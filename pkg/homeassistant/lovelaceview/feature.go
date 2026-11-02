@@ -187,18 +187,7 @@ func (f *Feature) refresh() {
 		slog.Warn("the dashboard list could not be fetched", "err", err)
 		return
 	}
-	f.mu.Lock()
-	was := f.list.Version
-	f.list = list
-	f.mu.Unlock()
-	if was != "" && list.Version != was {
-		slog.Info(
-			"Home Assistant changed version, reloading the dashboard",
-			"from",
-			was,
-			"to",
-			list.Version,
-		)
+	if f.listed(list) {
 		f.fresh()
 	}
 	f.knobs.Refresh()
@@ -206,6 +195,24 @@ func (f *Feature) refresh() {
 	if f.o.Redraw != nil {
 		f.o.Redraw()
 	}
+}
+
+func (f *Feature) listed(list homeassistant.Dashboards) bool {
+	f.mu.Lock()
+	was := f.list.Version
+	f.list = list
+	f.mu.Unlock()
+	if was == "" || list.Version == was {
+		return false
+	}
+	slog.Info(
+		"Home Assistant changed version, reloading the dashboard",
+		"from",
+		was,
+		"to",
+		list.Version,
+	)
+	return true
 }
 
 func (f *Feature) hint() string {

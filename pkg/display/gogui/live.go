@@ -3,6 +3,7 @@ package gogui
 import (
 	"image"
 	"sync"
+	"unsafe"
 )
 
 const livePrefix = "mem:live:"
@@ -45,6 +46,33 @@ func (l *Live) Write(w, h int, r image.Rectangle, rgba []byte) {
 		copy(l.pix[at:at+row], rgba[(y-r.Min.Y)*row:])
 	}
 	l.dirty = l.dirty.Union(r)
+}
+
+func (l *Live) WriteBGRA(w, h int, r image.Rectangle, bgra []byte, stride int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if w != l.w || h != l.h {
+		l.w, l.h = w, h
+		l.pix = make([]byte, w*h*4)
+		l.fresh = true
+	}
+	r = r.Intersect(image.Rect(0, 0, w, h))
+	if r.Empty() || stride < r.Max.X*4 || len(bgra) < (r.Max.Y-1)*stride+r.Max.X*4 {
+		return
+	}
+	n := r.Dx()
+	for y := r.Min.Y; y < r.Max.Y; y++ {
+		in := words(bgra[y*stride+r.Min.X*4:], n)
+		out := words(l.pix[(y*w+r.Min.X)*4:], n)
+		for i, v := range in {
+			out[i] = 0xff000000 | v&0xff00 | v>>16&0xff | v&0xff<<16
+		}
+	}
+	l.dirty = l.dirty.Union(r)
+}
+
+func words(b []byte, n int) []uint32 {
+	return unsafe.Slice((*uint32)(unsafe.Pointer(unsafe.SliceData(b[:n*4]))), n)
 }
 
 func (l *Live) take(upload func(w, h int, r image.Rectangle, pix []byte) error) {

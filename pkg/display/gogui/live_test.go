@@ -1,6 +1,7 @@
 package gogui
 
 import (
+	"bytes"
 	"image"
 	"testing"
 
@@ -61,5 +62,37 @@ func TestALivePictureUploadsWholeOnceThenOnlyWhatChanged(t *testing.T) {
 		if got[i] != want[i] {
 			t.Errorf("upload %d: %v, want %v", i, got[i], want[i])
 		}
+	}
+}
+
+func TestWriteBGRAConvertsIntoPlace(t *testing.T) {
+	const w, h, stride = 3, 2, 16
+	src := make([]byte, stride*h)
+	for y := range h {
+		for x := range w {
+			at := y*stride + x*4
+			src[at], src[at+1], src[at+2], src[at+3] = byte(10*y+x), 100, 200, 0
+		}
+	}
+	l := NewLive("test-bgra")
+	l.WriteBGRA(w, h, image.Rect(1, 0, 3, 2), src, stride)
+
+	want := []byte{
+		0, 0, 0, 0, 200, 100, 1, 0xff, 200, 100, 2, 0xff,
+		0, 0, 0, 0, 200, 100, 11, 0xff, 200, 100, 12, 0xff,
+	}
+	if !bytes.Equal(l.pix, want) {
+		t.Errorf("pixels\n got %v\nwant %v", l.pix, want)
+	}
+	if l.dirty != image.Rect(1, 0, 3, 2) {
+		t.Errorf("dirty %v", l.dirty)
+	}
+}
+
+func TestWriteBGRAIgnoresAShortFrame(t *testing.T) {
+	l := NewLive("test-bgra-short")
+	l.WriteBGRA(4, 4, image.Rect(0, 0, 4, 4), make([]byte, 8), 16)
+	if !l.dirty.Empty() {
+		t.Errorf("a short frame marked %v dirty", l.dirty)
 	}
 }

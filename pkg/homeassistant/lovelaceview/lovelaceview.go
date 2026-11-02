@@ -198,8 +198,7 @@ func (v *View) picture(at ui.Rect, cfg gogui.ContainerCfg) gogui.View {
 	v.mu.Lock()
 	pictured, failed := v.pictured, v.failed
 	v.mu.Unlock()
-	switch {
-	case pictured && !failed:
+	if pictured && !failed {
 		cfg.Content = []gogui.View{
 			gogui.Image(
 				gogui.ImageCfg{Src: v.live.Src(), Width: float32(at.W), Height: float32(at.H)},
@@ -514,18 +513,9 @@ func (v *View) frame(f compositor.Frame) {
 		damage = []image.Rectangle{image.Rect(0, 0, f.Width, f.Height)}
 	}
 	for _, r := range damage {
-		if r.Empty() {
-			continue
+		if !r.Empty() {
+			v.live.WriteBGRA(f.Width, f.Height, r, f.Pixels, f.Stride)
 		}
-		rgba := make([]byte, r.Dx()*r.Dy()*4)
-		for y := r.Min.Y; y < r.Max.Y; y++ {
-			src := f.Pixels[y*f.Stride+r.Min.X*4 : y*f.Stride+r.Max.X*4]
-			dst := rgba[(y-r.Min.Y)*r.Dx()*4:]
-			for x := 0; x < len(src); x += 4 {
-				dst[x], dst[x+1], dst[x+2], dst[x+3] = src[x+2], src[x+1], src[x], 0xff
-			}
-		}
-		v.live.Write(f.Width, f.Height, r, rgba)
 	}
 	v.mu.Lock()
 	v.pictured = true
