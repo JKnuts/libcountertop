@@ -70,9 +70,7 @@ func Nixie(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 			gogui.Label(r.Suffix, Lettering(glyph.TypefaceBold, th*0.1, neon)),
 		)
 	}
-	cfg := centred(append(content, dateLine(r, th*0.11, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(th * 0.12)
-	return gogui.Column(cfg)
+	return stack(r, th*0.12, append(content, dateLine(r, th*0.11, ink)...)...)
 }
 
 func tube(

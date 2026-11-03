@@ -17,6 +17,7 @@ type ClockController interface {
 	Placement
 	SetFace(config.Face)
 	SetInk(config.Ink)
+	SetBacking(config.Backing)
 	SetDate(bool)
 }
 type ClockDependencies struct {
@@ -69,10 +70,22 @@ func (p *ClockPages) Page() *shell.Page {
 					Kind:  menu.Chevron,
 					Value: cfg.Clock.Ink.Label(),
 				},
+				menu.Row{
+					Label: say.T("clock.backing"),
+					Kind:  menu.Chevron,
+					Value: cfg.Clock.Backing.Label(),
+				},
 				menu.Row{Label: say.T("clock.date"), Kind: menu.Toggle, On: cfg.Clock.Date},
 			)
 			taps = append(append(taps, placing...),
 				p.open(p.Colors()),
+				p.open(Choose(
+					say.T("clock.backing"),
+					config.Backings(),
+					func() config.Backing { return p.options.Preferences.ClockState().Clock.Backing },
+					p.options.Controller.SetBacking,
+					nil,
+				)),
 				func(int) { p.options.Controller.SetDate(!cfg.Clock.Date) },
 			)
 			return rows, taps

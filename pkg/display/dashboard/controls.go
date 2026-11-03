@@ -39,6 +39,8 @@ func NewTable() *Table {
 			schema.Sizes(), func(s *Setup) *schema.Size { return &s.Clock.Size }),
 		setting.Pick(Setting{Name: "color", Group: Group, Icon: "mdi:palette-outline"},
 			schema.Inks(), func(s *Setup) *schema.Ink { return &s.Clock.Ink }),
+		setting.Pick(Setting{Name: "backing", Group: Group, Icon: "mdi:card-outline"},
+			schema.Backings(), func(s *Setup) *schema.Backing { return &s.Clock.Backing }),
 		setting.Flag(Setting{Name: "date", Group: Group, Icon: "mdi:calendar-blank-outline"},
 			func(s *Setup) *bool { return &s.Clock.Date }),
 	}, setting.Messages{Text: say.T, Missing: say.Missing})
@@ -143,6 +145,10 @@ func (c *Controls) SetSize(v schema.Size) {
 
 func (c *Controls) SetInk(v schema.Ink) {
 	c.commit("color", func(s *Setup) { s.Clock.Ink = v })
+}
+
+func (c *Controls) SetBacking(v schema.Backing) {
+	c.commit("backing", func(s *Setup) { s.Clock.Backing = v })
 }
 
 func (c *Controls) SetDate(v bool) {

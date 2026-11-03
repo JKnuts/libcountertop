@@ -63,9 +63,7 @@ func Flip(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
 			}
 		},
 	})
-	cfg := centred(append([]gogui.View{tiles}, dateLine(r, th*0.11, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(th * 0.18)
-	return gogui.Column(cfg)
+	return stack(r, th*0.18, append([]gogui.View{tiles}, dateLine(r, th*0.11, ink)...)...)
 }
 
 func flipTile(

@@ -143,6 +143,9 @@ func (p *Renderer) miniControls(now nowplaying.Now) []miniControl {
 	if now.Can.Has(nowplaying.CanNext) {
 		out = append(out, miniControl{gogui.IconFastForward, func() { t().Next() }})
 	}
+	if now.Can.Has(nowplaying.CanStop) {
+		out = append(out, miniControl{gogui.IconStop, func() { t().Stop() }})
+	}
 	return append(out, miniControl{gogui.IconExpand, p.options.Player.Open})
 }
 

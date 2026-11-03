@@ -240,20 +240,6 @@ func (s *Stage) values(now time.Time) []float32 {
 		u[3] = 1
 	}
 	u[4], u[5], u[6] = float32(look.Back.R)/255, float32(look.Back.G)/255, float32(look.Back.B)/255
-	if box := look.Box; !box.Empty() {
-		side := float32(min(box.Dx(), box.Dy()))
-		u[7] = scrimMix
-		u[8], u[9], u[10], u[11] = float32(
-			box.Min.X,
-		), float32(
-			box.Min.Y,
-		), float32(
-			box.Dx(),
-		), float32(
-			box.Dy(),
-		)
-		u[12], u[13] = side*scrimPad, side*scrimSoft
-	}
 	u[14], u[15], u[16] = matColor[0], matColor[1], matColor[2]
 	for k, pr := range s.pairs {
 		if !pr.set || (k != s.newest && p >= 1) {

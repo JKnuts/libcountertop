@@ -153,7 +153,6 @@ func TestValuesCarryTheTransition(t *testing.T) {
 		Back:   theme.Color{R: 255},
 		Fit:    schema.FitCover,
 		Change: schema.TransitionSlide,
-		Box:    image.Rect(100, 100, 300, 200),
 	}}
 	s.pairs[0] = pair{id: "old", w: 1600, h: 1000, set: true}
 	s.pairs[1] = pair{id: "new", w: 1600, h: 1000, set: true}
@@ -165,8 +164,8 @@ func TestValuesCarryTheTransition(t *testing.T) {
 	if u[1] != 2 {
 		t.Errorf("slide is transition %v", u[1])
 	}
-	if u[4] != 1 || u[7] == 0 || u[10] != 200 {
-		t.Errorf("background %v, scrim %v, box width %v", u[4], u[7], u[10])
+	if u[4] != 1 {
+		t.Errorf("background %v", u[4])
 	}
 	if u[pairBase+15] != 1 || u[pairBase+pairFloats+15] != 1 {
 		t.Error("both photos should be drawn mid-transition")

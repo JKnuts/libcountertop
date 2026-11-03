@@ -53,6 +53,7 @@ func TestEntitiesKeepTheirIdentity(t *testing.T) {
 		"clock_align",
 		"clock_size",
 		"clock_color",
+		"clock_backing",
 		"clock_date",
 	}
 	for i, entity := range c.Entities() {

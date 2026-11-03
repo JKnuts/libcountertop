@@ -222,12 +222,13 @@ func (a *App) nativeDash(w *gogui.Window, vw, vh, top, margin int, pal theme.The
 			a.papering = true
 			layers = append(layers, a.around(at, vw, vh, pal.Background)...)
 		} else {
-			a.paper(ui.Rect{W: vw, H: vh}, box, pal.Background)
+			a.paper(ui.Rect{W: vw, H: vh}, pal.Background)
 		}
 		return append(layers, kind.Draw(w, at, showing, pal))
 	}
-	a.paper(ui.Rect{W: vw, H: vh}, box, pal.Background)
+	a.paper(ui.Rect{W: vw, H: vh}, pal.Background)
 	if face, ok := clockview.Of(cfg.Clock.Face); ok {
+		r.Behind = a.behind(cfg.Clock.Backing, box, pal)
 		layers = append(layers, widgets.Placed(box, face.Draw(w, box, r, ink)))
 	}
 	if r, ok := a.o.Forecast.Now(); (ok || a.weather.Alerting()) && cfg.Weather.Dashboard {

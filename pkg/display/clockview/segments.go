@@ -96,9 +96,7 @@ func Segments(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.Vi
 			}
 		},
 	})
-	cfg := centred(append([]gogui.View{digits}, dateLine(r, height*0.27, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(height * 0.2)
-	return gogui.Column(cfg)
+	return stack(r, height*0.2, append([]gogui.View{digits}, dateLine(r, height*0.27, ink)...)...)
 }
 
 func segUnits(row string) float32 {

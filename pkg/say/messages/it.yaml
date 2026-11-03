@@ -368,12 +368,17 @@ chime.rise: Crescente
 chime.timer: Timer
 chime.trouble: Problema
 clock.group.clock: Orologio
+clock.backing: Sfondo
+clock.backing.card: Scheda
+clock.backing.none: Nessuno
+clock.backing.shade: Ombra
 clock.color: Colore
 clock.color.title: Colore orologio
 clock.date: Mostra data
 clock.face: Quadrante
 clock.hours: Formato 24 ore
 clock.setting.align: Posizione orizzontale orologio
+clock.setting.backing: Sfondo orologio
 clock.setting.color: Colore orologio
 clock.setting.date: Data orologio
 clock.setting.face: Quadrante orologio
@@ -570,6 +575,7 @@ idle.none: Nessuno
 idle.off: Schermo spento
 idle.setting.after: Schermo inattivo dopo
 idle.setting.align: Posizione orizzontale orologio inattivo
+idle.setting.backing: Sfondo orologio inattivo
 idle.setting.face: Quadrante orologio inattivo
 idle.setting.media: Chiudi player in pausa dopo
 idle.setting.night: Modalità notte

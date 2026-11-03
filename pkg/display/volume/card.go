@@ -38,6 +38,11 @@ func (c *Card) Selected() (config.Stream, bool) {
 
 func (c *Card) Show(stream config.Stream) {
 	c.mu.Lock()
+	if c.held.Held() && c.open {
+		c.mu.Unlock()
+		c.stirred(true)
+		return
+	}
 	c.stream = stream
 
 	if !c.held.Held() {

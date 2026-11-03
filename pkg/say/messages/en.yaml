@@ -367,12 +367,17 @@ chime.rise: Rise
 chime.timer: Timer
 chime.trouble: Trouble
 clock.group.clock: Clock
+clock.backing: Backing
+clock.backing.card: Card
+clock.backing.none: None
+clock.backing.shade: Shade
 clock.color: Color
 clock.color.title: Clock color
 clock.date: Show date
 clock.face: Clock face
 clock.hours: Use 24-hour format
 clock.setting.align: Clock horizontal position
+clock.setting.backing: Clock backing
 clock.setting.color: Clock color
 clock.setting.date: Clock date
 clock.setting.face: Clock face
@@ -569,6 +574,7 @@ idle.none: None
 idle.off: Screen off
 idle.setting.after: Idle screen after
 idle.setting.align: Idle clock horizontal position
+idle.setting.backing: Idle clock backing
 idle.setting.face: Idle clock face
 idle.setting.media: Close paused player after
 idle.setting.night: Night mode

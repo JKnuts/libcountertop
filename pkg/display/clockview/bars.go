@@ -95,9 +95,7 @@ func Bars(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
 	if r.Suffix != "" && r.Dated() {
 		lines = dateLine(Reading{Date: r.Suffix + " · " + r.Date}, tile*0.22, ink)
 	}
-	cfg := centred(append([]gogui.View{grid}, lines...)...)
-	cfg.Spacing = gogui.SpacingPx(tile * 0.3)
-	return gogui.Column(cfg)
+	return stack(r, tile*0.3, append([]gogui.View{grid}, lines...)...)
 }
 
 func sweep(from, to float64, at float32) float64 {

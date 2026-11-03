@@ -617,6 +617,7 @@ func (c *Conversation) hold(on bool) {
 	c.holding = on
 
 	c.options.Sound.Duck(on)
+	c.log.Ducked(on)
 }
 
 func (c *Conversation) arm(d time.Duration) {

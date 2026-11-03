@@ -7,9 +7,10 @@ type Idle struct {
 	Media Delay `json:"media"`
 	Face  Face  `json:"face"`
 	Placement
-	First  IdleVisual `json:"first"`
-	Second IdleVisual `json:"second"`
-	Saver  SaverMode  `json:"saver"`
+	Backing Backing    `json:"backing"`
+	First   IdleVisual `json:"first"`
+	Second  IdleVisual `json:"second"`
+	Saver   SaverMode  `json:"saver"`
 
 	PhotoEvery  Delay           `json:"photo_every"`
 	PhotoFit    PhotoFit        `json:"photo_fit"`
@@ -101,6 +102,7 @@ func DefaultIdle() Idle {
 		Media:       Delay5m,
 		Face:        DefaultFace,
 		Placement:   Placement{Position: PositionRandom, Align: AlignRandom, Size: DefaultSize},
+		Backing:     BackingNone,
 		First:       IdleVisual{Source: SourceBoth},
 		Second:      IdleVisual{Source: SourceBoth},
 		Saver:       SaverNative,

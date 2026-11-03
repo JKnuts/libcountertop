@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	gogui "github.com/go-gui-org/go-gui/gui"
 )
 
 type Reading struct {
@@ -13,6 +15,8 @@ type Reading struct {
 	Date   string
 
 	Second int
+
+	Behind func(*gogui.ContainerCfg)
 }
 
 func Read(at time.Time, twentyFour bool) Reading {

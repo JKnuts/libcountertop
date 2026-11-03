@@ -16,13 +16,9 @@ const (
 	matShare   = 0.022
 	kenZoom    = 1.18
 	kenLeg     = 30 * time.Second
-	scrimPad   = 0.08
-	scrimSoft  = 0.18
-	scrimMix   = 0.62
 )
 
 type Look struct {
-	Box    image.Rectangle
 	Back   theme.Color
 	Fit    schema.PhotoFit
 	Change schema.PhotoTransition

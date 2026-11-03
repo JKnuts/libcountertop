@@ -2,7 +2,6 @@ package poster
 
 import (
 	"context"
-	"image"
 	"log/slog"
 	"time"
 
@@ -124,10 +123,9 @@ func (p *Poster) Frame() *photoframe.Frame { return p.frame }
 
 func (p *Poster) Shows() bool { return p.options.Settings.Read().Enabled }
 
-func (p *Poster) Look(box image.Rectangle, bg theme.Color) photoframe.Look {
+func (p *Poster) Look(bg theme.Color) photoframe.Look {
 	cfg := p.options.Settings.Read()
 	return photoframe.Look{
-		Box:    box,
 		Back:   bg,
 		Fit:    cfg.Fit,
 		Change: cfg.Change,

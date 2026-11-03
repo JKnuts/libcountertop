@@ -66,15 +66,5 @@ void main() {
 	} else {
 		col = mix(shot(o, px, bg, matc), shot(n, px, bg, matc), e);
 	}
-	if (u[7] > 0.0) {
-		highp vec2 c = vec2(u[8] + u[10] * 0.5, u[9] + u[11] * 0.5);
-		highp float pad = u[12];
-		highp float soft = u[13];
-		highp float d = rounded(px, c, vec2(u[10], u[11]) * 0.5 + pad, pad + soft * 0.5);
-		float t = clamp(1.0 - d / soft, 0.0, 1.0);
-		float k = d <= 0.0 ? 1.0 : t * t * (3.0 - 2.0 * t);
-		float a = u[7] * k;
-		col = mix(col, bg, a);
-	}
 	gl_FragColor = vec4(col, 1.0);
 }

@@ -46,6 +46,7 @@ type Options struct {
 func EngineArgs() []string {
 	return []string{
 		"--autoplay-policy=no-user-gesture-required",
+		"--allow-running-insecure-content",
 		"--disable-features=LocalNetworkAccessChecks,BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights",
 		"--user-agent=Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/537.36 (KHTML, like Gecko) " +
 			"Chrome/150.0.0.0 Safari/537.36 CrKey/1.56.500000",

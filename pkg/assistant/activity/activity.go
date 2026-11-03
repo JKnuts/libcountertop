@@ -1,6 +1,8 @@
 package activity
 
 import (
+	"strconv"
+
 	esphome "github.com/ygelfand/go-esphome-device"
 
 	"github.com/ygelfand/libcountertop/pkg/runtime/component"
@@ -14,7 +16,9 @@ type Log struct {
 }
 
 type Options struct {
-	Emit func(map[string]string)
+	Emit   func(map[string]string)
+	Duck   func(map[string]string)
+	DuckDB func() float64
 }
 
 func New(opts Options) *Log {
@@ -51,6 +55,17 @@ func (l *Log) Woke(phrase string) {
 		return
 	}
 	l.word.Set(component.Fit(phrase))
+}
+
+func (l *Log) Ducked(on bool) {
+	if l.opts.Duck == nil {
+		return
+	}
+	fields := map[string]string{"version": Version, "ducked": strconv.FormatBool(on)}
+	if l.opts.DuckDB != nil {
+		fields["duck_db"] = strconv.FormatFloat(l.opts.DuckDB(), 'f', -1, 64)
+	}
+	l.opts.Duck(fields)
 }
 
 func (l *Log) Heard(text string) {

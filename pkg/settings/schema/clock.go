@@ -14,7 +14,21 @@ type Clock struct {
 	Placement
 
 	Ink Ink `json:"ink"`
+
+	Backing Backing `json:"backing"`
 }
+
+type Backing string
+
+const (
+	BackingNone  Backing = "none"
+	BackingShade Backing = "shade"
+	BackingCard  Backing = "card"
+)
+
+func Backings() []Backing { return []Backing{BackingNone, BackingShade, BackingCard} }
+
+func (b Backing) Label() string { return say.T("clock.backing." + string(b)) }
 
 type Placement struct {
 	Position Position `json:"position"`
@@ -204,6 +218,7 @@ func DefaultClock() Clock {
 		Date:      DefaultDate,
 		Placement: Placement{Position: DefaultPosition, Align: AlignCenter, Size: DefaultSize},
 		Ink:       DefaultInk,
+		Backing:   BackingNone,
 	}
 }
 

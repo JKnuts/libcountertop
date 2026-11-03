@@ -138,3 +138,22 @@ func TestNoTurnIsSafeToMark(t *testing.T) {
 		t.Errorf("fired %d events, want none", len(*got))
 	}
 }
+
+func TestDuckingCarriesItsDepth(t *testing.T) {
+	var got []map[string]string
+	log := New(Options{
+		Duck:   func(fields map[string]string) { got = append(got, fields) },
+		DuckDB: func() float64 { return -15 },
+	})
+	log.Ducked(true)
+	log.Ducked(false)
+	if len(got) != 2 {
+		t.Fatalf("fired %d events, want 2", len(got))
+	}
+	for i, want := range []string{"true", "false"} {
+		if got[i]["ducked"] != want || got[i]["duck_db"] != "-15" {
+			t.Errorf("event %d: %v, want ducked=%s duck_db=-15", i, got[i], want)
+		}
+	}
+	New(Options{}).Ducked(true)
+}

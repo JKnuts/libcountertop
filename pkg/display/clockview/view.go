@@ -34,14 +34,29 @@ func Fitted(w *gogui.Window, text string, st gogui.TextStyle, maxW, maxH float32
 	return size
 }
 
-func centred(content ...gogui.View) gogui.ContainerCfg {
-	return gogui.ContainerCfg{
+func stack(r Reading, gap float32, content ...gogui.View) gogui.View {
+	inner := gogui.ContainerCfg{
+		Padding: gogui.NoPadding,
+		Spacing: gogui.SpacingPx(gap),
+		HAlign:  gogui.HAlignCenter,
+		Content: content,
+	}
+	if r.Behind == nil {
+		inner.Sizing, inner.VAlign = gogui.FillFill, gogui.VAlignMiddle
+		return gogui.Column(inner)
+	}
+	r.Behind(&inner)
+	return centred(gogui.Column(inner))
+}
+
+func centred(content gogui.View) gogui.View {
+	return gogui.Column(gogui.ContainerCfg{
 		Sizing:  gogui.FillFill,
 		Padding: gogui.NoPadding,
 		HAlign:  gogui.HAlignCenter,
 		VAlign:  gogui.VAlignMiddle,
-		Content: content,
-	}
+		Content: []gogui.View{content},
+	})
 }
 
 func dateLine(r Reading, size float32, ink theme.Theme) []gogui.View {
@@ -63,7 +78,7 @@ func Plain(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 			gogui.Label(r.Suffix, Lettering(glyph.TypefaceBold, size*0.24, ink.Muted)),
 		)
 	}
-	cfg := centred(append([]gogui.View{
+	return stack(r, size*0.1, append([]gogui.View{
 		gogui.Row(
 			gogui.ContainerCfg{
 				Padding: gogui.NoPadding,
@@ -72,8 +87,6 @@ func Plain(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 			},
 		),
 	}, dateLine(r, size*0.20, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(size * 0.1)
-	return gogui.Column(cfg)
 }
 
 func Stack(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
@@ -94,29 +107,23 @@ func Stack(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 		)
 	}
 	digits := gogui.Column(
-		gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: tight, Content: []gogui.View{
-			gogui.Row(
-				gogui.ContainerCfg{
-					Padding: gogui.NoPadding,
-					Spacing: gogui.SpacingPx(size * 0.06),
-					Content: top,
-				},
-			),
-			gogui.Label(minute, big),
-		}},
+		gogui.ContainerCfg{
+			Padding: gogui.NoPadding,
+			Spacing: tight,
+			HAlign:  gogui.HAlignCenter,
+			Content: []gogui.View{
+				gogui.Row(
+					gogui.ContainerCfg{
+						Padding: gogui.NoPadding,
+						Spacing: gogui.SpacingPx(size * 0.06),
+						Content: top,
+					},
+				),
+				gogui.Label(minute, big),
+			},
+		},
 	)
-	block := append([]gogui.View{digits}, dateLine(r, size*0.13, ink)...)
-	return gogui.Column(
-		centred(
-			gogui.Column(
-				gogui.ContainerCfg{
-					Padding: gogui.NoPadding,
-					Spacing: gogui.SpacingPx(size * 0.08),
-					Content: block,
-				},
-			),
-		),
-	)
+	return stack(r, size*0.08, append([]gogui.View{digits}, dateLine(r, size*0.13, ink)...)...)
 }
 
 func Cards(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
@@ -182,9 +189,7 @@ func Cards(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 			},
 		)
 	}
-	cfg := centred(append([]gogui.View{block}, dateLine(r, side*0.085, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(side * 0.16)
-	return gogui.Column(cfg)
+	return stack(r, side*0.16, append([]gogui.View{block}, dateLine(r, side*0.085, ink)...)...)
 }
 
 func heading(deg float64) (dx, dy float32) {
@@ -219,9 +224,7 @@ func Words(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 			Content: lines,
 		},
 	)
-	cfg := centred(append([]gogui.View{block}, dateLine(r, size*0.26, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(size * 0.3)
-	return gogui.Column(cfg)
+	return stack(r, size*0.3, append([]gogui.View{block}, dateLine(r, size*0.26, ink)...)...)
 }
 
 func Overlap(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
@@ -254,9 +257,7 @@ func Overlap(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.Vie
 			},
 		},
 	)
-	cfg := centred(append([]gogui.View{pair}, dateLine(r, size*0.13, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(size * 0.1)
-	return gogui.Column(cfg)
+	return stack(r, size*0.1, append([]gogui.View{pair}, dateLine(r, size*0.13, ink)...)...)
 }
 
 func canvasVersion(box ui.Rect, r Reading, ink theme.Theme, seconds bool) uint64 {

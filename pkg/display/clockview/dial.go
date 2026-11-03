@@ -9,7 +9,10 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 )
 
-const dialShare = 0.78
+const (
+	dialShare = 0.78
+	dateLead  = 1.4
+)
 
 var (
 	railFace  = theme.Color{R: 0xf7, G: 0xf7, B: 0xf5}
@@ -137,7 +140,13 @@ func dialCanvas(
 ) gogui.View {
 	bw, bh := float32(box.W), float32(box.H)
 	d := min(bw, bh) * dialShare
-	return gogui.DrawCanvas(gogui.DrawCanvasCfg{
+	if r.Behind != nil {
+		bw, bh = d, d
+		if r.Dated() {
+			bh += d * (0.10 + 0.075*dateLead)
+		}
+	}
+	canvas := gogui.DrawCanvas(gogui.DrawCanvasCfg{
 		ID:      id,
 		Width:   bw,
 		Height:  bh,
@@ -156,6 +165,12 @@ func dialCanvas(
 			}
 		},
 	})
+	if r.Behind == nil {
+		return canvas
+	}
+	inner := gogui.ContainerCfg{Padding: gogui.NoPadding, Content: []gogui.View{canvas}}
+	r.Behind(&inner)
+	return centred(gogui.Column(inner))
 }
 
 func hourAngle(hour, minute int) float64 { return float64(hour%12)*30 + float64(minute)*0.5 }

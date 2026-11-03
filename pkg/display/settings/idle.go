@@ -31,6 +31,7 @@ type IdleSlots interface {
 type IdleClock interface {
 	SetAfter(config.Delay)
 	SetFace(config.Face)
+	SetBacking(config.Backing)
 }
 type IdleNight interface {
 	SetNight(config.Night)
@@ -169,6 +170,18 @@ func (p *IdlePages) Page() *shell.Page {
 				Preview: p.Placed,
 			}.Rows(p.options.Shell)
 			rows, taps = append(rows, placed...), append(taps, placing...)
+			rows = append(rows, menu.Row{
+				Label: say.T("clock.backing"),
+				Kind:  menu.Chevron,
+				Value: c.Backing.Label(),
+			})
+			taps = append(taps, p.open(Choose(
+				say.T("clock.backing"),
+				config.Backings(),
+				func() config.Backing { return p.options.Preferences.IdleState().Idle.Backing },
+				i.SetBacking,
+				nil,
+			)))
 			if c.First.Photos() || c.Second.Photos() {
 				spans := config.IdlePhotoSpans()
 				steps := menu.Steps(len(spans))

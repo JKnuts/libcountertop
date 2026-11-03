@@ -1,7 +1,6 @@
 package screens
 
 import (
-	"image"
 	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
@@ -16,6 +15,12 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/visualview"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
+)
+
+const (
+	backingPad = 0.05
+	shadeMix   = 0.6
+	shadeSoft  = 0.08
 )
 
 func (a *App) idleScreen(v *idleview.View) *Screen {
@@ -91,7 +96,7 @@ func (a *App) idle(w *gogui.Window, v *idleview.View) gogui.View {
 
 	whole := ui.Rect{W: vw, H: vh}
 	var layers []gogui.View
-	if len(slots) == 0 && (night.Quiet() || !a.paper(whole, box, pal.Background)) {
+	if len(slots) == 0 && (night.Quiet() || !a.paper(whole, pal.Background)) {
 		layers = append(layers, widgets.Placed(whole, a.ground(pal.Background)))
 	}
 	for n, slot := range slots {
@@ -100,7 +105,6 @@ func (a *App) idle(w *gogui.Window, v *idleview.View) gogui.View {
 		}
 		area := areas[n]
 		look := photoframe.Look{
-			Box:    image.Rect(box.X-area.X, box.Y-area.Y, box.X-area.X+box.W, box.Y-area.Y+box.H),
 			Back:   pal.Background,
 			Fit:    idle.PhotoFit,
 			Change: idle.PhotoChange,
@@ -120,6 +124,7 @@ func (a *App) idle(w *gogui.Window, v *idleview.View) gogui.View {
 			tones[n] = visual.Kind(slot.Kind).Traits()
 		}
 		for _, p := range idleview.Pieces(pal, tones, areas, box) {
+			r.Behind = a.behind(idle.Backing, box, p.Palette)
 			clock := face.Draw(w, box, r, cfg.Clock.Ink.Over(p.Palette))
 			if p.Clip.W == 0 {
 				layers = append(layers, widgets.Placed(box, clock))
@@ -177,11 +182,11 @@ func (a *App) visualScreen(v *visualview.View) *Screen {
 	}
 }
 
-func (a *App) paper(area, box ui.Rect, bg theme.Color) bool {
+func (a *App) paper(area ui.Rect, bg theme.Color) bool {
 	if a.wallpaper == nil || !a.o.Poster.Shows() {
 		return false
 	}
-	look := a.o.Poster.Look(image.Rect(box.X, box.Y, box.X+box.W, box.Y+box.H), bg)
+	look := a.o.Poster.Look(bg)
 	if !a.wallpaper.Keep(area, look) {
 		return false
 	}
@@ -212,6 +217,29 @@ func (a *App) ground(bg theme.Color) gogui.View {
 		Padding: gogui.NoPadding,
 		Color:   widgets.Color(bg),
 	})
+}
+
+func (a *App) behind(
+	b schema.Backing,
+	box ui.Rect,
+	pal theme.Theme,
+) func(*gogui.ContainerCfg) {
+	side := float32(min(box.W, box.H))
+	pad := gogui.PadAll(side * backingPad)
+	switch b {
+	case schema.BackingShade:
+		shade := widgets.Color(pal.Background).WithOpacity(shadeMix)
+		return func(cfg *gogui.ContainerCfg) {
+			cfg.Padding, cfg.Color, cfg.Radius = pad, shade, gogui.RadiusLarge
+			cfg.Shadow = &gogui.BoxShadow{Color: shade, BlurRadius: side * shadeSoft}
+		}
+	case schema.BackingCard:
+		return func(cfg *gogui.ContainerCfg) {
+			*cfg = a.ui.Toolkit.Panel(*cfg)
+			cfg.Padding = pad
+		}
+	}
+	return nil
 }
 
 func (a *App) seeThrough(on bool) {

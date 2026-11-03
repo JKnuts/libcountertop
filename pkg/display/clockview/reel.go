@@ -63,7 +63,5 @@ func Reel(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
 			strip(big+rowGap, minute, 60, 0, minuteAt)
 		},
 	})
-	cfg := centred(append([]gogui.View{strips}, dateLine(r, big*0.18, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(big * 0.2)
-	return gogui.Column(cfg)
+	return stack(r, big*0.2, append([]gogui.View{strips}, dateLine(r, big*0.18, ink)...)...)
 }

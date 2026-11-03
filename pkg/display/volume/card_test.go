@@ -32,3 +32,21 @@ func TestCardSelectionAndOldExpiryCannotHideRefreshedCard(t *testing.T) {
 		t.Fatal("closed card retained its hold")
 	}
 }
+
+func TestExpandedCardKeepsItsSelectionWhenAnotherStreamChanges(t *testing.T) {
+	stack := shell.New()
+	defer stack.Close()
+	c := NewCard(stack)
+	defer c.Close()
+	c.Show(schema.StreamMedia)
+	c.Expand()
+	c.Show(schema.StreamMain)
+	if stream, open := c.Picked(); stream != schema.StreamMedia || !open {
+		t.Fatal("expanded card moved to the changed stream", stream, open)
+	}
+	c.Expand()
+	c.Show(schema.StreamMain)
+	if stream, _ := c.Picked(); stream != schema.StreamMain {
+		t.Fatal("collapsed card did not follow the changed stream", stream)
+	}
+}

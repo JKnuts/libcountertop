@@ -40,6 +40,8 @@ func NewTable() *Table {
 			schema.IdleAligns(), func(c *schema.Idle) *schema.Align { return &c.Align }),
 		setting.Pick(Setting{Name: "size", Group: Group, Icon: "mdi:resize"},
 			schema.Sizes(), func(c *schema.Idle) *schema.Size { return &c.Size }),
+		setting.Pick(Setting{Name: "backing", Group: Group, Icon: "mdi:card-outline"},
+			schema.Backings(), func(c *schema.Idle) *schema.Backing { return &c.Backing }),
 		setting.Pick(
 			Setting{Name: "night", Group: Group, ID: "night_mode", Icon: "mdi:weather-night"},
 			schema.Nights(),

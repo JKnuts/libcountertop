@@ -205,9 +205,7 @@ func Binary(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View
 			}
 		},
 	})
-	cfg := centred(append([]gogui.View{leds}, dateLine(r, cell*0.55, ink)...)...)
-	cfg.Spacing = gogui.SpacingPx(cell)
-	return gogui.Column(cfg)
+	return stack(r, cell, append([]gogui.View{leds}, dateLine(r, cell*0.55, ink)...)...)
 }
 
 func ellipse(cx, cy, rx, ry float32) []float32 {

@@ -307,6 +307,10 @@ func (i *Idle) SetFace(v schema.Face) {
 	i.set("face", func(c *schema.Idle) { c.Face = v })
 }
 
+func (i *Idle) SetBacking(v schema.Backing) {
+	i.set("backing", func(c *schema.Idle) { c.Backing = v })
+}
+
 func (i *Idle) SetPosition(v schema.Position) {
 	i.set("position", func(c *schema.Idle) { c.Position = v })
 }
