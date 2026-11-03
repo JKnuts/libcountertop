@@ -2,6 +2,7 @@ package shopping
 
 import (
 	"slices"
+	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 
@@ -20,6 +21,8 @@ const page = "shopping"
 type View struct{ draft string }
 
 func (*View) Covers() bool { return true }
+
+func (*View) Timeout() time.Duration { return shell.AppTimeout }
 
 type Options struct {
 	UI    *widgets.UI

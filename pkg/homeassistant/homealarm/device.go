@@ -23,7 +23,7 @@ const partsTemplate = `{%- set panel = device_id(ENTITY) -%}
 {%- endif -%}
 {%- endfor -%}
 {%- endif -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 var zoneClasses = []string{
 	"door", "window", "garage_door", "opening", "motion", "occupancy", "presence", "vibration",

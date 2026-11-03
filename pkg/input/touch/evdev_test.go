@@ -359,7 +359,7 @@ func TestATapFromEventsToAGesture(t *testing.T) {
 	}
 }
 
-func TestTwoFingersEachGetTheirOwnGesture(t *testing.T) {
+func TestTwoFingersMakeOneGesture(t *testing.T) {
 	d := placed()
 	r := NewRecognizer(panelH, panelW)
 
@@ -375,7 +375,7 @@ func TestTwoFingersEachGetTheirOwnGesture(t *testing.T) {
 	got = append(got, gestures(&d, r,
 		ev(evAbs, absMTSlot, 1), ev(evAbs, absMTTrackingID, released), syn())...)
 
-	if len(got) != 2 {
-		t.Fatalf("got %d gestures, want one per finger", len(got))
+	if len(got) != 1 || got[0].Fingers != 2 {
+		t.Fatalf("got %+v, want one two-finger gesture", got)
 	}
 }

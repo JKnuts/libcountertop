@@ -8,6 +8,7 @@ import (
 
 	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
 	"github.com/ygelfand/libcountertop/pkg/audio/resample"
+	"github.com/ygelfand/libcountertop/pkg/media/nowplaying"
 	"github.com/ygelfand/libcountertop/pkg/media/playback"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
@@ -164,6 +165,8 @@ func (s *sound) Showing() playback.Showing {
 }
 
 func (s *sound) Label() string { return "AirPlay" }
+
+func (s *sound) Brand() nowplaying.Brand { return nowplaying.AirPlay }
 
 func (s *sound) Play()     {}
 func (s *sound) Pause()    {}

@@ -27,6 +27,8 @@ type Screen struct {
 
 	Marks bool `json:"marks"`
 
+	Touches bool `json:"touches,omitempty"`
+
 	Language string `json:"language"`
 
 	Custom theme.Custom `json:"custom"`

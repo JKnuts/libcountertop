@@ -79,8 +79,42 @@ func TestOnlyValidInputExtendsIdleTimeout(t *testing.T) {
 	}
 	p.release()
 	p.receive([]byte(`{"phase":"down","x":0,"y":0}`))
-	if p.contact != nil {
+	if p.down[0] != nil {
 		t.Fatal("closed controller accepted input")
+	}
+}
+
+func TestEachFingerIsItsOwnContact(t *testing.T) {
+	var got []touch.Contact
+	p := pointer{deliver: func(c touch.Contact) { got = append(got, c) }, width: 800, height: 480}
+	for _, message := range []string{
+		`{"phase":"down","x":0.25,"y":0.5,"id":0}`,
+		`{"phase":"down","x":0.75,"y":0.5,"id":1}`,
+		`{"phase":"move","x":0.2,"y":0.5,"id":0}`,
+		`{"phase":"move","x":0.8,"y":0.5,"id":1}`,
+		`{"phase":"up","x":0.2,"y":0.5,"id":0}`,
+	} {
+		p.receive([]byte(message))
+	}
+	p.release()
+	if len(got) != 6 {
+		t.Fatalf("contacts = %v", got)
+	}
+	first, second := got[0].ID, got[1].ID
+	if first == second {
+		t.Fatalf("both fingers share id %d", first)
+	}
+	want := []struct {
+		id    int
+		phase touch.Phase
+	}{
+		{first, touch.Down}, {second, touch.Down}, {first, touch.Move},
+		{second, touch.Move}, {first, touch.Up}, {second, touch.Up},
+	}
+	for i, w := range want {
+		if got[i].ID != w.id || got[i].Phase != w.phase {
+			t.Errorf("contact %d = %v, want id %d %v", i, got[i], w.id, w.phase)
+		}
 	}
 }
 
@@ -92,6 +126,8 @@ func TestRejectMalformedPointer(t *testing.T) {
 		`{"phase":"down","x":null,"y":0}`,
 		`{"phase":"down","x":1e1000,"y":0}`,
 		`{"phase":"button","x":0,"y":0}`,
+		`{"phase":"down","x":0,"y":0,"id":-1}`,
+		`{"phase":"down","x":0,"y":0,"id":10}`,
 	} {
 		t.Run(message, func(t *testing.T) {
 			p := pointer{

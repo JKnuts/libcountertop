@@ -15,7 +15,7 @@ func (a *App) searchField() gui.View {
 	if search == nil {
 		return nil
 	}
-	return a.ui.Input(gui.InputCfg{
+	return a.ui.Search(gui.InputCfg{
 		ID:            searchFieldID,
 		Text:          *search.Query,
 		Placeholder:   say.T("settings.search"),

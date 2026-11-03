@@ -120,6 +120,15 @@
   position: relative;
 }
 
+.ct-control-screen {
+  width: 100%;
+  min-width: 0;
+}
+
+.ct-control-screen .ct-bezel {
+  margin-inline: auto;
+}
+
 .ct-desktop-keyboard {
   position: absolute;
   top: 0;

@@ -14,7 +14,7 @@ const namedTemplate = `{%- set ns = namespace(out=[]) -%}
 {%- for s in (states[DOMAIN] | list)[START:END] -%}
 {%- set ns.out = ns.out + [[s.entity_id, s.name]] -%}
 {%- endfor -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 func (h *Controller) Named(ctx context.Context, domain string) ([]Named, error) {
 	var out []Named

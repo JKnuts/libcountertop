@@ -6,6 +6,7 @@ import (
 	"github.com/bluenviron/mediacommon/v2/pkg/codecs/h264"
 	"github.com/bluenviron/mediacommon/v2/pkg/codecs/h265"
 
+	display "github.com/ygelfand/libcountertop/pkg/display/geometry"
 	"github.com/ygelfand/libcountertop/pkg/display/surface"
 	"github.com/ygelfand/libcountertop/pkg/media/call"
 	"github.com/ygelfand/libcountertop/pkg/media/rtc"
@@ -40,6 +41,27 @@ func (s *Stream) Refused() bool {
 }
 
 func (s *Stream) Reorient() { s.l.reorient() }
+
+func (s *Stream) Fitted(vw, vh int) (display.Rect, bool) {
+	s.l.mu.Lock()
+	defer s.l.mu.Unlock()
+	if s.l.size.Width == 0 || s.l.size.Height == 0 {
+		return display.Rect{}, false
+	}
+	return fit(s.l.box(vw, vh), s.l.size.Width, s.l.size.Height), true
+}
+
+func (s *Stream) Zoom(z display.Zoom) {
+	s.l.mu.Lock()
+	defer s.l.mu.Unlock()
+	if s.l.zoom == z {
+		return
+	}
+	s.l.zoom = z
+	if c := s.l.display.Helper(); c != nil && s.l.shown {
+		s.l.place(c)
+	}
+}
 
 func (s *Stream) Stats() call.LayerStats { return s.l.stats() }
 

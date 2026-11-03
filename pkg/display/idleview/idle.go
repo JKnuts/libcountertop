@@ -299,6 +299,10 @@ func (i *Idle) SetNightAfter(v schema.Delay) {
 	i.set("night.after", func(c *schema.Idle) { c.NightAfter = v })
 }
 
+func (i *Idle) SetWake(v schema.Gesture) {
+	i.set("wake", func(c *schema.Idle) { c.Wake = v })
+}
+
 func (i *Idle) SetFace(v schema.Face) {
 	i.set("face", func(c *schema.Idle) { c.Face = v })
 }

@@ -399,6 +399,8 @@ debug.seed: Visual seed
 debug.seed.random: Random
 debug.seed.value: "#{{.N}}"
 debug.title: Developer options
+debug.touches: "Fingers down: {{.N}}"
+debug.touches.gesture: "Last gesture: {{.Name}}"
 debug.visuals: Visuals
 delay.10m: 10 minutes
 delay.10s: 10 seconds
@@ -545,6 +547,7 @@ home.tile.off: "Off"
 home.tile.on: "On"
 home.tile.unavailable: Unavailable
 home.title: Home control
+home.reconnecting: Reconnecting to Home Assistant…
 home.unconnected: Not connected
 home.unconnected.hint: Add {{.Name}} to Home Assistant
 hours.12: 12 hour
@@ -571,6 +574,7 @@ idle.setting.media: Close paused player after
 idle.setting.night: Night mode
 idle.setting.night.after: Night mode after
 idle.setting.night.lux: Night mode below
+idle.setting.wake: Wake gesture
 idle.setting.position: Idle clock vertical position
 idle.setting.saver: Screen saver mode
 idle.setting.size: Idle clock size
@@ -604,6 +608,7 @@ keyboard.compact: Compact
 keyboard.large: Large
 keyboard.refresh: Refresh
 keyboard.save: Save
+keyboard.search: Search
 keyboard.size: Keyboard size
 keyboard.standard: Standard
 language.name: English
@@ -647,6 +652,16 @@ network.ssid: Wi-Fi network
 network.title: Network & internet
 network.via_home.hint: Updates fetched by Home Assistant
 night.clock: Dim to a clock
+gesture.tap: Tap
+gesture.double-tap: Double tap
+gesture.hold: Hold
+gesture.swipe-up: Swipe up
+gesture.swipe-down: Swipe down
+gesture.swipe-left: Swipe left
+gesture.swipe-right: Swipe right
+gesture.pinch-in: Pinch in
+gesture.pinch-out: Pinch out
+gesture.fingers: "{{.Move}} with {{.N}} fingers"
 night.dim: Dim
 night.none: Nothing
 night.off: Turn off the screen
@@ -1067,8 +1082,44 @@ place.vertical: Vertical position
 player.ad: Ad
 player.ad_clip: Ad {{.Clip}} of {{.Clips}}
 player.live: LIVE
+player.lyrics: Lyrics
 player.next: Up next
 player.now: Now playing
+music.app: Music
+music.now: Playing
+music.speakers: Speakers
+music.close: Close
+music.quiet: Nothing playing
+music.none: No Music Assistant speakers
+music.unavailable: Music Assistant is not reachable
+music.integration: Update the EchoLocal integration in Home Assistant
+music.find: Find a speaker
+music.starting: Starting…
+music.home: Home
+music.search: Search
+music.library: Library
+music.searching: Search Music Assistant
+music.nothing: Nothing here
+music.recent: Recently played
+music.playlists: Playlists
+music.albums: Albums
+music.artists: Artists
+music.radio: Radio
+music.play: Play
+music.next: Play next
+music.add: Add to queue
+music.similar: Similar
+music.back: Back
+music.kind.artist: Artist
+music.kind.album: Album
+music.kind.track: Track
+music.kind.playlist: Playlist
+music.kind.radio: Radio station
+music.kind.podcast: Podcast
+music.kind.audiobook: Audiobook
+music.group: Group
+music.here: Move here
+music.queue: Up next
 position.bottom: Bottom
 position.center: Center
 position.random: Random
@@ -1212,6 +1263,7 @@ screen.setting.language: Language
 screen.setting.marks: Privacy marks
 screen.setting.size: Size
 screen.setting.style: Style
+screen.setting.touches: Show touches
 screen.setting.theme: Theme
 screen.setting.timer: Timer style
 screen.setting.custom.background: Custom theme background

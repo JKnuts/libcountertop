@@ -27,9 +27,8 @@ import (
 )
 
 const (
-	step   = 500 * time.Millisecond
-	hold   = 1500 * time.Millisecond
-	linger = 3 * time.Minute
+	step = 500 * time.Millisecond
+	hold = 1500 * time.Millisecond
 
 	countyLinesMiles = 300
 )
@@ -40,7 +39,7 @@ func (*View) Covers() bool { return true }
 
 func (*View) Wakes() bool { return true }
 
-func (*View) Timeout() time.Duration { return linger }
+func (*View) Timeout() time.Duration { return shell.AppTimeout }
 
 type Options struct {
 	UI       *widgets.UI

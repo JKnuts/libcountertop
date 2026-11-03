@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 
@@ -29,9 +30,13 @@ func (*View) Covers() bool { return true }
 
 func (*View) Presents() bool { return true }
 
+func (*View) Timeout() time.Duration { return shell.AppTimeout }
+
 type folder struct{ id, title string }
 
 func (*folder) Covers() bool { return true }
+
+func (*folder) Timeout() time.Duration { return shell.AppTimeout }
 
 type Player interface {
 	Now() nowplaying.Now

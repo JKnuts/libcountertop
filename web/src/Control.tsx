@@ -101,7 +101,9 @@ export function Control() {
     <Stack gap="md" align="center" style={{ width: "100%", maxWidth: 800 }}>
       <Title order={2}>{session.name}</Title>
       <Text size="sm" c="dimmed">{session.target ? "Remote keyboard" : "Screen control"}</Text>
-      {session.target ? <Keyboard onAuthLost={expired} /> : <Desktop enabled onAuthLost={expired}><Screen /></Desktop>}
+      {session.target ? <Keyboard onAuthLost={expired} /> : <div className="ct-control-screen">
+        <Desktop enabled onAuthLost={expired}><Screen /></Desktop>
+      </div>}
       <Button size="xs" variant="subtle" onClick={() => void end()}>End access</Button>
     </Stack>
   </Center>;

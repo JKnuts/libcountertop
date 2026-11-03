@@ -48,11 +48,16 @@ func (s *session) receive(raw []byte) error {
 	return err
 }
 
+const (
+	remoteFingers = 10
+	remoteID      = -1 << 30
+)
+
 type pointer struct {
 	mu            sync.Mutex
 	deliver       func(touch.Contact)
 	width, height int
-	contact       *touch.Contact
+	down          [remoteFingers]*touch.Contact
 	last          time.Time
 }
 
@@ -64,8 +69,10 @@ func (p *pointer) receive(raw []byte) {
 		Phase string   `json:"phase"`
 		X     *float64 `json:"x"`
 		Y     *float64 `json:"y"`
+		ID    int      `json:"id"`
 	}
-	if json.Unmarshal(raw, &event) != nil || event.X == nil || event.Y == nil {
+	if json.Unmarshal(raw, &event) != nil || event.X == nil || event.Y == nil ||
+		event.ID < 0 || event.ID >= remoteFingers {
 		return
 	}
 	x, y := *event.X, *event.Y
@@ -77,15 +84,16 @@ func (p *pointer) receive(raw []byte) {
 	if p.deliver == nil {
 		return
 	}
+	held := p.down[event.ID]
 	var phase touch.Phase
 	switch event.Phase {
 	case "down":
-		if p.contact != nil {
+		if held != nil {
 			return
 		}
 		phase = touch.Down
 	case "move", "up":
-		if p.contact == nil {
+		if held == nil {
 			return
 		}
 		phase = touch.Move
@@ -95,14 +103,14 @@ func (p *pointer) receive(raw []byte) {
 	default:
 		return
 	}
-	c := touch.Contact{ID: -1 << 30, Phase: phase, At: time.Now(),
+	c := touch.Contact{ID: remoteID + event.ID, Phase: phase, At: time.Now(),
 		X: min(int(x*float64(p.width)), p.width-1),
 		Y: min(int(y*float64(p.height)), p.height-1)}
-	p.contact = &c
+	p.down[event.ID] = &c
 	p.last = c.At
 	p.deliver(c)
 	if phase == touch.Up {
-		p.contact = nil
+		p.down[event.ID] = nil
 	}
 }
 
@@ -115,11 +123,14 @@ func (p *pointer) idle(now time.Time) bool {
 func (p *pointer) release() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.contact != nil {
-		c := *p.contact
+	for i, held := range p.down {
+		if held == nil {
+			continue
+		}
+		c := *held
 		c.Phase, c.At = touch.Up, time.Now()
 		p.deliver(c)
-		p.contact = nil
+		p.down[i] = nil
 	}
 	p.deliver = nil
 }

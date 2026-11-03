@@ -171,8 +171,7 @@ type Renderer struct {
 	norm      []gui.GradientStop
 	sampled   []gui.GradientStop
 
-	down  [2]float32
-	still bool
+	still map[uint64][2]float32
 }
 
 type picture struct {
@@ -208,6 +207,7 @@ func New(sink Sink, w *gui.Window) (*Renderer, error) {
 		live:   map[string]uint32{},
 		events: make(chan gui.Event, 256),
 		wake:   make(chan struct{}, 1),
+		still:  map[uint64][2]float32{},
 	}
 	r.back = &glyphBack{r: r, textures: map[glyph.TextureID]*page{}}
 	ts, err := glyph.NewTextSystem(r.back)
@@ -256,18 +256,18 @@ func (r *Renderer) Touch(p Phase, id uint64, x, y float32) {
 	}
 	switch p {
 	case Began:
-		r.down, r.still = [2]float32{x, y}, true
+		r.still[id] = [2]float32{x, y}
 	case Moved:
-		if r.still {
-			dx, dy := x-r.down[0], y-r.down[1]
+		if down, ok := r.still[id]; ok {
+			dx, dy := x-down[0], y-down[1]
 			slop := gui.CurrentTheme().Cfg.TextStyleDef.Size
 			if dx*dx+dy*dy <= slop*slop {
 				return
 			}
-			r.still = false
+			delete(r.still, id)
 		}
 	default:
-		r.still = false
+		delete(r.still, id)
 	}
 	e := gui.Event{Type: phases[p], NumTouches: 1}
 	e.Touches[0] = gui.TouchPoint{

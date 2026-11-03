@@ -301,3 +301,47 @@ func TestRotatedCanvasTextTurnsItsGlyphs(t *testing.T) {
 		t.Errorf("text turned a quarter is %.0f wide and %.0f tall", w, h)
 	}
 }
+
+func TestEachFingerKeepsItsOwnSlop(t *testing.T) {
+	r := &Renderer{events: make(chan gui.Event, 16), still: map[uint64][2]float32{}}
+	slop := gui.CurrentTheme().Cfg.TextStyleDef.Size
+	r.Touch(Began, 1, 100, 100)
+	r.Touch(Began, 2, 400, 100)
+	r.Touch(Moved, 1, 100+slop/2, 100)
+	r.Touch(Moved, 2, 400+slop*2, 100)
+	r.Touch(Ended, 1, 100, 100)
+	r.Touch(Moved, 2, 400+slop*3, 100)
+
+	var got []struct {
+		kind gui.EventType
+		id   uint64
+	}
+	for len(r.events) > 0 {
+		e := <-r.events
+		got = append(got, struct {
+			kind gui.EventType
+			id   uint64
+		}{e.Type, e.Touches[0].Identifier})
+	}
+	want := []struct {
+		kind gui.EventType
+		id   uint64
+	}{
+		{gui.EventTouchesBegan, 1},
+		{gui.EventTouchesBegan, 2},
+		{gui.EventTouchesMoved, 2},
+		{gui.EventTouchesEnded, 1},
+		{gui.EventTouchesMoved, 2},
+	}
+	if len(got) != len(want) {
+		t.Fatalf("events %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("event %d: %v, want %v", i, got[i], want[i])
+		}
+	}
+	if len(r.still) != 0 {
+		t.Errorf("fingers still held: %v", r.still)
+	}
+}

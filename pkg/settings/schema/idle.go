@@ -18,6 +18,8 @@ type Idle struct {
 	Night      Night `json:"night"`
 	NightLux   int   `json:"night_lux"`
 	NightAfter Delay `json:"night_after"`
+
+	Wake Gesture `json:"wake,omitempty"`
 }
 
 func (c Idle) Tessera() bool { return c.Saver == SaverTessera }
@@ -108,5 +110,6 @@ func DefaultIdle() Idle {
 		PhotoEvery:  Delay30s,
 		PhotoFit:    FitKenBurns,
 		PhotoChange: TransitionFade,
+		Wake:        GestureTap,
 	}
 }

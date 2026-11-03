@@ -20,6 +20,10 @@ type Now struct {
 	Mark   []byte
 	MarkID uint64
 
+	Logo   []byte
+	LogoID uint64
+	Brand  Brand
+
 	Elapsed  time.Duration
 	Length   time.Duration
 	Earliest time.Duration
@@ -77,6 +81,13 @@ const (
 	FromBluetooth
 	FromGroup
 	FromCast
+)
+
+type Brand uint8
+
+const (
+	Unbranded Brand = iota
+	AirPlay
 )
 
 type Details interface {

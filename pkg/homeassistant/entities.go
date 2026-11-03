@@ -43,7 +43,7 @@ const entitiesTemplate = `{%- set ns = namespace(out=[]) -%}
 {%- set ns.out = ns.out + [{'id': s.entity_id, 'name': s.name, 'state': s.state, 'area_id': area_id(s.entity_id) or '', 'area': area_name(s.entity_id) or '', 'labels': labels(s.entity_id), 'attributes': at.d}] -%}
 {%- endif -%}
 {%- endfor -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 func (f Filter) Template() string {
 	source := "states"
@@ -104,7 +104,7 @@ const LabelsTemplate = `{%- set ns = namespace(out=[]) -%}
 {%- for l in labels() -%}
 {%- set ns.out = ns.out + [{'id': l, 'name': label_name(l) or l}] -%}
 {%- endfor -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 func ParseLabels(raw json.RawMessage) ([]Label, error) {
 	out := []Label{}

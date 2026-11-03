@@ -87,6 +87,7 @@ type playing struct {
 	artURL  string
 	mark    picture
 	markURL string
+	logo    picture
 	thumbs  map[string]picture
 
 	seen     chan struct{}
@@ -153,14 +154,22 @@ func (o *Output) Play(src playback.Source) {
 
 	if pictured {
 		screen.Hold(p.card)
-		if b, ok := src.(playback.Branded); ok && b.Logo() != "" {
-			url := b.Logo()
-			safe.Go("playout logo", func() {
-				if pic := o.logoFor(url); pic.raw != nil {
-					screen.Logo(pic.raw, pic.id)
-				}
-			})
-		}
+	}
+	if b, ok := src.(playback.Branded); ok && b.Logo() != "" {
+		url := b.Logo()
+		safe.Go("playout logo", func() {
+			pic := o.logoFor(url)
+			if pic.raw == nil {
+				return
+			}
+			o.mu.Lock()
+			p.logo = pic
+			o.mu.Unlock()
+			if pictured {
+				screen.Logo(pic.raw, pic.id)
+			}
+			o.options.Media().Changed()
+		})
 	}
 	o.worker(p, "playout sound", func() { o.pump(ctx, p) })
 	if pictured {
@@ -729,8 +738,15 @@ func (c *card) Now() nowplaying.Now {
 	}
 
 	c.o.mu.Lock()
-	art, mark := c.p.art, c.p.mark
+	art, mark, logo := c.p.art, c.p.mark, c.p.logo
+	if logo.raw == nil && c.o.sess != nil {
+		logo = c.o.sessArt
+	}
 	c.o.mu.Unlock()
+	var brand nowplaying.Brand
+	if b, ok := c.p.src.(playback.Badged); ok {
+		brand = b.Brand()
+	}
 
 	can := nowplaying.CanStop
 	if !s.NoPause {
@@ -781,6 +797,9 @@ func (c *card) Now() nowplaying.Now {
 		ArtID:    art.id,
 		Mark:     mark.raw,
 		MarkID:   mark.id,
+		Logo:     logo.raw,
+		LogoID:   logo.id,
+		Brand:    brand,
 		Elapsed:  elapsed,
 		Length:   s.Length,
 		Earliest: s.Earliest,
@@ -849,11 +868,13 @@ func (b *standby) Now() nowplaying.Now {
 	b.o.mu.Lock()
 	defer b.o.mu.Unlock()
 	return nowplaying.Now{
-		Hold:  b.o.sess != nil,
-		Can:   nowplaying.CanStop,
-		Title: b.o.note,
-		Art:   b.o.sessArt.raw,
-		ArtID: b.o.sessArt.id,
+		Hold:   b.o.sess != nil,
+		Can:    nowplaying.CanStop,
+		Title:  b.o.note,
+		Art:    b.o.sessArt.raw,
+		ArtID:  b.o.sessArt.id,
+		Logo:   b.o.sessArt.raw,
+		LogoID: b.o.sessArt.id,
 	}
 }
 

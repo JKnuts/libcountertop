@@ -316,7 +316,7 @@ const limitsTemplate = `{%- set ns = namespace(out={}) -%}
 {%- set ns.out = dict(ns.out, **{e: {'modes': s.attributes.get('hvac_modes') or [], 'fans': s.attributes.get('fan_modes') or [], 'presets': s.attributes.get('preset_modes') or [], 'min': s.attributes.get('min_temp'), 'max': s.attributes.get('max_temp'), 'step': s.attributes.get('target_temp_step'), 'features': s.attributes.get('supported_features') or 0}}) -%}
 {%- endif -%}
 {%- endfor -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 type limits struct {
 	Modes    []string `json:"modes"`

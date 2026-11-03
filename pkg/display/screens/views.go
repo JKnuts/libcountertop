@@ -47,7 +47,7 @@ func (a *App) screenFor(v shell.View) *Screen {
 	}
 	switch v {
 	case a.o.PlayerPage():
-		return &Screen{Title: say.T("player.now"), View: v, Fixed: true, Build: a.player.Body}
+		return &Screen{View: v, Fixed: true, Build: a.player.Body}
 	case a.o.Volume.Card():
 		return &Screen{View: v, Build: a.volumeCard}
 	}
@@ -165,7 +165,7 @@ func (a *App) keyboard(w *gogui.Window) gogui.View {
 		Palette: a.ui.Palette(),
 		Kit:     a.ui.Kit(),
 		Cancel:  say.T("keyboard.cancel"),
-		Save:    say.T("keyboard.save"),
+		Save:    a.ui.Editor.Action(say.T("keyboard.save")),
 		Type:    r.Type,
 		Press:   r.Press,
 		Pair:    a.o.KeyboardPair,

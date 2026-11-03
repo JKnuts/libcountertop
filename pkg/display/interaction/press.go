@@ -8,11 +8,13 @@ import (
 )
 
 const (
-	tapDelay   = 100 * time.Millisecond
+	tapDelay   = 150 * time.Millisecond
 	pressFlash = 64 * time.Millisecond
+	tapShow    = 150 * time.Millisecond
 	rippleGrow = 300 * time.Millisecond
 	rippleFade = 250 * time.Millisecond
 	rippleTick = 16 * time.Millisecond
+	inkAlpha   = 80
 )
 
 type Presses struct {
@@ -28,6 +30,8 @@ func New() *Presses { return &Presses{} }
 type ripple struct {
 	id         string
 	x, y, w, h float32
+	radius     float32
+	ink        gogui.Color
 	lit, up    time.Time
 	gen        int
 }
@@ -82,27 +86,40 @@ func (p *Presses) Release(e gogui.EventCtx) {
 }
 
 func overlay(r ripple, now time.Time) gogui.View {
-	t := gogui.CurrentTheme().Cfg
 	reach := float32(math.Hypot(float64(max(r.x, r.w-r.x)), float64(max(r.y, r.h-r.y))))
 	grown := min(float32(now.Sub(r.lit))/float32(rippleGrow), 1)
 	grown = 1 - (1-grown)*(1-grown)
 	alpha := float32(1)
-	if !r.up.IsZero() {
+	if !r.up.IsZero() && now.After(r.up) {
 		alpha = max(1-float32(now.Sub(r.up))/float32(rippleFade), 0)
 	}
-	ink := t.TextStyleDef.Color
-	ink.A = uint8(48 * min(alpha, 1))
+	ink := r.ink
+	ink.A = uint8(inkAlpha * min(alpha, 1))
 	return gogui.DrawCanvas(gogui.DrawCanvasCfg{
-		Width: r.w, Height: r.h, Clip: true, Radius: t.RadiusMedium,
+		Width: r.w, Height: r.h, Clip: true, Radius: r.radius,
 		Version: uint64(now.UnixNano()),
 		OnDraw: func(dc *gogui.DrawContext) {
 			if grown >= 1 {
-				dc.FilledRoundedRect(0, 0, r.w, r.h, t.RadiusMedium, ink)
+				dc.FilledRoundedRect(0, 0, r.w, r.h, r.radius, ink)
 				return
 			}
 			dc.FilledPolygon(Disc(r.x, r.y, reach*grown), ink)
 		},
 	})
+}
+
+func inkFor(cfg gogui.ContainerCfg) gogui.Color {
+	if cfg.Color.A > 0 {
+		return Contrast(cfg.Color)
+	}
+	return gogui.CurrentTheme().Cfg.TextStyleDef.Color
+}
+
+func Contrast(c gogui.Color) gogui.Color {
+	if 0.299*float32(c.R)+0.587*float32(c.G)+0.114*float32(c.B) > 140 {
+		return gogui.RGB(0, 0, 0)
+	}
+	return gogui.RGB(0xff, 0xff, 0xff)
 }
 
 func Disc(cx, cy, radius float32) []float32 {
@@ -120,7 +137,17 @@ func (p *Presses) Pressable(
 	cfg gogui.ContainerCfg,
 	do func(gogui.EventCtx),
 ) gogui.View {
+	return p.Inked(layout, cfg, inkFor(cfg), do)
+}
+
+func (p *Presses) Inked(
+	layout func(gogui.ContainerCfg) gogui.View,
+	cfg gogui.ContainerCfg,
+	ink gogui.Color,
+	do func(gogui.EventCtx),
+) gogui.View {
 	id := cfg.ID
+	radius := cfg.Radius.Or(gogui.CurrentTheme().Cfg.RadiusMedium)
 	if do == nil || cfg.Disabled {
 		return layout(cfg)
 	}
@@ -136,12 +163,14 @@ func (p *Presses) Pressable(
 		gen := p.waveGen
 		s := e.Layout.Shape
 		p.wave = ripple{
-			id:  id,
-			x:   e.Event.MouseX - s.X,
-			y:   e.Event.MouseY - s.Y,
-			w:   s.Width,
-			h:   s.Height,
-			gen: gen,
+			id:     id,
+			x:      e.Event.MouseX - s.X,
+			y:      e.Event.MouseY - s.Y,
+			w:      s.Width,
+			h:      s.Height,
+			radius: radius,
+			ink:    ink,
+			gen:    gen,
 		}
 		p.pending = do
 		w := e.Window
@@ -195,8 +224,9 @@ func (p *Presses) Lift(w *gogui.Window) {
 		w.InvalidateLayout()
 		return
 	}
-	p.wave.lit = time.Now()
-	p.wave.up = p.wave.lit.Add(pressFlash)
+	now := time.Now()
+	p.wave.lit = now.Add(-rippleGrow)
+	p.wave.up = now.Add(tapShow)
 	p.animate(w)
 	gen := p.wave.gen
 	time.AfterFunc(pressFlash, func() {

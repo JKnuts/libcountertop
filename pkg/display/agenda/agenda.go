@@ -23,6 +23,8 @@ type View struct{}
 
 func (*View) Covers() bool { return true }
 
+func (*View) Timeout() time.Duration { return shell.AppTimeout }
+
 type Options struct {
 	UI         *widgets.UI
 	Shell      *shell.Shell

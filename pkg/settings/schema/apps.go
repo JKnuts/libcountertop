@@ -14,6 +14,7 @@ const (
 	AppShopping   = "shopping"
 	AppCalendar   = "calendar"
 	AppRadio      = "radio"
+	AppMusic      = "music"
 	AppRadar      = "radar"
 	AppAlarms     = "alarms"
 	AppCameras    = "cameras"

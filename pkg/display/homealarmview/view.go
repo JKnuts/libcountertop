@@ -23,11 +23,10 @@ import (
 )
 
 const (
-	sendWait  = 15 * time.Second
-	lingerFor = 3 * time.Minute
-	logMost   = 8
-	codeMost  = 12
-	frame     = 50 * time.Millisecond
+	sendWait = 15 * time.Second
+	logMost  = 8
+	codeMost = 12
+	frame    = 50 * time.Millisecond
 )
 
 type Options struct {
@@ -52,7 +51,7 @@ type App struct{}
 
 func (*App) Covers() bool { return true }
 
-func (*App) Timeout() time.Duration { return lingerFor }
+func (*App) Timeout() time.Duration { return shell.AppTimeout }
 
 type Popup struct{}
 
@@ -60,7 +59,7 @@ func (*Popup) Covers() bool { return true }
 
 func (*Popup) Wakes() bool { return true }
 
-func (*Popup) Timeout() time.Duration { return lingerFor }
+func (*Popup) Timeout() time.Duration { return shell.AppTimeout }
 
 type entry struct {
 	at     time.Time

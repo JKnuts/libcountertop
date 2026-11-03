@@ -12,6 +12,7 @@ import (
 const (
 	DockTimeout     = 15 * time.Second
 	SettingsTimeout = 45 * time.Second
+	AppTimeout      = 3 * time.Minute
 
 	settling = 400 * time.Millisecond
 )

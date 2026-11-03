@@ -27,7 +27,7 @@ const namesTemplate = `{%- set ns = namespace(out=[]) -%}
 {%- for e in (label_entities(LABEL) if LABEL else []) -%}
 {%- set ns.out = ns.out + [state_attr(e, 'friendly_name') or e] -%}
 {%- endfor -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 func HomeNames(ctx context.Context, h Home, label string) ([]string, error) {
 	quoted, err := json.Marshal(label)

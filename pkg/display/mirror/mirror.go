@@ -2,6 +2,7 @@ package mirror
 
 import (
 	"regexp"
+	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 
@@ -18,6 +19,8 @@ import (
 type View struct{ feed shell.Feed }
 
 func (*View) Covers() bool { return true }
+
+func (*View) Timeout() time.Duration { return shell.AppTimeout }
 
 type Camera interface {
 	Watch(v shell.View)

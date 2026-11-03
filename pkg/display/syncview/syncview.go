@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"slices"
 	"sync"
+	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 
@@ -26,9 +27,13 @@ type Directory struct{}
 
 func (*Directory) Covers() bool { return true }
 
+func (*Directory) Timeout() time.Duration { return shell.AppTimeout }
+
 type Pairing struct{}
 
 func (*Pairing) Covers() bool { return true }
+
+func (*Pairing) Timeout() time.Duration { return shell.AppTimeout }
 
 func (*Pairing) Wakes() bool { return true }
 

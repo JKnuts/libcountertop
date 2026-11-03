@@ -64,6 +64,8 @@ type Screen struct {
 	device string
 	panel  Panel
 
+	feed sync.Mutex
+
 	mu   sync.Mutex
 	f    *os.File
 	err  error
@@ -170,6 +172,9 @@ func (s *Screen) Run(ctx context.Context) error {
 }
 
 func (s *Screen) Feed(c Contact) {
+	s.feed.Lock()
+	defer s.feed.Unlock()
+
 	s.mu.Lock()
 	s.last = time.Now()
 	s.mu.Unlock()

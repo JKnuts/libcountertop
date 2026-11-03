@@ -116,6 +116,7 @@ type layer struct {
 	broken  func()
 
 	mu      sync.Mutex
+	zoom    display.Zoom
 	open    bool
 	shown   bool
 	hidden  bool
@@ -242,7 +243,7 @@ func (l *layer) place(c *surface.Client) {
 	o := l.display.Orientation()
 	fw, fh := l.display.Native()
 	vw, vh := o.Size(fw, fh)
-	at := fit(l.box(vw, vh), l.size.Width, l.size.Height)
+	at := l.zoom.Apply(fit(l.box(vw, vh), l.size.Width, l.size.Height))
 	x, y, m, _ := o.Place(fw, fh, at, l.size.Width, l.size.Height)
 	if err := c.VideoPlace(l.id, x, y, m, l.z, !l.hidden); err != nil {
 		slog.Debug("call video place", "layer", l.id, "err", err)

@@ -28,7 +28,7 @@ const browseShape = `{%- set r = response.values() | first -%}` +
 	`{%- for c in (r.children or [])[:300] -%}` +
 	`{%- set ns.i = ns.i + [[c.title, c.media_content_id, c.can_play, c.can_expand, c.thumbnail or '']] -%}` +
 	`{%- endfor -%}` +
-	`{{ {'t': r.title, 'n': (r.children or []) | length, 'i': ns.i} | tojson }}`
+	`{{ {'t': r.title, 'n': (r.children or []) | length, 'i': ns.i} | to_json }}`
 
 type Item struct {
 	Title      string

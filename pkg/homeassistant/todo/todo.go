@@ -21,7 +21,7 @@ import (
 const (
 	fetchWait   = 10 * time.Second
 	itemsAction = "todo.get_items"
-	itemsShape  = "{{ response | tojson }}"
+	itemsShape  = "{{ response | to_json }}"
 	preferred   = "todo.shopping_list"
 	statusDone  = "completed"
 	statusOpen  = "needs_action"

@@ -135,9 +135,7 @@ func (p *Player) Now() nowplaying.Now {
 	playing, paused := p.Playing()
 
 	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	return nowplaying.Now{
+	now := nowplaying.Now{
 		Playing: playing,
 		Paused:  paused,
 		Title:   p.playing.Title,
@@ -149,6 +147,12 @@ func (p *Player) Now() nowplaying.Now {
 		Length:  p.length,
 		Can:     nowplaying.CanPause | nowplaying.CanNext | nowplaying.CanPrevious,
 	}
+	p.mu.Unlock()
+
+	if p.options.Queue != nil {
+		now.Queue = p.options.Queue.Ahead(now)
+	}
+	return now
 }
 
 func (p *Player) reached(playing bool) time.Duration {
@@ -355,6 +359,9 @@ type Media interface {
 type Clock interface {
 	WatchSteps(func(time.Duration)) func()
 }
+type Queue interface {
+	Ahead(nowplaying.Now) []nowplaying.Track
+}
 type Device interface {
 	Name() string
 	Identity() core.Identity
@@ -368,6 +375,7 @@ type Dependencies struct {
 	Clock       Clock
 	OpenPort    func()
 	Media       Media
+	Queue       Queue
 }
 
 func (p *Player) listener() *core.Listener {

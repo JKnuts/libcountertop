@@ -28,7 +28,6 @@ const (
 	sendAfter = 700 * time.Millisecond
 	sendWait  = 15 * time.Second
 	keepFor   = 10 * time.Second
-	lingerFor = 3 * time.Minute
 	frame     = 33 * time.Millisecond
 )
 
@@ -45,7 +44,7 @@ type App struct{}
 
 func (*App) Covers() bool { return true }
 
-func (*App) Timeout() time.Duration { return lingerFor }
+func (*App) Timeout() time.Duration { return shell.AppTimeout }
 
 type End int
 

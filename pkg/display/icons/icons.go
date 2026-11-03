@@ -15,6 +15,12 @@ var MDI []byte
 //go:embed homeassistant.svg
 var HomeAssistant string
 
+//go:embed airplay.svg
+var AirPlay string
+
+//go:embed musicassistant.svg
+var MusicAssistant string
+
 const Family = "Material Design Icons"
 
 const (

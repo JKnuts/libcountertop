@@ -40,7 +40,7 @@ func (p Pipelines) Read(
 	slot int,
 ) (chosen string, options []string, err error) {
 	raw, err := p.Controller.Template(ctx, findSelect(p.MAC(), "_assistant", slot)+
-		`{{ {'state': states(ns.e), 'options': state_attr(ns.e, 'options') or []} | tojson }}`)
+		`{{ {'state': states(ns.e), 'options': state_attr(ns.e, 'options') or []} | to_json }}`)
 	if err != nil {
 		return "", nil, err
 	}

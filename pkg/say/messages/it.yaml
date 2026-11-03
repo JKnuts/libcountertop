@@ -400,6 +400,8 @@ debug.seed: Seed grafica
 debug.seed.random: Casuale
 debug.seed.value: "#{{.N}}"
 debug.title: Opzioni sviluppatore
+debug.touches: "Dita sullo schermo: {{.N}}"
+debug.touches.gesture: "Ultimo gesto: {{.Name}}"
 debug.visuals: Grafica
 delay.10m: 10 minuti
 delay.10s: 10 secondi
@@ -546,6 +548,7 @@ home.tile.off: "Off"
 home.tile.on: "On"
 home.tile.unavailable: Non disponibile
 home.title: Controllo casa
+home.reconnecting: Riconnessione a Home Assistant…
 home.unconnected: Non connesso
 home.unconnected.hint: Aggiungi {{.Name}} a Home Assistant
 hours.12: 12 ore
@@ -572,6 +575,7 @@ idle.setting.media: Chiudi player in pausa dopo
 idle.setting.night: Modalità notte
 idle.setting.night.after: Modalità notte dopo
 idle.setting.night.lux: Modalità notte sotto
+idle.setting.wake: Gesto di riattivazione
 idle.setting.position: Posizione verticale orologio inattivo
 idle.setting.saver: Modalità salvaschermo
 idle.setting.size: Dimensione orologio inattivo
@@ -605,6 +609,7 @@ keyboard.compact: Compatta
 keyboard.large: Grande
 keyboard.refresh: Aggiorna
 keyboard.save: Salva
+keyboard.search: Cerca
 keyboard.size: Dimensione tastiera
 keyboard.standard: Standard
 look.default: Predefinito
@@ -647,6 +652,16 @@ network.ssid: Rete Wi-Fi
 network.title: Rete e Internet
 network.via_home.hint: Aggiornamenti scaricati da Home Assistant
 night.clock: Attenua a orologio
+gesture.tap: Tocco
+gesture.double-tap: Doppio tocco
+gesture.hold: Pressione prolungata
+gesture.swipe-up: Scorri in alto
+gesture.swipe-down: Scorri in basso
+gesture.swipe-left: Scorri a sinistra
+gesture.swipe-right: Scorri a destra
+gesture.pinch-in: Pizzica per ridurre
+gesture.pinch-out: Pizzica per ingrandire
+gesture.fingers: "{{.Move}} con {{.N}} dita"
 night.dim: Attenua
 night.none: Niente
 night.off: Spegni lo schermo
@@ -1067,8 +1082,44 @@ place.vertical: Posizione verticale
 player.ad: Annuncio
 player.ad_clip: Annuncio {{.Clip}} di {{.Clips}}
 player.live: LIVE
+player.lyrics: Testo
 player.next: A seguire
 player.now: In riproduzione
+music.app: Musica
+music.now: In riproduzione
+music.speakers: Altoparlanti
+music.close: Chiudi
+music.quiet: Niente in riproduzione
+music.none: Nessun altoparlante di Music Assistant
+music.unavailable: Music Assistant non è raggiungibile
+music.integration: Aggiorna l'integrazione EchoLocal in Home Assistant
+music.find: Cerca un altoparlante
+music.starting: Avvio…
+music.home: Home
+music.search: Cerca
+music.library: Libreria
+music.searching: Cerca in Music Assistant
+music.nothing: Niente qui
+music.recent: Ascoltati di recente
+music.playlists: Playlist
+music.albums: Album
+music.artists: Artisti
+music.radio: Radio
+music.play: Riproduci
+music.next: Riproduci dopo
+music.add: Aggiungi alla coda
+music.similar: Simili
+music.back: Indietro
+music.kind.artist: Artista
+music.kind.album: Album
+music.kind.track: Brano
+music.kind.playlist: Playlist
+music.kind.radio: Stazione radio
+music.kind.podcast: Podcast
+music.kind.audiobook: Audiolibro
+music.group: Gruppo
+music.here: Sposta qui
+music.queue: A seguire
 position.bottom: In basso
 position.center: Centro
 position.random: Casuale
@@ -1212,6 +1263,7 @@ screen.setting.language: Lingua
 screen.setting.marks: Indicatori privacy
 screen.setting.size: Dimensione
 screen.setting.style: Stile
+screen.setting.touches: Mostra tocchi
 screen.setting.theme: Tema
 screen.setting.timer: Stile timer
 screen.setting.custom.background: Sfondo tema personalizzato

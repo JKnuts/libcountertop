@@ -1,6 +1,8 @@
 package callview
 
 import (
+	"time"
+
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/libcountertop/pkg/audio/volume"
@@ -35,9 +37,13 @@ type Profile struct{ ID string }
 
 func (*Profile) Covers() bool { return true }
 
+func (*Profile) Timeout() time.Duration { return shell.AppTimeout }
+
 type Directory struct{}
 
 func (*Directory) Covers() bool { return true }
+
+func (*Directory) Timeout() time.Duration { return shell.AppTimeout }
 
 type Stage struct {
 	shell *shell.Shell

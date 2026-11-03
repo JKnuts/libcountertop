@@ -54,6 +54,11 @@ func NewTable() *Table {
 			schema.NightDelays(),
 			func(c *schema.Idle) *schema.Delay { return &c.NightAfter },
 		),
+		setting.Pick(
+			Setting{Name: "wake", Group: Group, ID: "wake_gesture", Icon: "mdi:gesture-tap-button"},
+			schema.Gestures(),
+			func(c *schema.Idle) *schema.Gesture { return &c.Wake },
+		),
 	}
 	rows = append(rows, setting.Pick(
 		Setting{Name: "photo_every", Group: Group, Icon: "mdi:image-sync"},

@@ -41,6 +41,8 @@ type View struct{ apps *Apps }
 
 func (*View) Covers() bool { return true }
 
+func (*View) Timeout() time.Duration { return shell.AppTimeout }
+
 type Apps struct {
 	options Options
 	knobs   *setting.Controls[schema.Apps]

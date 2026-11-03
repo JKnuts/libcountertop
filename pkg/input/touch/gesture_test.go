@@ -145,20 +145,124 @@ func TestJourneysAreTrackedByID(t *testing.T) {
 	}
 }
 
-func TestTwoFingersAreIndependent(t *testing.T) {
-	r := NewRecognizer(screenW, screenH)
-
-	r.Feed(down(1, 100, 300))
-	r.Feed(down(2, 1800, 900))
-
-	a, ok := r.Feed(up(1, 800, 310))
-	if !ok || a.Kind != Swipe || a.Toward != Right {
-		t.Errorf("the first finger came out as %+v", a)
+func together(r *Recognizer, from, to [][2]int, held time.Duration) (Gesture, bool) {
+	start := time.Now()
+	for i, p := range from {
+		r.Feed(Contact{ID: i + 1, X: p[0], Y: p[1], Phase: Down, At: start})
 	}
+	var g Gesture
+	var ok bool
+	for i, p := range to {
+		g, ok = r.Feed(Contact{ID: i + 1, X: p[0], Y: p[1], Phase: Up, At: start.Add(held)})
+	}
+	return g, ok
+}
 
-	b, ok := r.Feed(up(2, 1805, 905))
-	if !ok || b.Kind != Tap {
-		t.Errorf("the second finger came out as %+v", b)
+func TestFingersDownTogetherMakeOneGesture(t *testing.T) {
+	r := NewRecognizer(screenW, screenH)
+	r.Feed(down(1, 800, 600))
+	r.Feed(down(2, 1000, 600))
+	if _, ok := r.Feed(up(1, 800, 600)); ok {
+		t.Fatal("a gesture was reported while a finger was still down")
+	}
+	g, ok := r.Feed(up(2, 1000, 600))
+	if !ok || g.Kind != Tap || g.Fingers != 2 {
+		t.Errorf("came out as %+v, want a two-finger tap", g)
+	}
+}
+
+func TestMultiFingerGestures(t *testing.T) {
+	cases := []struct {
+		name    string
+		from    [][2]int
+		to      [][2]int
+		held    time.Duration
+		kind    Kind
+		toward  Edge
+		fingers int
+	}{
+		{
+			"three-finger tap",
+			[][2]int{{700, 600}, {900, 600}, {1100, 600}},
+			[][2]int{{702, 603}, {901, 598}, {1104, 601}},
+			100 * time.Millisecond, Tap, NoEdge, 3,
+		},
+		{
+			"five-finger tap",
+			[][2]int{{500, 600}, {700, 500}, {900, 480}, {1100, 500}, {1300, 650}},
+			[][2]int{{500, 600}, {700, 500}, {900, 480}, {1100, 500}, {1300, 650}},
+			100 * time.Millisecond, Tap, NoEdge, 5,
+		},
+		{
+			"two-finger hold",
+			[][2]int{{800, 600}, {1000, 600}},
+			[][2]int{{801, 600}, {1000, 602}},
+			time.Second, Hold, NoEdge, 2,
+		},
+		{
+			"two-finger swipe down",
+			[][2]int{{800, 300}, {1000, 300}},
+			[][2]int{{800, 800}, {1000, 800}},
+			200 * time.Millisecond, Swipe, Bottom, 2,
+		},
+		{
+			"four-finger swipe left",
+			[][2]int{{1400, 400}, {1400, 550}, {1400, 700}, {1400, 850}},
+			[][2]int{{600, 400}, {600, 550}, {600, 700}, {600, 850}},
+			200 * time.Millisecond, Swipe, Left, 4,
+		},
+		{
+			"pinch out",
+			[][2]int{{900, 600}, {1000, 600}},
+			[][2]int{{600, 600}, {1300, 600}},
+			300 * time.Millisecond, PinchOut, NoEdge, 2,
+		},
+		{
+			"pinch in",
+			[][2]int{{500, 600}, {1400, 600}},
+			[][2]int{{900, 600}, {1000, 600}},
+			300 * time.Millisecond, PinchIn, NoEdge, 2,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			g, ok := together(NewRecognizer(screenW, screenH), c.from, c.to, c.held)
+			if !ok || g.Kind != c.kind || g.Toward != c.toward || g.Fingers != c.fingers {
+				t.Errorf("came out as %+v, want %v toward %v with %d fingers",
+					g, c.kind, c.toward, c.fingers)
+			}
+			if g.From != NoEdge {
+				t.Errorf("a multi-finger gesture started at the %v edge", g.From)
+			}
+		})
+	}
+}
+
+func TestTwoTapsInARowMakeADoubleTap(t *testing.T) {
+	r := NewRecognizer(screenW, screenH)
+	pair := [][2]int{{800, 600}, {1000, 600}}
+	if g, _ := together(r, pair, pair, 50*time.Millisecond); g.Kind != Tap {
+		t.Fatalf("the first tap came out as %v", g.Kind)
+	}
+	if g, _ := together(r, pair, pair, 50*time.Millisecond); g.Kind != DoubleTap || g.Fingers != 2 {
+		t.Errorf("the second tap came out as %+v, want a two-finger double tap", g)
+	}
+	if g, _ := together(r, pair, pair, 50*time.Millisecond); g.Kind != Tap {
+		t.Errorf("a third tap came out as %v, want a fresh tap", g.Kind)
+	}
+}
+
+func TestTapsWithDifferentFingersAreNotADoubleTap(t *testing.T) {
+	r := NewRecognizer(screenW, screenH)
+	together(r, [][2]int{{800, 600}}, [][2]int{{800, 600}}, 50*time.Millisecond)
+	g, _ := together(
+		r,
+		[][2]int{{800, 600}, {1000, 600}},
+		[][2]int{{800, 600}, {1000, 600}},
+		50*time.Millisecond,
+	)
+	if g.Kind != Tap {
+		t.Errorf("came out as %v, want a tap", g.Kind)
 	}
 }
 

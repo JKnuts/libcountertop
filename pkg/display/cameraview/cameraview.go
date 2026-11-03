@@ -20,6 +20,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/apps"
 	"github.com/ygelfand/libcountertop/pkg/display/callvideo"
 	"github.com/ygelfand/libcountertop/pkg/display/dashboard"
+	"github.com/ygelfand/libcountertop/pkg/display/geometry"
 	"github.com/ygelfand/libcountertop/pkg/display/icons"
 	"github.com/ygelfand/libcountertop/pkg/display/interaction"
 	"github.com/ygelfand/libcountertop/pkg/display/menu"
@@ -43,7 +44,7 @@ const (
 	fetchWait   = 10 * time.Second
 	failedRetry = time.Minute
 	liveRetry   = time.Second
-	linger      = 3 * time.Minute
+	zoomSettle  = 500 * time.Millisecond
 	fetchAtMost = 8
 	gapShare    = 0.05
 	TabKind     = "cameras"
@@ -74,13 +75,13 @@ type Grid struct{}
 
 func (*Grid) Covers() bool { return true }
 
-func (*Grid) Timeout() time.Duration { return linger }
+func (*Grid) Timeout() time.Duration { return shell.AppTimeout }
 
 type Live struct{}
 
 func (*Live) Covers() bool { return true }
 
-func (*Live) Timeout() time.Duration { return linger }
+func (*Live) Timeout() time.Duration { return shell.AppTimeout }
 
 type frame struct {
 	key string
@@ -115,6 +116,10 @@ type Cameras struct {
 	liveBegan time.Time
 	spinning  atomic.Bool
 	liveShot  frame
+	liveFit   geometry.Rect
+	zoom      geometry.Zoom
+	pinchFrom float64
+	zoomed    time.Time
 	video     *callvideo.Stream
 	refused   map[string]struct{}
 	audible   bool
@@ -594,7 +599,7 @@ func (c *Cameras) watch(id string) {
 	if c.liveShot.key != "" {
 		gogui.DropImage(c.liveShot.key)
 	}
-	c.liveShot = frame{}
+	c.liveShot, c.zoom = frame{}, geometry.Zoom{}
 	c.mu.Unlock()
 	c.o.Shell.Push(c.live)
 	safe.Go("camera live", func() { c.runLive(ctx, id) })
@@ -744,22 +749,37 @@ func (c *Cameras) buildLive(w *gogui.Window) gogui.View {
 	vw, vh := w.WindowSize()
 	c.mu.Lock()
 	f, id, began, video, audible, why := c.liveShot, c.watching, c.liveBegan, c.video, c.audible, c.why
-	thumb := c.frames[id]
+	thumb, zoom := c.frames[id], c.zoom
 	c.mu.Unlock()
+	if video != nil {
+		video.Zoom(zoom)
+	}
 	var content []gogui.View
 	back := gogui.RGB(0, 0, 0)
+	picture := func(p frame) {
+		sw, sh := enlarge(p.w, p.h, vw, vh)
+		fitted := geometry.Rect{
+			X: (vw - int(sw)) / 2,
+			Y: (vh - int(sh)) / 2,
+			W: int(sw),
+			H: int(sh),
+		}
+		c.mu.Lock()
+		c.liveFit = fitted
+		c.mu.Unlock()
+		at := zoom.Apply(fitted)
+		content = append(content, widgets.Placed(
+			ui.Rect{X: at.X, Y: at.Y, W: at.W, H: at.H},
+			gogui.Image(gogui.ImageCfg{Src: p.src, Width: float32(at.W), Height: float32(at.H)}),
+		))
+	}
 	switch {
 	case video != nil:
 		back = gogui.ColorTransparent
 	case f.src != "":
-		sw, sh := enlarge(f.w, f.h, vw, vh)
-		content = append(content, gogui.Image(gogui.ImageCfg{Src: f.src, Width: sw, Height: sh}))
+		picture(f)
 	case thumb.src != "":
-		sw, sh := enlarge(thumb.w, thumb.h, vw, vh)
-		content = append(
-			content,
-			gogui.Image(gogui.ImageCfg{Src: thumb.src, Width: sw, Height: sh}),
-		)
+		picture(thumb)
 	default:
 		if cam, ok := c.camera(id); ok {
 			content = append(content, gogui.Label(cam.Name, widgets.Secondary()))
@@ -788,18 +808,86 @@ func (c *Cameras) buildLive(w *gogui.Window) gogui.View {
 		content = append(content, c.sounder(vw, vh, audible))
 	}
 	return gogui.Column(gogui.ContainerCfg{
-		ID:      "camera-live",
-		Sizing:  gogui.FillFill,
-		Padding: gogui.NoPadding,
-		HAlign:  gogui.HAlignCenter,
-		VAlign:  gogui.VAlignMiddle,
-		Color:   back,
-		Content: content,
-		OnClick: func(e gogui.EventCtx) {
-			c.closeLive()
-			e.Consume()
-		},
+		ID:        "camera-live",
+		Sizing:    gogui.FillFill,
+		Padding:   gogui.NoPadding,
+		HAlign:    gogui.HAlignCenter,
+		VAlign:    gogui.VAlignMiddle,
+		Clip:      true,
+		Color:     back,
+		Content:   content,
+		OnGesture: c.zoomLive,
 	})
+}
+
+func (c *Cameras) tapLive(e gogui.EventCtx) {
+	e.Consume()
+	c.mu.Lock()
+	z, recent := c.zoom, time.Since(c.zoomed) < zoomSettle
+	if z.Zoomed() && !recent {
+		c.zoom = geometry.Zoom{}
+	}
+	c.mu.Unlock()
+	switch {
+	case recent:
+	case z.Zoomed():
+		e.Window.InvalidateLayout()
+	default:
+		c.closeLive()
+	}
+}
+
+func (c *Cameras) zoomLive(e gogui.EventCtx) {
+	ev := e.Event
+	if ev.GestureType == gogui.GestureTap {
+		c.tapLive(e)
+		return
+	}
+	vw, vh := e.Window.WindowSize()
+	view := geometry.Rect{W: vw, H: vh}
+	c.mu.Lock()
+	video, fitted, z := c.video, c.liveFit, c.zoom
+	c.mu.Unlock()
+	if video != nil {
+		r, ok := video.Fitted(vw, vh)
+		if !ok {
+			return
+		}
+		fitted = r
+	}
+	if fitted.W == 0 || fitted.H == 0 {
+		return
+	}
+	switch ev.GestureType {
+	case gogui.GesturePinch:
+		if ev.GesturePhase == gogui.GesturePhaseBegan {
+			c.mu.Lock()
+			c.pinchFrom = max(z.Scale, 1)
+			c.mu.Unlock()
+		}
+		c.mu.Lock()
+		from := c.pinchFrom
+		c.mu.Unlock()
+		z = z.Pinch(
+			fitted,
+			view,
+			from*float64(ev.PinchScale),
+			float64(ev.CentroidX),
+			float64(ev.CentroidY),
+		)
+	case gogui.GesturePan:
+		if !z.Zoomed() {
+			return
+		}
+		z = z.Pan(fitted, view, float64(ev.GestureDX), float64(ev.GestureDY))
+	default:
+		return
+	}
+	c.mu.Lock()
+	c.zoom, c.zoomed = z, time.Now()
+	c.mu.Unlock()
+	e.Consume()
+	e.Window.InvalidateLayout()
 }
 
 func (c *Cameras) closeLive() {
@@ -808,7 +896,7 @@ func (c *Cameras) closeLive() {
 	if c.liveShot.key != "" {
 		gogui.DropImage(c.liveShot.key)
 	}
-	c.liveShot = frame{}
+	c.liveShot, c.zoom = frame{}, geometry.Zoom{}
 	c.mu.Unlock()
 }
 

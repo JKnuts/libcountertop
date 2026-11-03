@@ -24,8 +24,16 @@ type Connection = {
   timeout?: number;
   idle?: number;
   typing?: number;
-  pointer?: { id: number; x: number; y: number };
+  pointers: Map<number, { slot: number; x: number; y: number }>;
 };
+
+const fingers = 10;
+
+function freeSlot(pointers: Map<number, { slot: number }>) {
+  const used = new Set([...pointers.values()].map((p) => p.slot));
+  for (let slot = 0; slot < fingers; slot++) if (!used.has(slot)) return slot;
+  return -1;
+}
 
 async function gather(pc: RTCPeerConnection, signal: AbortSignal) {
   if (pc.iceGatheringState === "complete") return;
@@ -69,15 +77,22 @@ export function Desktop({ enabled, children, actions, onAuthLost }: { enabled: b
     if (phase === "live") keyboard.current?.focus({ preventScroll: true });
   }, [phase]);
 
+  const lift = useCallback((id: number) => {
+    const c = connection.current;
+    const held = c?.pointers.get(id);
+    if (!c || !held) return;
+    c.pointers.delete(id);
+    if (c.input.readyState !== "open") return;
+    try {
+      c.input.send(JSON.stringify({ phase: "up", x: held.x, y: held.y, id: held.slot }));
+    } catch {}
+  }, []);
+
   const release = useCallback(() => {
     const c = connection.current;
-    if (c?.pointer && c.input.readyState === "open") {
-      try {
-        c.input.send(JSON.stringify({ phase: "up", x: c.pointer.x, y: c.pointer.y }));
-      } catch {}
-      c.pointer = undefined;
-    }
-  }, []);
+    if (!c) return;
+    for (const id of [...c.pointers.keys()]) lift(id);
+  }, [lift]);
 
   const stop = useCallback(() => {
     const c = connection.current;
@@ -114,7 +129,12 @@ export function Desktop({ enabled, children, actions, onAuthLost }: { enabled: b
     setError("");
     if (!window.RTCPeerConnection) { setError("WebRTC is unavailable in this browser"); return; }
     const pc = new RTCPeerConnection({ iceServers: [] });
-    const c: Connection = { pc, input: pc.createDataChannel("input", { ordered: true }), abort: new AbortController() };
+    const c: Connection = {
+      pc,
+      input: pc.createDataChannel("input", { ordered: true }),
+      abort: new AbortController(),
+      pointers: new Map(),
+    };
     connection.current = c;
     setPhase("connecting");
     const fail = (message: string) => {
@@ -206,22 +226,26 @@ export function Desktop({ enabled, children, actions, onAuthLost }: { enabled: b
 
   const pointer = (event: PointerEvent<HTMLVideoElement>, action: "down" | "move" | "up") => {
     const c = connection.current;
-    if (!c || phase !== "live" || c.input.readyState !== "open" || !event.isPrimary) return;
-    if (action === "down" && (c.pointer || event.button !== 0)) return;
-    if (action !== "down" && c.pointer?.id !== event.pointerId) return;
+    if (!c || phase !== "live" || c.input.readyState !== "open") return;
+    const held = c.pointers.get(event.pointerId);
+    if (action === "down" && (held || event.button !== 0)) return;
+    if (action !== "down" && !held) return;
     event.preventDefault();
     const bounds = event.currentTarget.getBoundingClientRect();
     const point = videoPoint(bounds, event.currentTarget.videoWidth, event.currentTarget.videoHeight, event.clientX, event.clientY);
     if (!point || (action === "down" && (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1))) return;
+    const slot = held ? held.slot : freeSlot(c.pointers);
+    if (slot < 0) return;
     const x = Math.max(0, Math.min(1, point.x));
     const y = Math.max(0, Math.min(1, point.y));
     if (action === "down") event.currentTarget.setPointerCapture(event.pointerId);
     if (action === "down" && event.pointerType === "mouse") keyboard.current?.focus({ preventScroll: true });
-    c.pointer = action === "up" ? undefined : { id: event.pointerId, x, y };
+    if (action === "up") c.pointers.delete(event.pointerId);
+    else c.pointers.set(event.pointerId, { slot, x, y });
     if (action === "move" && c.input.bufferedAmount > 4096) return;
     if (c.input.bufferedAmount > 65536) { stop(); return; }
     try {
-      c.input.send(JSON.stringify({ phase: action, x, y }));
+      c.input.send(JSON.stringify({ phase: action, x, y, id: slot }));
     } catch {
       stop();
       return;
@@ -263,8 +287,8 @@ export function Desktop({ enabled, children, actions, onAuthLost }: { enabled: b
             onPointerDown={(e) => pointer(e, "down")}
             onPointerMove={(e) => pointer(e, "move")}
             onPointerUp={(e) => pointer(e, "up")}
-            onPointerCancel={release}
-            onLostPointerCapture={release}
+            onPointerCancel={(e) => lift(e.pointerId)}
+            onLostPointerCapture={(e) => lift(e.pointerId)}
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           />

@@ -10,6 +10,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/style"
 	videoplayer "github.com/ygelfand/libcountertop/pkg/display/videopage"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
+	"github.com/ygelfand/libcountertop/pkg/media/lyrics"
 	"github.com/ygelfand/libcountertop/pkg/media/nowplaying"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
@@ -17,20 +18,27 @@ import (
 type Player interface {
 	Now() nowplaying.Now
 	Named() string
+	From() nowplaying.Kind
 	Transport() nowplaying.Controller
 	Open()
 }
+type Lyrics interface {
+	Find(q lyrics.Query) lyrics.Sheet
+}
 type Dependencies struct {
 	Player Player
+	Lyrics Lyrics
 	Volume volume.Channel
 	Shell  *shell.Shell
 	UI     *widgets.UI
 	Dock   func() schema.Edge
+	Loud   func()
 }
 type Renderer struct {
 	options Dependencies
 	kit     widgets.Toolkit
 	seeking scrub
+	pane    pane
 }
 
 func New(o Dependencies) *Renderer { return &Renderer{options: o, kit: o.UI.Toolkit} }

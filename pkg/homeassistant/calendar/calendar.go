@@ -21,7 +21,7 @@ const (
 	fetchWait    = 10 * time.Second
 	stale        = 5 * time.Minute
 	eventsAction = "calendar.get_events"
-	eventsShape  = "{{ response | tojson }}"
+	eventsShape  = "{{ response | to_json }}"
 	dayLayout    = "2006-01-02"
 	wireLayout   = "2006-01-02 15:04:05"
 )

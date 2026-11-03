@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-const homeShape = `{{ [state_attr('zone.home', 'latitude'), state_attr('zone.home', 'longitude')] | tojson }}`
+const homeShape = `{{ [state_attr('zone.home', 'latitude'), state_attr('zone.home', 'longitude')] | to_json }}`
 
 var ErrNoHome = errors.New("homeassistant: the home zone has no location")
 

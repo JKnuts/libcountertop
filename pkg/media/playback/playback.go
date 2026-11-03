@@ -20,6 +20,10 @@ type Branded interface {
 	Logo() string
 }
 
+type Badged interface {
+	Brand() nowplaying.Brand
+}
+
 type Seeker interface {
 	Seek(to time.Duration)
 }

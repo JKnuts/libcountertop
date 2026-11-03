@@ -22,6 +22,7 @@ type Editor struct {
 	Presses   *interaction.Presses
 	leaf      string
 	save      func()
+	actions   map[string]string
 	Top       float32
 	Shift     bool
 	Symbols   bool
@@ -32,7 +33,23 @@ type Editor struct {
 }
 
 func NewEditor() *Editor {
-	return &Editor{drafts: make(map[string]string), revealed: make(map[string]struct{})}
+	return &Editor{
+		drafts:   make(map[string]string),
+		revealed: make(map[string]struct{}),
+		actions:  make(map[string]string),
+	}
+}
+
+func (e *Editor) Action(fallback string) string {
+	if label := e.actions[e.leaf]; label != "" {
+		return label
+	}
+	return fallback
+}
+
+func (e *Editor) Acting(kit FieldStyle, cfg gui.InputCfg, label string, do func()) gui.View {
+	e.actions[cfg.ID] = label
+	return e.Field(kit, cfg, do)
 }
 
 func focused(w *gui.Window, leaf string) bool {

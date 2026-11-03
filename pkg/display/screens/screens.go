@@ -125,6 +125,7 @@ type Mixer interface {
 }
 
 type Popup interface {
+	Show(schema.Stream)
 	Linger()
 	Expand()
 	Dismiss()
@@ -177,6 +178,7 @@ type Options struct {
 	Tabs      *dashboard.Tabs
 	Home      *homecontrol.Engine
 	HomeHA    homeview.Client
+	Adopted   func() bool
 	Saver     homeview.SaverMode
 	Visuals   homeview.Visuals
 	Tessera   *tesseraview.View
@@ -196,6 +198,7 @@ type Options struct {
 	ThermostatPage  func() shell.View
 	Player          playerview.Player
 	PlayerPage      func() shell.View
+	Lyrics          playerview.Lyrics
 	MediaVolume     volume.Channel
 	Volume          Volume
 	Streams         []schema.Stream
@@ -223,6 +226,7 @@ type App struct {
 	alarms  alarmview.View
 
 	ticking atomic.Bool
+	touched touches
 
 	wallpaper *photoframe.Stage
 	papered   atomic.Bool
@@ -270,14 +274,17 @@ func New(o Options) *App {
 	a.nav = &navigation.Nav{For: a.screenFor}
 	a.player = playerview.New(playerview.Dependencies{
 		Player: o.Player,
+		Lyrics: o.Lyrics,
 		Volume: o.MediaVolume,
 		Shell:  o.Shell,
 		UI:     o.UI,
 		Dock:   func() schema.Edge { return o.Settings().Screen.Drawer },
+		Loud:   func() { o.Volume.Show(schema.StreamMedia) },
 	})
 	a.home = homeview.New(homeview.Dependencies{
 		Engine:          o.Home,
 		Client:          o.HomeHA,
+		Adopted:         o.Adopted,
 		Name:            o.DeviceName,
 		Weather:         o.Weather,
 		WeatherEntities: o.WeatherEntities,
@@ -422,6 +429,13 @@ func (a *App) Run(ctx context.Context) error {
 
 	stopTouch := a.o.Touch.Contacts.Listen(func(t touch.Contact) {
 		sh.Touch()
+		a.touched.contact(t)
+		if a.o.Settings().Screen.Touches {
+			w.QueueCommand(func(w *gogui.Window) { w.InvalidateLayout() })
+		}
+		if _, held := a.wakeBy(); held {
+			return
+		}
 		at := image.Pt(t.X, t.Y)
 		switch t.Phase {
 		case touch.Down:
@@ -456,7 +470,7 @@ func (a *App) Run(ctx context.Context) error {
 			}
 		}
 		r.Touch(p, uint64(t.ID), float32(t.X), float32(t.Y))
-		if t.Phase == touch.Up {
+		if t.Phase == touch.Up && len(starts) == 0 {
 			w.QueueCommand(func(w *gogui.Window) {
 				a.ui.Gestures.Lift()
 				a.ui.Presses.Lift(w)
@@ -467,6 +481,18 @@ func (a *App) Run(ctx context.Context) error {
 		}
 	})
 	defer stopTouch()
+	stopGesture := a.o.Touch.Gestures.Listen(func(g touch.Gesture) {
+		a.touched.gesture(gestureName(g))
+		if want, held := a.wakeBy(); held && gestureSetting(g) == want {
+			w.QueueCommand(func(w *gogui.Window) {
+				if top := sh.Top(); resting(top) {
+					sh.Remove(top)
+				}
+				w.InvalidateLayout()
+			})
+		}
+	})
+	defer stopGesture()
 
 	var look atomic.Value
 	look.Store(a.current().Cfg.Name)
@@ -511,6 +537,7 @@ func (a *App) Run(ctx context.Context) error {
 		{Priority: priorityNotice + 1, Build: a.assistantPanel, Covered: a.o.Stage.Unstage},
 		{Priority: playerview.PriorityMini, Build: a.player.Mini},
 		{Priority: priorityMarks, Build: a.privacyMarks},
+		{Priority: priorityTouches, Build: a.touchMarks},
 		{Priority: widgets.UpgradePriority, Build: a.upgradeCard, Covers: a.upgradeCovers},
 	} {
 		a.nav.Show(o)

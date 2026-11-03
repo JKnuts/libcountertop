@@ -7,6 +7,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/menu"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
 	"github.com/ygelfand/libcountertop/pkg/display/theme"
+	"github.com/ygelfand/libcountertop/pkg/say"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 	"github.com/ygelfand/libcountertop/pkg/settings/storage"
 )
@@ -54,6 +55,9 @@ func (u *UI) Input(cfg gogui.InputCfg, save func()) gogui.View {
 	return u.Editor.Field(u.Kit(), cfg, save)
 }
 func (u *UI) Field(id string, r menu.Row) gogui.View { return u.Editor.Row(u.Kit(), id, r) }
+func (u *UI) Search(cfg gogui.InputCfg, submit func()) gogui.View {
+	return u.Editor.Acting(u.Kit(), cfg, say.T("keyboard.search"), submit)
+}
 func (u *UI) Row(id, page string, r menu.Row, tap func(int), glyphs bool) gogui.View {
 	if r.Open != nil && u.Open != nil {
 		r.Kind = menu.Chevron

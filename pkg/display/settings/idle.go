@@ -37,10 +37,12 @@ type IdleNight interface {
 	SetNightLux(int)
 	SetNightAfter(config.Delay)
 }
+type IdleWake interface{ SetWake(config.Gesture) }
 type IdleActions interface {
 	IdleClock
 	IdleSlots
 	IdleNight
+	IdleWake
 	Placement
 }
 type WeatherCatalog interface {
@@ -222,6 +224,27 @@ func (p *IdlePages) Page() *shell.Page {
 			)
 			taps = append(taps, nil, nil)
 			rows, taps = p.withSensors(rows, taps)
+			wake := c.Wake
+			if wake == "" {
+				wake = config.GestureTap
+			}
+			rows = append(rows, menu.Row{
+				Label: say.T("idle.setting.wake"),
+				Kind:  menu.Chevron,
+				Value: wake.Label(),
+			})
+			taps = append(taps, p.open(Choose(
+				say.T("idle.setting.wake"),
+				config.Gestures(),
+				func() config.Gesture {
+					if g := p.options.Preferences.IdleState().Idle.Wake; g != "" {
+						return g
+					}
+					return config.GestureTap
+				},
+				i.SetWake,
+				nil,
+			)))
 			return append(rows, menu.Row{
 					Label: say.T("idle.night"),
 					Open:  func() shell.View { return p.Night() },

@@ -29,7 +29,7 @@ const (
 	VersionEntity = "sensor.echolocal_protocol_version"
 	Ping          = "echolocal.ping"
 	Protocol      = 1
-	pingReply     = "{{ response | tojson }}"
+	pingReply     = "{{ response | to_json }}"
 )
 
 type Failed struct{ Message string }

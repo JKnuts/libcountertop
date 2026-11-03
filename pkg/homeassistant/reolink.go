@@ -48,7 +48,7 @@ const reolinkDevicesTemplate = `{%- set keys = ['visitor', 'person', 'package', 
 {%- endif -%}
 {%- endif -%}
 {%- endfor -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 func (h *Controller) ReolinkDevices(ctx context.Context) ([]ReolinkDevice, error) {
 	raw, err := h.Template(ctx, reolinkDevicesTemplate)

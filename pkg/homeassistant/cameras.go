@@ -23,7 +23,7 @@ const camerasTemplate = `{%- set ns = namespace(out=[]) -%}
 {%- for s in states.camera -%}
 {%- set ns.out = ns.out + [{'id': s.entity_id, 'name': s.name, 'state': s.state, 'area_id': area_id(s.entity_id) or '', 'area': area_name(s.entity_id) or '', 'labels': labels(s.entity_id), 'picture': s.attributes.get('entity_picture') or '', 'features': s.attributes.get('supported_features') or 0}] -%}
 {%- endfor -%}
-{{ ns.out | tojson }}`
+{{ ns.out | to_json }}`
 
 func (h *Controller) Cameras(ctx context.Context) ([]Camera, error) {
 	raw, err := h.Template(ctx, camerasTemplate)

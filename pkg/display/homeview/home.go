@@ -148,6 +148,8 @@ func (view *Renderer) trouble() (title, hint string, retry func(int)) {
 		return say.T("home.off"), say.T("home.off.hint"), nil
 	case ha.Access() == homeassistant.Allowed:
 		return "", "", nil
+	case !ha.Connected() && view.options.Adopted != nil && view.options.Adopted():
+		return say.T("home.reconnecting"), "", nil
 	case !ha.Connected():
 		return say.T("home.unconnected"), say.F("home.unconnected.hint", device), nil
 	case ha.Access() == homeassistant.Unknown:
@@ -504,6 +506,7 @@ type Client interface {
 type Dependencies struct {
 	Engine          *homecontrol.Engine
 	Client          Client
+	Adopted         func() bool
 	Name            func() string
 	Weather         storage.Section[schema.Weather]
 	WeatherEntities func() shell.View

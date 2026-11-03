@@ -25,7 +25,6 @@ import (
 )
 
 const (
-	lingerFor        = 3 * time.Minute
 	cardFor          = 20 * time.Second
 	snapWait         = 15 * time.Second
 	eventPictureWait = 3 * time.Second
@@ -61,7 +60,7 @@ type App struct{}
 
 func (*App) Covers() bool { return true }
 
-func (*App) Timeout() time.Duration { return lingerFor }
+func (*App) Timeout() time.Duration { return shell.AppTimeout }
 
 type Live struct {
 	rang    bool
