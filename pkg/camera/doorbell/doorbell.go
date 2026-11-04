@@ -102,7 +102,7 @@ func (s Status) Says() string {
 
 type Finder interface {
 	ReolinkDevices(ctx context.Context) ([]homeassistant.ReolinkDevice, error)
-	Named(ctx context.Context, domain string) ([]homeassistant.Named, error)
+	Entities(ctx context.Context, f homeassistant.Filter) ([]homeassistant.Entity, error)
 }
 
 type Follower interface {
@@ -239,9 +239,13 @@ func (d *Doorbell) named(ctx context.Context, domain string) ([]homeassistant.Na
 	if d.o.Finder == nil {
 		return nil, nil
 	}
-	out, err := d.o.Finder.Named(ctx, domain)
+	found, err := d.o.Finder.Entities(ctx, homeassistant.Filter{Domains: []string{domain}})
 	if err != nil {
 		return nil, err
+	}
+	out := make([]homeassistant.Named, 0, len(found))
+	for _, e := range found {
+		out = append(out, homeassistant.Named{Entity: e.ID, Name: e.Name})
 	}
 	slices.SortFunc(
 		out,

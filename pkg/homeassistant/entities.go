@@ -33,29 +33,36 @@ type Filter struct {
 	Attributes []string
 }
 
-const entitiesTemplate = `{%- set ns = namespace(out=[]) -%}
-{%- for s in SOURCE -%}
-{%- if (CLASSES | length == 0 or s.attributes.get('device_class') in CLASSES) and (LABELS | length == 0 or labels(s.entity_id) | select('in', LABELS) | list | length > 0) -%}
-{%- set at = namespace(d={}) -%}
+const (
+	entityWhere = `(CLASSES | length == 0 or s.attributes.get('device_class') in CLASSES) and (LABELS | length == 0 or labels(s.entity_id) | select('in', LABELS) | list | length > 0)`
+
+	entityPrepare = `{%- set at = namespace(d={}) -%}
 {%- for k in ATTRIBUTES if k in s.attributes -%}
 {%- set at.d = dict(at.d, **{k: s.attributes[k] | string}) -%}
-{%- endfor -%}
-{%- set ns.out = ns.out + [{'id': s.entity_id, 'name': s.name, 'state': s.state, 'area_id': area_id(s.entity_id) or '', 'area': area_name(s.entity_id) or '', 'labels': labels(s.entity_id), 'attributes': at.d}] -%}
-{%- endif -%}
-{%- endfor -%}
-{{ ns.out | to_json }}`
+{%- endfor -%}`
 
-func (f Filter) Template() string {
+	entityItem = `{'id': s.entity_id, 'name': s.name, 'state': s.state, 'area_id': area_id(s.entity_id) or '', 'area': area_name(s.entity_id) or '', 'labels': labels(s.entity_id), 'attributes': at.d}`
+
+	entitySmall = `{'id': s.entity_id, 'name': s.name[:200], 'state': s.state[:200]}`
+)
+
+func (f Filter) listing() listing {
 	source := "states"
 	if len(f.Domains) > 0 {
 		source = "states | selectattr('domain', 'in', " + list(f.Domains) + ")"
 	}
-	return strings.NewReplacer(
-		"SOURCE", source,
+	fill := strings.NewReplacer(
 		"CLASSES", list(f.Classes),
 		"LABELS", list(f.Labels),
 		"ATTRIBUTES", list(f.Attributes),
-	).Replace(entitiesTemplate)
+	)
+	return listing{
+		source:  "(" + source + ") | sort(attribute='entity_id')",
+		where:   fill.Replace(entityWhere),
+		prepare: fill.Replace(entityPrepare),
+		item:    entityItem,
+		small:   entitySmall,
+	}
 }
 
 func list(values []string) string {
@@ -74,11 +81,7 @@ func unwrap(raw json.RawMessage) json.RawMessage {
 	return raw
 }
 
-func ParseEntities(raw json.RawMessage) ([]Entity, error) {
-	out := []Entity{}
-	if err := json.Unmarshal(unwrap(raw), &out); err != nil {
-		return nil, fmt.Errorf("homeassistant: the entity list: %w", err)
-	}
+func sortEntities(out []Entity) {
 	slices.SortFunc(out, func(a, b Entity) int {
 		if (a.Area == "") != (b.Area == "") {
 			if a.Area == "" {
@@ -92,7 +95,6 @@ func ParseEntities(raw json.RawMessage) ([]Entity, error) {
 			cmp.Compare(a.ID, b.ID),
 		)
 	})
-	return out, nil
 }
 
 type Label struct {

@@ -3,7 +3,7 @@ package doorbell
 import (
 	"context"
 	"errors"
-	"strings"
+	"slices"
 	"testing"
 
 	"github.com/ygelfand/libcountertop/pkg/homeassistant"
@@ -58,11 +58,14 @@ func (e entities) ReolinkDevices(context.Context) ([]homeassistant.ReolinkDevice
 	return nil, nil
 }
 
-func (e entities) Named(_ context.Context, domain string) ([]homeassistant.Named, error) {
-	var out []homeassistant.Named
+func (e entities) Entities(
+	_ context.Context,
+	f homeassistant.Filter,
+) ([]homeassistant.Entity, error) {
+	var out []homeassistant.Entity
 	for _, x := range e {
-		if strings.HasPrefix(x.ID, domain+".") {
-			out = append(out, homeassistant.Named{Entity: x.ID, Name: x.Name})
+		if slices.Contains(f.Domains, x.Domain()) {
+			out = append(out, x)
 		}
 	}
 	return out, nil

@@ -5,9 +5,10 @@ import (
 )
 
 func (h *Controller) Entities(ctx context.Context, f Filter) ([]Entity, error) {
-	raw, err := h.Template(ctx, f.Template())
+	out, err := listAll[Entity](ctx, h.Template, f.listing())
 	if err != nil {
 		return nil, err
 	}
-	return ParseEntities(raw)
+	sortEntities(out)
+	return out, nil
 }

@@ -238,7 +238,7 @@ func TestEntitiesSendsTheFilter(t *testing.T) {
 		return &api.HomeassistantActionResponse{
 			Success: true,
 			ResponseData: []byte(
-				`{"response":"[{\"id\":\"light.a\",\"name\":\"A\",\"state\":\"on\",\"area\":\"\"}]"}`,
+				`{"response":"{\"next\":null,\"items\":[{\"id\":\"light.a\",\"name\":\"A\",\"state\":\"on\",\"area\":\"\"}]}"}`,
 			),
 		}
 	})
