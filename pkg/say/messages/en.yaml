@@ -1556,6 +1556,7 @@ tv.setting.default: Default TV
 tv.setting.favorites: Favorites
 tv.update: Update the YouTube TV integration
 tv.watch: "Watch on {{.TV}}"
+tv.watch_here: Watch here
 tv.youtube: YouTube TV
 uisize.compact: Compact
 uisize.large: Large

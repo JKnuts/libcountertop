@@ -23,7 +23,10 @@ func PageBody(w *gogui.Window, p *shell.Page, render PageRenderer) gogui.View {
 	switch {
 	case p.Build != nil:
 		rows, taps := p.Build()
-		glyphs := slices.ContainsFunc(rows, func(r menu.Row) bool { return r.Glyph != "" })
+		glyphs := slices.ContainsFunc(
+			rows,
+			func(r menu.Row) bool { return r.Glyph != "" || r.Picture != nil },
+		)
 		for i, r := range rows {
 			var tap func(int)
 			if i < len(taps) {

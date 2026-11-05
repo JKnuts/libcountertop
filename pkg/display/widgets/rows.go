@@ -46,7 +46,10 @@ func (kit *Toolkit) Row(
 	content := []gogui.View{head}
 	if glyphs {
 		var mark []gogui.View
-		if r.Glyph != "" {
+		switch {
+		case r.Picture != nil:
+			mark = []gogui.View{r.Picture}
+		case r.Glyph != "":
 			mark = []gogui.View{icon(r.Glyph, gogui.CurrentTheme().Cfg.ColorTextSecondary)}
 		}
 		content = []gogui.View{gogui.Row(gogui.ContainerCfg{

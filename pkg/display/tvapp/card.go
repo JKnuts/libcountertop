@@ -139,9 +139,11 @@ func (a *App) watch(tv yttv.TV, channel yttv.Channel) gogui.View {
 	}
 	st := gogui.CurrentTheme().Cfg.TextStyleDef
 	a.o.UI.Toolkit.Tab(&cfg, &st, widgets.Chosen(true))
-	cfg.Content = []gogui.View{
-		gogui.Label(say.F("tv.watch", map[string]any{"TV": a.label(tv)}), st),
+	words := say.F("tv.watch", map[string]any{"TV": tv.Name})
+	if a.o.Guide.Mine(tv) {
+		words = say.T("tv.watch_here")
 	}
+	cfg.Content = []gogui.View{gogui.Label(words, st)}
 	entity := tv.Entity
 	return a.o.UI.Toolkit.Pressable(gogui.Row, cfg, func(e gogui.EventCtx) {
 		a.act(func(ctx context.Context) error { return a.o.Guide.Cast(ctx, entity, channel) })

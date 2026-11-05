@@ -35,6 +35,7 @@ type Options struct {
 	Shape  Shape
 	Get    func(ctx context.Context, url string) ([]byte, error)
 	Redraw func()
+	Keep   int
 }
 
 type Covers struct {
@@ -55,7 +56,12 @@ type cover struct {
 	failed time.Time
 }
 
-func New(o Options) *Covers { return &Covers{o: o, byURL: map[string]*cover{}} }
+func New(o Options) *Covers {
+	if o.Keep <= 0 {
+		o.Keep = keep
+	}
+	return &Covers{o: o, byURL: map[string]*cover{}}
+}
 
 func (c *Covers) Src(url string, side int) string {
 	if url == "" || side <= 0 {
@@ -85,7 +91,7 @@ func (c *Covers) Src(url string, side int) string {
 }
 
 func (c *Covers) add(url string, k *cover) {
-	if len(c.order) >= keep {
+	if len(c.order) >= c.o.Keep {
 		old := c.order[0]
 		c.order = c.order[1:]
 		if gone := c.byURL[old]; gone != nil && gone.key != "" {

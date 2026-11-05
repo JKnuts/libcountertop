@@ -31,6 +31,7 @@ const (
 	askTime    = 15 * time.Second
 	artLimit   = 4 << 20
 	volumeStep = 0.05
+	logos      = 512
 )
 
 type Player interface {
@@ -81,7 +82,9 @@ func New(o Options) *App {
 	a.thumb = covers.New(covers.Options{
 		Prefix: "tvapp", Shape: covers.Wide, Get: a.download, Redraw: a.redraw,
 	})
-	a.logo = covers.New(covers.Options{Prefix: "tvapp-logo", Get: a.download, Redraw: a.redraw})
+	a.logo = covers.New(covers.Options{
+		Prefix: "tvapp-logo", Get: a.download, Redraw: a.redraw, Keep: logos,
+	})
 	return a
 }
 

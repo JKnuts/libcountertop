@@ -26,9 +26,10 @@ const (
 )
 
 type Row struct {
-	Glyph string
-	Label string
-	Hint  string
+	Glyph   string
+	Picture gogui.View
+	Label   string
+	Hint    string
 
 	Snap func(level int) int
 

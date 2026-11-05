@@ -3,10 +3,10 @@ package tvapp
 import (
 	"slices"
 	"strconv"
-	"time"
 
 	"github.com/ygelfand/libcountertop/pkg/display/menu"
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 	"github.com/ygelfand/libcountertop/pkg/homeassistant/yttv"
 	"github.com/ygelfand/libcountertop/pkg/say"
 )
@@ -86,14 +86,16 @@ func (a *App) channelRows(filter string) ([]menu.Row, []func(int)) {
 	}
 	favorites := a.o.Guide.Favorites()
 	listed := order(channels, filter, favorites)
-	now := time.Now()
+	logo := style.Reach() * 0.6
 	rows := make([]menu.Row, 0, len(listed))
 	taps := make([]func(int), 0, len(listed))
 	for _, c := range listed {
 		on := slices.Contains(favorites, c.Key())
-		row := menu.Row{Label: c.Name, Kind: menu.Toggle, On: on}
-		if airing, ok := c.At(now); ok {
-			row.Hint = airing.Title
+		row := menu.Row{
+			Picture: a.picture(a.logo, c.Icon, logo, logo, "mdi:television-classic"),
+			Label:   c.Name,
+			Kind:    menu.Toggle,
+			On:      on,
 		}
 		key := c.Key()
 		rows = append(rows, row)
