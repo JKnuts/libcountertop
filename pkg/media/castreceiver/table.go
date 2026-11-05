@@ -15,12 +15,7 @@ type (
 	Controls = setting.Controls[schema.Cast]
 )
 
-const (
-	Group = setting.Group("Cast")
-
-	loungeAlways = "always"
-	loungeDemand = "demand"
-)
+const Group = setting.Group("Cast")
 
 func NewTable() *Table {
 	var t *Table
@@ -58,30 +53,6 @@ func rows(table func() *Table) []Setting {
 				c.YouTube.Skip = sponsorblock.ParseCategories(v)
 				if c.YouTube.Skip == nil {
 					c.YouTube.Skip = []string{}
-				}
-				return nil
-			},
-		},
-		{
-			Name: "youtube.lounge", Group: Group, Icon: "mdi:youtube", Kind: setting.Choice,
-			Options: []setting.Option{
-				{Value: loungeAlways, Key: loungeAlways},
-				{Value: loungeDemand, Key: loungeDemand},
-			},
-			Read: func(c *schema.Cast) string {
-				if c.YouTube.OnDemand {
-					return loungeDemand
-				}
-				return loungeAlways
-			},
-			Write: func(c *schema.Cast, v string) error {
-				switch v {
-				case loungeAlways:
-					c.YouTube.OnDemand = false
-				case loungeDemand:
-					c.YouTube.OnDemand = true
-				default:
-					return table().MustRow("youtube.lounge").Bad(v, "")
 				}
 				return nil
 			},

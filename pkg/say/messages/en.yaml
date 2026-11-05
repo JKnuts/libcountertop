@@ -347,15 +347,11 @@ camera.starting: Starting the camera
 camera.muted: Microphones are muted
 camera.shutter: Camera shutter is closed
 cast.entity.receiver: Cast receiver
-cast.entity.youtube.lounge: YouTube lounge
 cast.entity.youtube.skip: YouTube SponsorBlock categories
 cast.group.cast: Cast
 cast.starting: Starting {{.Name}}…
 cast.refused: "Chromecast: {{.Name}} can't play on this device"
-cast.option.youtube.lounge.always: Always
-cast.option.youtube.lounge.demand: On demand
 cast.setting.receiver: Receiver
-cast.setting.youtube.lounge: YouTube lounge
 cast.example.youtube.skip: sponsor, selfpromo, intro
 cast.setting.youtube.skip: SponsorBlock categories
 chime.chirp: Chirp
@@ -1717,6 +1713,11 @@ youtube.category.outro: Outro
 youtube.category.preview: Preview
 youtube.category.selfpromo: Self-promotion
 youtube.category.sponsor: Sponsor
+youtube.entity.lounge: YouTube lounge
+youtube.group.cast: Cast
+youtube.option.lounge.always: Always
+youtube.option.lounge.demand: On demand
+youtube.setting.lounge: YouTube lounge
 youtube.skip: Skip segments
 youtube.skip.none: None
 youtube.skip.some: "{{.N}} kinds"

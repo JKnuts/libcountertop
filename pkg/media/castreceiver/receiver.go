@@ -126,14 +126,18 @@ func (r *Receiver) save(s Setting, v string) error {
 }
 
 func (r *Receiver) apply(was, now schema.Cast) {
-	switch {
-	case was.Receiver != now.Receiver:
+	if was.Receiver != now.Receiver {
 		r.turn(now.Receiver)
-	case was.YouTube.OnDemand != now.YouTube.OnDemand && now.Receiver:
-		r.server.Down()
-		if err := r.server.Up(); err != nil {
-			slog.Error("the cast receiver would not start", "err", err)
-		}
+	}
+}
+
+func (r *Receiver) Restart() {
+	if !r.Enabled() {
+		return
+	}
+	r.server.Down()
+	if err := r.server.Up(); err != nil {
+		slog.Error("the cast receiver would not start", "err", err)
 	}
 }
 

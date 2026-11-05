@@ -10,19 +10,7 @@ func Preferences(requestIDPrefix string, s storage.Section[schema.Cast]) prefere
 	return preferences.Provider{
 		Prefix: requestIDPrefix,
 		Read: func() preferences.Settings {
-			c := s.Read()
-			return preferences.Settings{
-				YouTube: preferences.YouTube{
-					Device:   c.YouTube.Device,
-					Music:    c.YouTube.Music,
-					Video:    c.YouTube.Video,
-					Skip:     c.YouTube.Skip,
-					OnDemand: c.YouTube.OnDemand,
-				},
-			}
-		},
-		Save: func(device, music, video string) error {
-			return schema.NewCastWriter(s).Screens(device, music, video)
+			return preferences.Settings{YouTube: preferences.YouTube{Skip: s.Read().YouTube.Skip}}
 		},
 	}
 }

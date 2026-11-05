@@ -348,15 +348,11 @@ camera.starting: Avvio fotocamera
 camera.muted: Microfoni disattivati
 camera.shutter: Otturatore fotocamera chiuso
 cast.entity.receiver: Ricevitore Cast
-cast.entity.youtube.lounge: YouTube lounge
 cast.entity.youtube.skip: Categorie SponsorBlock di YouTube
 cast.group.cast: Cast
 cast.starting: Avvio di {{.Name}}…
 cast.refused: "Chromecast: {{.Name}} non può essere riprodotto su questo dispositivo"
-cast.option.youtube.lounge.always: Sempre
-cast.option.youtube.lounge.demand: Su richiesta
 cast.setting.receiver: Ricevitore
-cast.setting.youtube.lounge: YouTube lounge
 cast.example.youtube.skip: sponsor, selfpromo, intro
 cast.setting.youtube.skip: Categorie SponsorBlock
 chime.chirp: Cinguettio
@@ -1717,6 +1713,11 @@ youtube.category.outro: Outro
 youtube.category.preview: Anteprima
 youtube.category.selfpromo: Autopromozione
 youtube.category.sponsor: Sponsor
+youtube.entity.lounge: YouTube lounge
+youtube.group.cast: Cast
+youtube.option.lounge.always: Sempre
+youtube.option.lounge.demand: Su richiesta
+youtube.setting.lounge: YouTube lounge
 youtube.skip: Salta segmenti
 youtube.skip.none: Nessuno
 youtube.skip.some: "{{.N}} tipi"

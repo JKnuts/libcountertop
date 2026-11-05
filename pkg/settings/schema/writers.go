@@ -96,10 +96,12 @@ func (w CastWriter) Bundle(url string) error {
 	return w.s.Update(func(c *Cast) { c.Bundle = url })
 }
 
-func (w CastWriter) Screens(device, music, video string) error {
-	return w.s.Update(func(c *Cast) {
-		c.YouTube.Device, c.YouTube.Music, c.YouTube.Video = device, music, video
-	})
+type LoungeWriter struct{ s storage.Section[Lounge] }
+
+func NewLoungeWriter(s storage.Section[Lounge]) LoungeWriter { return LoungeWriter{s: s} }
+
+func (w LoungeWriter) Screens(device, music, video string) error {
+	return w.s.Update(func(l *Lounge) { l.Device, l.Music, l.Video = device, music, video })
 }
 
 type ClockWriter struct{ s storage.Section[Clock] }

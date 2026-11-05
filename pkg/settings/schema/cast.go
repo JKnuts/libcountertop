@@ -1,5 +1,7 @@
 package schema
 
+import "encoding/json"
+
 type Cast struct {
 	Receiver bool `json:"receiver"`
 
@@ -10,15 +12,33 @@ type Cast struct {
 }
 
 type YouTube struct {
-	Device string `json:"device,omitempty"`
-	Music  string `json:"music,omitempty"`
-	Video  string `json:"video,omitempty"`
-
 	Skip []string `json:"skip"`
-
-	OnDemand bool `json:"onDemand,omitempty"`
 }
 
 func DefaultCast() Cast {
 	return Cast{Receiver: false, YouTube: YouTube{Skip: []string{"sponsor"}}}
+}
+
+type Lounge struct {
+	Device string `json:"device,omitempty"`
+	Music  string `json:"music,omitempty"`
+	Video  string `json:"video,omitempty"`
+
+	OnDemand bool `json:"onDemand,omitempty"`
+}
+
+func MigrateLounge(data []byte, lounge *Lounge) error {
+	var old struct {
+		Lounge *json.RawMessage `json:"lounge"`
+		Cast   struct {
+			YouTube Lounge `json:"youtube"`
+		} `json:"cast"`
+	}
+	if err := json.Unmarshal(data, &old); err != nil {
+		return err
+	}
+	if old.Lounge == nil {
+		*lounge = old.Cast.YouTube
+	}
+	return nil
 }

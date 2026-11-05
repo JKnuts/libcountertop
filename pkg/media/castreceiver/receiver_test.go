@@ -116,7 +116,6 @@ func TestTheSwitchIsPublished(t *testing.T) {
 	want := []string{
 		"cast_receiver",
 		"youtube_sponsorblock",
-		"cast_youtube_lounge",
 		"cast_oracle",
 		"cast_bundle",
 		"cast_credentials",
@@ -147,17 +146,11 @@ func TestTheComponentIsNamed(t *testing.T) {
 
 func TestPreferencesReadTheCastSettings(t *testing.T) {
 	m := &memory{c: schema.DefaultCast()}
-	m.c.YouTube.OnDemand = true
+	m.c.YouTube.Skip = []string{"intro"}
 	p := Preferences("product", m)
 
-	if !p.Settings().YouTube.OnDemand {
-		t.Error("the lounge mode was not read")
-	}
-	if err := p.SaveScreens("d", "m", "v"); err != nil {
-		t.Fatal(err)
-	}
-	if got := m.Read().YouTube; got.Device != "d" || got.Music != "m" || got.Video != "v" {
-		t.Errorf("screens saved as %+v", got)
+	if got := p.Settings().YouTube.Skip; !slices.Equal(got, []string{"intro"}) {
+		t.Errorf("skip read as %v", got)
 	}
 	if p.RequestIDPrefix() != "product" {
 		t.Error(p.RequestIDPrefix())

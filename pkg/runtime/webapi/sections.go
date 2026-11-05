@@ -14,7 +14,7 @@ type section struct {
 var sections = []section{
 	{"settings.network", []string{"network", "certs", "access"}},
 	{"settings.features", []string{
-		"cast", "media", "bluetooth", "rtsp", "call",
+		"cast", "youtube", "media", "bluetooth", "rtsp", "call",
 		"calendar", "todo", "tv",
 	}},
 	{"settings.display", []string{
