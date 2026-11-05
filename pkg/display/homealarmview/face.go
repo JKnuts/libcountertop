@@ -446,20 +446,19 @@ func (f *face) cornerWidth() float32 {
 	if f.still || f.board {
 		return 0
 	}
-	return float32(2*(widgets.CornerSide()+int(gogui.PadLarge)) + int(gogui.PadLarge))
+	return float32(widgets.CornerSide() + 2*int(gogui.PadLarge))
 }
 
 func (f *face) corners() []gogui.View {
-	p := f.v.o.UI.Presses
-	side, pad := widgets.CornerSide(), int(gogui.PadLarge)
-	x := int(f.vw) - pad - side
+	press := f.v.o.UI.Presses.Pressable
 	level := f.v.o.Shell.Controls()
 	out := []gogui.View{
-		widgets.CloseCornerAt(p, "homealarm-close", x, level, func() { f.v.close(f.current()) }),
+		widgets.LeaveCorner(press, "homealarm-close", widgets.CornerFloating, level,
+			func() { f.v.close(f.current()) }),
 	}
 	if !f.popup {
-		out = append(out, widgets.SettingsCornerAt(p, "homealarm-settings", x-pad-side, level,
-			func() { f.v.o.Shell.Push(f.v.Page()) }))
+		out = append(out, widgets.SettingsCorner(press, "homealarm-settings", int(f.vw),
+			widgets.CornerFloating, level, func() { f.v.o.Shell.Push(f.v.Page()) }))
 	}
 	return out
 }

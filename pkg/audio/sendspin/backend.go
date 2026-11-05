@@ -54,6 +54,7 @@ type Callbacks struct {
 	Grouped    func(string)
 	Metadata   func(*protocol.MetadataState, func() int64)
 	Artwork    func(protocol.ArtworkChunk)
+	Controller func(protocol.ControllerState)
 }
 
 func (c Callbacks) state(s string) {
@@ -84,5 +85,11 @@ func (c Callbacks) metadata(m *protocol.MetadataState, now func() int64) {
 func (c Callbacks) artwork(a protocol.ArtworkChunk) {
 	if c.Artwork != nil {
 		c.Artwork(a)
+	}
+}
+
+func (c Callbacks) controller(s protocol.ControllerState) {
+	if c.Controller != nil {
+		c.Controller(s)
 	}
 }

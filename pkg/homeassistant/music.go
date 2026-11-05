@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 )
 
 const (
-	MusicProtocol = 5
+	MusicProtocol    = 5
+	FavoriteProtocol = 6
 
 	musicBrowseAction          = "echolocal.music_browse"
+	musicFavoriteAction        = "echolocal.music_favorite"
 	musicLibraryAction         = "echolocal.music_library"
 	musicSearchAction          = "echolocal.music_search"
 	musicPlayersAction         = "echolocal.music_players"
@@ -120,6 +123,30 @@ func (h *Controller) MusicPlay(ctx context.Context, player, item string) error {
 	}, nil)
 }
 
+type Favorite struct {
+	Known    bool   `json:"known"`
+	Favorite bool   `json:"favorite"`
+	Title    string `json:"title"`
+}
+
+func (h *Controller) MusicFavorite(ctx context.Context, player string) (Favorite, error) {
+	var out Favorite
+	err := h.musicAt(ctx, FavoriteProtocol, musicFavoriteAction,
+		map[string]string{"player": player}, &out)
+	return out, err
+}
+
+func (h *Controller) SetMusicFavorite(
+	ctx context.Context,
+	player string,
+	on bool,
+) (Favorite, error) {
+	var out Favorite
+	err := h.musicAt(ctx, FavoriteProtocol, musicFavoriteAction,
+		map[string]string{"player": player, "favorite": strconv.FormatBool(on)}, &out)
+	return out, err
+}
+
 func (h *Controller) MusicRecent(ctx context.Context) ([]MusicItem, error) {
 	return h.musicItems(ctx, musicRecentAction, nil)
 }
@@ -150,7 +177,17 @@ func (h *Controller) music(
 	data map[string]string,
 	into any,
 ) error {
-	conn, ok := h.speaker(MusicProtocol)
+	return h.musicAt(ctx, MusicProtocol, action, data, into)
+}
+
+func (h *Controller) musicAt(
+	ctx context.Context,
+	protocol int,
+	action string,
+	data map[string]string,
+	into any,
+) error {
+	conn, ok := h.speaker(protocol)
 	if !ok {
 		return ErrNoMusic
 	}

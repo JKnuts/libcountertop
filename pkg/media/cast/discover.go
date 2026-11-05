@@ -50,14 +50,16 @@ type Device struct {
 }
 
 func Identify(mac, name, model string, p Profile) Device {
-	clean := strings.ReplaceAll(strings.ToLower(mac), ":", "")
-
 	return Device{
-		ID:      derive("cast-id", clean),
+		ID:      IDFor(mac),
 		Name:    name,
 		Model:   model,
 		Profile: p,
 	}
+}
+
+func IDFor(mac string) string {
+	return derive("cast-id", strings.ReplaceAll(strings.ToLower(mac), ":", ""))
 }
 
 func derive(purpose, mac string) string {

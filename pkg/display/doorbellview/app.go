@@ -29,16 +29,18 @@ func (v *View) buildApp(w *gogui.Window) gogui.View {
 	vw, vh := w.WindowSize()
 	level := v.o.Shell.Controls()
 	content := []gogui.View{
-		widgets.CloseCorner(
-			v.presses,
+		widgets.LeaveCorner(
+			v.presses.Pressable,
 			"doorbell-app-close",
+			widgets.CornerFloating,
 			level,
 			func() { v.o.Shell.Remove(v.app) },
 		),
 		widgets.SettingsCorner(
-			v.presses,
+			v.presses.Pressable,
 			"doorbell-app-settings",
 			vw,
+			widgets.CornerFloating,
 			level,
 			func() { v.o.Shell.Push(v.Page()) },
 		),

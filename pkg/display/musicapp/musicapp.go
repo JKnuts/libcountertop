@@ -14,6 +14,7 @@ import (
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/libcountertop/pkg/display/apps"
+	"github.com/ygelfand/libcountertop/pkg/display/covers"
 	"github.com/ygelfand/libcountertop/pkg/display/icons"
 	"github.com/ygelfand/libcountertop/pkg/display/navigation"
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
@@ -87,7 +88,7 @@ type App struct {
 	problem string
 	volumes map[string]float64
 	timers  map[string]*time.Timer
-	covers  *covers
+	covers  *covers.Covers
 }
 
 func New(o Options) *App {
@@ -97,7 +98,7 @@ func New(o Options) *App {
 		volumes: map[string]float64{},
 		timers:  map[string]*time.Timer{},
 	}
-	a.covers = newCovers(a.download, a.redraw)
+	a.covers = covers.New(covers.Options{Prefix: "musicapp", Get: a.download, Redraw: a.redraw})
 	return a
 }
 
@@ -128,12 +129,18 @@ func (a *App) build(w *gogui.Window) gogui.View {
 	if gate := a.o.Gate(w); gate != nil {
 		content = gate
 	}
+	top := reach * 0.4
+	if !wide {
+		top = cornerBand()
+	}
 	body := gogui.Column(gogui.ContainerCfg{
 		Sizing:  gogui.FillFill,
-		Padding: gogui.NewPadding(reach*0.4, reach*0.5, reach*0.4, reach*0.5),
+		Padding: gogui.NewPadding(top, reach*0.5, reach*0.4, reach*0.5),
 		Content: []gogui.View{content},
 	})
 	bar := a.tabs(wide)
+	leave := widgets.LeaveCorner(a.o.UI.Presses.Pressable, "music-close", widgets.CornerSolid, 1,
+		func() { a.o.Shell.Remove(a.view) })
 	outer := gogui.ContainerCfg{
 		Width:   float32(vw),
 		Height:  float32(vh),
@@ -142,12 +149,14 @@ func (a *App) build(w *gogui.Window) gogui.View {
 		Color:   gogui.CurrentTheme().Cfg.ColorBackground,
 	}
 	if wide {
-		outer.Content = []gogui.View{bar, body}
+		outer.Content = []gogui.View{bar, body, leave}
 		return gogui.Row(outer)
 	}
-	outer.Content = []gogui.View{body, bar}
+	outer.Content = []gogui.View{body, bar, leave}
 	return gogui.Column(outer)
 }
+
+func cornerBand() float32 { return float32(widgets.CornerSide()) + 2*gogui.PadLarge }
 
 func (a *App) page(w *gogui.Window) gogui.View {
 	a.mu.Lock()
@@ -251,10 +260,7 @@ func (a *App) tabs(wide bool) gogui.View {
 			e.Consume()
 		})
 	}
-	keys := []gogui.View{
-		key("music-close", "mdi:close", say.T("music.close"), false,
-			func() { a.o.Shell.Remove(a.view) }),
-	}
+	var keys []gogui.View
 	for _, t := range []struct {
 		tab         tab
 		id, icon, k string
@@ -277,6 +283,7 @@ func (a *App) tabs(wide bool) gogui.View {
 	}
 	if wide {
 		cfg.Width, cfg.Sizing, cfg.Scrollable = reach*2.4, gogui.FixedFill, true
+		cfg.Padding = gogui.NewPadding(cornerBand(), gogui.PadSmall, gogui.PadSmall, gogui.PadSmall)
 		return gogui.Column(cfg)
 	}
 	cfg.Sizing = gogui.FillFit
@@ -388,7 +395,7 @@ func (a *App) download(ctx context.Context, url string) ([]byte, error) {
 }
 
 func (a *App) cover(url string, side float32) gogui.View {
-	if src := a.covers.src(url, int(side)); src != "" {
+	if src := a.covers.Src(url, int(side)); src != "" {
 		return gogui.Column(gogui.ContainerCfg{
 			Width: side, Height: side, Sizing: gogui.FixedFixed, Padding: gogui.NoPadding,
 			Radius: gogui.RadiusPx(side * 0.04), Clip: true,

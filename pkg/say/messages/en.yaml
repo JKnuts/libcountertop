@@ -141,7 +141,7 @@ calendar.empty: Nothing coming up
 calendar.group.calendar: Calendar
 calendar.none: No calendars in Home Assistant
 calendar.off: "Off"
-calendar.pick: Pick calendars in Settings → Home control → Calendar
+calendar.pick: Pick calendars
 calendar.example.entities: calendar.family, calendar.work
 calendar.setting.entities: Calendars
 calendar.setting.span: Days to show
@@ -1094,7 +1094,6 @@ player.now: Now playing
 music.app: Music
 music.now: Playing
 music.speakers: Speakers
-music.close: Close
 music.quiet: Nothing playing
 music.none: No Music Assistant speakers
 music.unavailable: Music Assistant is not reachable
@@ -1543,6 +1542,21 @@ tone.info: Info
 tone.success: Success
 tone.title: Wake sound
 tone.warning: Warning
+tv.app: TV
+tv.empty: Nothing airing
+tv.example.default: media_player.yttv_living_room
+tv.failed: Couldn't load the channel guide
+tv.find: Find a channel or show
+tv.group.tv: TV
+tv.here: Here
+tv.next: "Next at {{.Time}}: {{.Title}}"
+tv.none: No YouTube TV players in Home Assistant
+tv.quiet: Nothing playing
+tv.setting.default: Default TV
+tv.setting.favorites: Favorites
+tv.update: Update the YouTube TV integration
+tv.watch: "Watch on {{.TV}}"
+tv.youtube: YouTube TV
 uisize.compact: Compact
 uisize.large: Large
 uisize.medium: Medium

@@ -28,6 +28,7 @@ type Camera interface {
 }
 
 type Options struct {
+	UI     *widgets.UI
 	Shell  *shell.Shell
 	Camera Camera
 }
@@ -80,6 +81,10 @@ func (m *Mirror) build(*gogui.Window) gogui.View {
 	if !m.view.feed.Live {
 		content = widgets.FeedNote(m.view.feed)
 	}
+	content = append(content, widgets.LeaveCorner(
+		m.o.UI.Presses.Pressable, "mirror-close", widgets.CornerFloating, 1,
+		func() { m.o.Shell.Remove(m.view) },
+	))
 	return gogui.Column(gogui.ContainerCfg{
 		ID:      "mirror",
 		Sizing:  gogui.FillFill,

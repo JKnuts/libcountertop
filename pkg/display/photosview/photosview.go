@@ -137,12 +137,28 @@ func (v *View) build(w *gogui.Window) gogui.View {
 	if _, ok := v.frame.Current(); !ok {
 		level = 1
 	}
-	content = append(content,
-		widgets.CloseCorner(v.presses, "photos-close", level, func() { v.o.Shell.Remove(v.app) }),
+	content = append(
+		content,
+		widgets.LeaveCorner(
+			v.presses.Pressable,
+			"photos-close",
+			widgets.CornerFloating,
+			level,
+			func() { v.o.Shell.Remove(v.app) },
+		),
 	)
 	if v.o.Page != nil {
-		content = append(content, widgets.SettingsCorner(v.presses, "photos-settings", vw, level,
-			func() { v.o.Shell.Push(v.o.Page()) }))
+		content = append(
+			content,
+			widgets.SettingsCorner(
+				v.presses.Pressable,
+				"photos-settings",
+				vw,
+				widgets.CornerFloating,
+				level,
+				func() { v.o.Shell.Push(v.o.Page()) },
+			),
+		)
 	}
 	return gogui.Column(gogui.ContainerCfg{
 		ID:      "photos-app",

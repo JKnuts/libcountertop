@@ -34,6 +34,8 @@ type Player struct {
 
 	playing track
 	group   string
+	shuffle bool
+	repeat  nowplaying.Repeat
 
 	artwork []byte
 
@@ -108,6 +110,29 @@ func (p *Player) Stop()  { p.tell("stop", "pause") }
 func (p *Player) Next()     { p.tell("next") }
 func (p *Player) Previous() { p.tell("previous") }
 
+func (p *Player) SetShuffle(on bool) {
+	if on {
+		p.tell("shuffle")
+		return
+	}
+	p.tell("unshuffle")
+}
+
+func (p *Player) SetRepeat(r nowplaying.Repeat) { p.tell("repeat_" + string(r)) }
+
+func (p *Player) SetLiked(on bool) {
+	if p.options.Favorite != nil {
+		p.options.Favorite.SetLiked(p.Now(), on)
+	}
+}
+
+func (p *Player) controlled(c protocol.ControllerState) {
+	p.mu.Lock()
+	p.shuffle, p.repeat = c.Shuffle, nowplaying.Repeat(c.Repeat)
+	p.mu.Unlock()
+	p.changed()
+}
+
 func (p *Player) tell(want ...string) {
 	p.mu.Lock()
 	s := p.joined
@@ -145,12 +170,26 @@ func (p *Player) Now() nowplaying.Now {
 		ArtID:   artID(p.artwork),
 		Elapsed: p.reached(playing),
 		Length:  p.length,
+		Shuffle: p.shuffle,
+		Repeat:  p.repeat,
 		Can:     nowplaying.CanPause | nowplaying.CanNext | nowplaying.CanPrevious,
 	}
+	joined := p.joined
 	p.mu.Unlock()
 
+	if joined != nil && joined.Takes("shuffle", "unshuffle") {
+		now.Can |= nowplaying.CanShuffle
+	}
+	if joined != nil && joined.Takes("repeat_off", "repeat_all", "repeat_one") {
+		now.Can |= nowplaying.CanRepeat
+	}
 	if p.options.Queue != nil {
 		now.Queue = p.options.Queue.Ahead(now)
+	}
+	if p.options.Favorite != nil {
+		if liked, known := p.options.Favorite.Liked(now); known {
+			now.Liked, now.Can = liked, now.Can|nowplaying.CanLike
+		}
 	}
 	return now
 }
@@ -362,6 +401,11 @@ type Clock interface {
 type Queue interface {
 	Ahead(nowplaying.Now) []nowplaying.Track
 }
+
+type Favorite interface {
+	Liked(nowplaying.Now) (liked, known bool)
+	SetLiked(now nowplaying.Now, on bool)
+}
 type Device interface {
 	Name() string
 	Identity() core.Identity
@@ -376,6 +420,7 @@ type Dependencies struct {
 	OpenPort    func()
 	Media       Media
 	Queue       Queue
+	Favorite    Favorite
 }
 
 func (p *Player) listener() *core.Listener {
@@ -389,6 +434,7 @@ func (p *Player) listener() *core.Listener {
 			Began:      func() { p.options.Media.Began(p) },
 			Grouped:    p.grouped,
 			Artwork:    p.drew,
+			Controller: p.controlled,
 			Metadata: func(m *protocol.MetadataState, now func() int64) {
 				p.plays(p.track().merge(m))
 				if m.Progress != nil {

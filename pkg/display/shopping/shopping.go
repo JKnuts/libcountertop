@@ -25,10 +25,11 @@ func (*View) Covers() bool { return true }
 func (*View) Timeout() time.Duration { return shell.AppTimeout }
 
 type Options struct {
-	UI    *widgets.UI
-	Shell *shell.Shell
-	Todo  *todo.Todo
-	Gate  func(*gogui.Window) gogui.View
+	UI       *widgets.UI
+	Shell    *shell.Shell
+	Todo     *todo.Todo
+	Gate     func(*gogui.Window) gogui.View
+	Settings func() *shell.Page
 }
 
 type Shopping struct {
@@ -51,7 +52,11 @@ func (s *Shopping) Screen(v shell.View) *navigation.Screen {
 	if v != s.view {
 		return nil
 	}
-	return &navigation.Screen{Title: s.title(), View: v, Build: s.build}
+	screen := &navigation.Screen{Title: s.title(), View: v, Build: s.build}
+	if s.o.Settings != nil {
+		screen.Settings = func() { s.o.Shell.Push(s.o.Settings()) }
+	}
+	return screen
 }
 
 func (s *Shopping) title() string {

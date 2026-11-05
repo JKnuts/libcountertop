@@ -86,6 +86,10 @@ func (view *Renderer) homeRows() ([]menu.Row, []func(int)) {
 		rows = append(rows, menu.Row{Label: say.T("thermostat.app"), Kind: menu.Chevron})
 		taps = append(taps, func(int) { view.options.Shell.Push(page()) })
 	}
+	if page := view.options.YouTubeTV; page != nil {
+		rows = append(rows, menu.Row{Label: say.T("tv.youtube"), Kind: menu.Chevron})
+		taps = append(taps, func(int) { view.options.Shell.Push(page()) })
+	}
 	return rows, taps
 }
 
@@ -516,6 +520,7 @@ type Dependencies struct {
 	Doorbell        func() shell.View
 	HomeAlarm       func() shell.View
 	Thermostat      func() shell.View
+	YouTubeTV       func() shell.View
 	Shell           *shell.Shell
 	Logo            string
 	Marks           settings.ModeMarks

@@ -35,7 +35,41 @@ type Now struct {
 
 	Queue []Track
 
+	Shuffle bool
+	Repeat  Repeat
+	Liked   bool
+
 	Can Controls
+}
+
+type Repeat string
+
+const (
+	RepeatOff Repeat = "off"
+	RepeatAll Repeat = "all"
+	RepeatOne Repeat = "one"
+)
+
+func (r Repeat) Next() Repeat {
+	switch r {
+	case RepeatAll:
+		return RepeatOne
+	case RepeatOne:
+		return RepeatOff
+	}
+	return RepeatAll
+}
+
+type Shuffler interface {
+	SetShuffle(on bool)
+}
+
+type Repeater interface {
+	SetRepeat(r Repeat)
+}
+
+type Liker interface {
+	SetLiked(on bool)
 }
 
 type Break struct {
@@ -70,6 +104,9 @@ const (
 	CanStop
 	CanNext
 	CanPrevious
+	CanShuffle
+	CanRepeat
+	CanLike
 )
 
 func (c Controls) Has(want Controls) bool { return c&want == want }

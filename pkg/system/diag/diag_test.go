@@ -145,3 +145,17 @@ func objectID(e esphome.Entity) string {
 	}
 	return ""
 }
+
+func TestTheAddressListStopsAtWholeAddresses(t *testing.T) {
+	parts := []string{"192.168.1.50", "2001:db8::1111:2222:3333:4444", "2001:db8::aaaa"}
+	if got := joinWithin(parts, ", ", 50); got != "192.168.1.50, 2001:db8::1111:2222:3333:4444" {
+		t.Errorf("joinWithin = %q", got)
+	}
+	if got := joinWithin(
+		parts,
+		", ",
+		esphome.MaxState,
+	); got != "192.168.1.50, 2001:db8::1111:2222:3333:4444, 2001:db8::aaaa" {
+		t.Errorf("joinWithin = %q", got)
+	}
+}

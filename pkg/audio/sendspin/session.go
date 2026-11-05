@@ -249,6 +249,7 @@ func (s *Session) said(st protocol.ServerStateMessage) {
 		s.commands = c.SupportedCommands
 		s.mu.Unlock()
 		slog.Debug("sendspin server commands", "commands", c.SupportedCommands)
+		s.callbacks.controller(*c)
 	}
 
 	if m := st.Metadata; m != nil {
@@ -431,3 +432,14 @@ func micros() int64 { return time.Now().UnixMicro() }
 func (s *Session) Close() { s.client.Close() }
 
 func (s *Session) Command(want ...string) bool { return s.tell(want...) }
+
+func (s *Session) Takes(cmd ...string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, c := range cmd {
+		if !slices.Contains(s.commands, c) {
+			return false
+		}
+	}
+	return true
+}

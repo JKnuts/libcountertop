@@ -256,15 +256,50 @@ func (p *Renderer) extras(now nowplaying.Now, l look) (gogui.View, gogui.View) {
 		stop = p.round("player-stop", gogui.IconStop, st, side, gogui.ColorTransparent,
 			func() { p.options.Player.Transport().Stop() })
 	}
-	return pair(vol, words), pair(slot(side), stop)
+	toggle := func(id, name string, on bool, do func()) gogui.View {
+		lit := mdi
+		if on {
+			lit.Color = l.body.Color
+		}
+		return p.round(id, icons.Glyph(icons.Named(name)), lit, side, gogui.ColorTransparent, do)
+	}
+	shuffle, repeat, like := slot(side), slot(side), slot(side)
+	t := p.options.Player.Transport()
+	if s, ok := t.(nowplaying.Shuffler); ok && now.Can.Has(nowplaying.CanShuffle) {
+		name := "mdi:shuffle-disabled"
+		if now.Shuffle {
+			name = "mdi:shuffle-variant"
+		}
+		shuffle = toggle("player-shuffle", name, now.Shuffle,
+			func() { s.SetShuffle(!now.Shuffle) })
+	}
+	if r, ok := t.(nowplaying.Repeater); ok && now.Can.Has(nowplaying.CanRepeat) {
+		name := map[nowplaying.Repeat]string{
+			nowplaying.RepeatAll: "mdi:repeat",
+			nowplaying.RepeatOne: "mdi:repeat-once",
+		}[now.Repeat]
+		if name == "" {
+			name = "mdi:repeat-off"
+		}
+		repeat = toggle("player-repeat", name, now.Repeat == nowplaying.RepeatAll ||
+			now.Repeat == nowplaying.RepeatOne, func() { r.SetRepeat(now.Repeat.Next()) })
+	}
+	if k, ok := t.(nowplaying.Liker); ok && now.Can.Has(nowplaying.CanLike) {
+		name := "mdi:heart-outline"
+		if now.Liked {
+			name = "mdi:heart"
+		}
+		like = toggle("player-like", name, now.Liked, func() { k.SetLiked(!now.Liked) })
+	}
+	return group(vol, words, shuffle), group(repeat, like, stop)
 }
 
-func pair(a, b gogui.View) gogui.View {
+func group(views ...gogui.View) gogui.View {
 	return gogui.Row(gogui.ContainerCfg{
 		Sizing:  gogui.FitFit,
 		Padding: gogui.NoPadding,
 		VAlign:  gogui.VAlignMiddle,
-		Content: []gogui.View{a, b},
+		Content: views,
 	})
 }
 

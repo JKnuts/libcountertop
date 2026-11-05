@@ -628,27 +628,8 @@ func (r *Radar) keys(
 }
 
 func (r *Radar) close() gogui.View {
-	reach := style.Reach()
-	glyph := gogui.CurrentTheme().TextStyleIconMedium
-	glyph.Family = icons.Family
-	glyph.Size = reach * 0.6
-	glyph.Color = gogui.RGB(0xff, 0xff, 0xff)
-	return widgets.Placed(
-		ui.Rect{X: int(reach * 0.3), Y: int(reach * 0.3), W: int(reach * 1.1), H: int(reach * 1.1)},
-		gogui.Column(gogui.ContainerCfg{
-			ID:      "radar-close",
-			Sizing:  gogui.FillFill,
-			Radius:  gogui.RadiusMedium,
-			Color:   gogui.RGBA(0, 0, 0, 0x99),
-			HAlign:  gogui.HAlignCenter,
-			VAlign:  gogui.VAlignMiddle,
-			Content: []gogui.View{gogui.Label(icons.Glyph(icons.Named("arrow-left")), glyph)},
-			OnClick: func(e gogui.EventCtx) {
-				r.o.Shell.Remove(r.view)
-				e.Consume()
-			},
-		}),
-	)
+	return widgets.LeaveCorner(r.o.UI.Presses.Pressable, "radar-close", widgets.CornerFloating, 1,
+		func() { r.o.Shell.Remove(r.view) })
 }
 
 func (r *Radar) zoom(ranges []schema.RadarRange, i int) {

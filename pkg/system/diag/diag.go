@@ -202,7 +202,7 @@ func (d *Diag) Sample() {
 	d.Measure()
 	d.board()
 	d.wireless()
-	d.address.Set(strings.Join(addresses(), ", "))
+	d.address.Set(joinWithin(addresses(), ", ", esphome.MaxState))
 	if d.o.Network != nil {
 		d.network.Set(d.o.Network())
 	}
@@ -296,6 +296,24 @@ func addresses() []string {
 		out = append(out, ip.String())
 	}
 	return out
+}
+
+func joinWithin(parts []string, sep string, limit int) string {
+	var b strings.Builder
+	for _, p := range parts {
+		grow := len(p)
+		if b.Len() > 0 {
+			grow += len(sep)
+		}
+		if b.Len()+grow > limit {
+			break
+		}
+		if b.Len() > 0 {
+			b.WriteString(sep)
+		}
+		b.WriteString(p)
+	}
+	return b.String()
 }
 
 func set(s *esphome.Sensor, r metrics.Reading) {

@@ -78,41 +78,18 @@ func Floating(z int, v gogui.View) gogui.View {
 
 func (kit *Toolkit) PageFrame(w *gogui.Window, p FrameOptions) gogui.View {
 	t := gogui.CurrentTheme()
-	back := t.TextStyleIconMedium
-	back.Color = t.TextStyleDisplay.Color
-	back.Size = t.TextStyleDisplay.Size * 0.6
 	var foot []gogui.View
 	if p.Foot != nil {
 		foot = append(foot, p.Foot(w))
 	}
 	head := []gogui.View{
-		kit.KeyButton(
-			"back",
-			gogui.IconArrowLeft,
-			back,
-			style.Rest,
-			func(e gogui.EventCtx) {
-				p.Back()
-				e.Window.InvalidateLayout()
-			},
-		),
+		LeaveButton(kit.Pressable, "back", CornerSolid, 1, p.Back),
 		gogui.Label(p.Title, t.TextStyleDisplay),
 	}
 	if p.Settings != nil {
-		gear := back
-		gear.Family = icons.Family
 		head = append(head,
 			gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding}),
-			kit.KeyButton(
-				"settings",
-				icons.Glyph(icons.Named("mdi:cog")),
-				gear,
-				style.Rest,
-				func(e gogui.EventCtx) {
-					p.Settings()
-					e.Window.InvalidateLayout()
-				},
-			),
+			SettingsButton(kit.Pressable, "settings", CornerSolid, 1, p.Settings),
 		)
 	}
 	header := []gogui.View{gogui.Row(gogui.ContainerCfg{

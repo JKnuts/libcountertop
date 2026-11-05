@@ -796,7 +796,13 @@ func (c *Cameras) buildLive(w *gogui.Window) gogui.View {
 	}
 	content = append(
 		content,
-		widgets.CloseCorner(c.presses, "camera-live-close", level, c.closeLive),
+		widgets.LeaveCorner(
+			c.presses.Pressable,
+			"camera-live-close",
+			widgets.CornerFloating,
+			level,
+			c.closeLive,
+		),
 	)
 	if video != nil || f.src != "" {
 		content = append(content, mode(vw, video != nil))
@@ -1015,11 +1021,18 @@ func (c *Cameras) emptyNote() string {
 
 func (c *Cameras) corners(vw int, level float32) []gogui.View {
 	return []gogui.View{
-		widgets.CloseCorner(c.presses, "cameras-close", level, func() { c.o.Shell.Remove(c.grid) }),
+		widgets.LeaveCorner(
+			c.presses.Pressable,
+			"cameras-close",
+			widgets.CornerFloating,
+			level,
+			func() { c.o.Shell.Remove(c.grid) },
+		),
 		widgets.SettingsCorner(
-			c.presses,
+			c.presses.Pressable,
 			"cameras-settings",
 			vw,
+			widgets.CornerFloating,
 			level,
 			func() { c.o.Shell.Push(c.Page()) },
 		),

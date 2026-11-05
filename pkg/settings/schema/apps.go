@@ -24,6 +24,7 @@ const (
 	AppHomeAlarm  = "homealarm"
 	AppPhotos     = "photos"
 	AppThermostat = "thermostat"
+	AppTV         = "tv"
 )
 
 func DefaultApps() Apps { return Apps{Dock: []string{AppPlayer, AppCalls}} }

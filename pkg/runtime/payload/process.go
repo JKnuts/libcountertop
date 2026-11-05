@@ -9,8 +9,9 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"sync"
+
+	"github.com/ygelfand/libcountertop/pkg/runtime/oom"
 )
 
 type Command struct {
@@ -77,8 +78,7 @@ func (p *Process) score(n int) {
 	if n == 0 {
 		return
 	}
-	at := "/proc/" + strconv.Itoa(p.cmd.Process.Pid) + "/oom_score_adj"
-	if err := os.WriteFile(at, []byte(strconv.Itoa(n)), 0o644); err != nil {
+	if err := oom.Set(p.cmd.Process.Pid, n); err != nil {
 		slog.Warn(
 			"a helper's out-of-memory priority could not be set",
 			"path",

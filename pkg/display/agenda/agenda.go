@@ -31,6 +31,7 @@ type Options struct {
 	Calendar   *calendar.Calendar
 	Gate       func(*gogui.Window) gogui.View
 	TwentyFour func() bool
+	Settings   func() *shell.Page
 }
 
 type Agenda struct {
@@ -53,7 +54,19 @@ func (a *Agenda) Screen(v shell.View) *navigation.Screen {
 	if v != a.view {
 		return nil
 	}
-	return &navigation.Screen{Title: say.T("calendar.app"), View: v, Build: a.build}
+	return &navigation.Screen{
+		Title:    say.T("calendar.app"),
+		View:     v,
+		Build:    a.build,
+		Settings: a.settings(),
+	}
+}
+
+func (a *Agenda) settings() func() {
+	if a.o.Settings == nil {
+		return nil
+	}
+	return func() { a.o.Shell.Push(a.o.Settings()) }
 }
 
 func (a *Agenda) build(w *gogui.Window) gogui.View {
@@ -68,7 +81,14 @@ func (a *Agenda) build(w *gogui.Window) gogui.View {
 	var views []gogui.View
 	switch {
 	case len(a.o.Calendar.Chosen()) == 0:
-		views = append(views, note("none", say.T("calendar.pick")))
+		var pick func(int)
+		if open := a.settings(); open != nil {
+			pick = func(int) { open() }
+		}
+		views = append(
+			views,
+			ui.Row("none", page, menu.Row{Label: say.T("calendar.pick")}, pick, false),
+		)
 	case !loaded:
 		views = append(views, note("loading", say.T("home.loading")))
 	case err != nil:

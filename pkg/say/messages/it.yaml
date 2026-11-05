@@ -142,7 +142,7 @@ calendar.empty: Nessun impegno in arrivo
 calendar.group.calendar: Calendario
 calendar.none: Nessun calendario in Home Assistant
 calendar.off: "Off"
-calendar.pick: Scegli i calendari in Impostazioni → Controllo casa → Calendario
+calendar.pick: Scegli i calendari
 calendar.example.entities: calendar.family, calendar.work
 calendar.setting.entities: Calendari
 calendar.setting.span: Giorni da mostrare
@@ -1094,7 +1094,6 @@ player.now: In riproduzione
 music.app: Musica
 music.now: In riproduzione
 music.speakers: Altoparlanti
-music.close: Chiudi
 music.quiet: Niente in riproduzione
 music.none: Nessun altoparlante di Music Assistant
 music.unavailable: Music Assistant non è raggiungibile
@@ -1543,6 +1542,21 @@ tone.info: Info
 tone.success: Conferma
 tone.title: Suono di attivazione
 tone.warning: Attenzione
+tv.app: TV
+tv.empty: Nessun programma in onda
+tv.example.default: media_player.yttv_soggiorno
+tv.failed: Impossibile caricare la guida dei canali
+tv.find: Cerca un canale o un programma
+tv.group.tv: TV
+tv.here: Qui
+tv.next: "Alle {{.Time}}: {{.Title}}"
+tv.none: Nessun lettore YouTube TV in Home Assistant
+tv.quiet: Niente in riproduzione
+tv.setting.default: TV predefinita
+tv.setting.favorites: Preferiti
+tv.update: Aggiorna l'integrazione YouTube TV
+tv.watch: "Guarda su {{.TV}}"
+tv.youtube: YouTube TV
 uisize.compact: Compatta
 uisize.large: Grande
 uisize.medium: Media

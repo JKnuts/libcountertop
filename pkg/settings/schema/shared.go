@@ -36,6 +36,7 @@ type Shared struct {
 	Thermostat Thermostat `json:"thermostat"`
 	Time       Time       `json:"time"`
 	Todo       Todo       `json:"todo"`
+	TV         TV         `json:"tv"`
 	Update     Update     `json:"update"`
 	Visual     Visual     `json:"visual"`
 	Voice      Voice      `json:"voice"`
@@ -72,6 +73,7 @@ func DefaultShared() Shared {
 		Sendspin:   DefaultSendspin(),
 		Thermostat: DefaultThermostat(),
 		Todo:       DefaultTodo(),
+		TV:         DefaultTV(),
 		Update:     DefaultUpdate(),
 		Visual:     DefaultVisualSettings(),
 		Voice:      DefaultVoice(),
@@ -127,6 +129,7 @@ type Sections[C any] struct {
 	Thermostat storage.Binding[C, Thermostat]
 	Time       storage.Binding[C, Time]
 	Todo       storage.Binding[C, Todo]
+	TV         storage.Binding[C, TV]
 	Update     storage.Binding[C, Update]
 	Visual     storage.Binding[C, Visual]
 	Voice      storage.Binding[C, Voice]
@@ -173,6 +176,7 @@ func NewSections[C any](store func() *storage.Store[C], shared func(*C) *Shared)
 		),
 		Time:    bind(store, shared, func(s *Shared) *Time { return &s.Time }),
 		Todo:    bind(store, shared, func(s *Shared) *Todo { return &s.Todo }),
+		TV:      bind(store, shared, func(s *Shared) *TV { return &s.TV }),
 		Update:  bind(store, shared, func(s *Shared) *Update { return &s.Update }),
 		Visual:  bind(store, shared, func(s *Shared) *Visual { return &s.Visual }),
 		Voice:   bind(store, shared, func(s *Shared) *Voice { return &s.Voice }),
@@ -214,6 +218,7 @@ func (w SharedWriter[C]) Screen() ScreenWriter       { return NewScreenWriter(w.
 func (w SharedWriter[C]) Sendspin() SendspinWriter   { return NewSendspinWriter(w.s.Sendspin) }
 func (w SharedWriter[C]) Time() TimeWriter           { return NewTimeWriter(w.s.Time) }
 func (w SharedWriter[C]) Todo() TodoWriter           { return NewTodoWriter(w.s.Todo) }
+func (w SharedWriter[C]) TV() TVWriter               { return NewTVWriter(w.s.TV) }
 func (w SharedWriter[C]) Update() UpdateWriter       { return NewUpdateWriter(w.s.Update) }
 func (w SharedWriter[C]) Visual() VisualWriter       { return NewVisualWriter(w.s.Visual) }
 func (w SharedWriter[C]) Wake(slot int) WakeWriter   { return NewWakeWriter(w.s.Wake, slot) }

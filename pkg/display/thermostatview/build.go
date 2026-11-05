@@ -127,16 +127,15 @@ func (f *face) render(lk look, rounded bool) gogui.View {
 }
 
 func (v *View) corners(vw float32) []gogui.View {
-	p := v.o.UI.Presses
-	side, pad := widgets.CornerSide(), int(gogui.PadLarge)
-	x := int(vw) - pad - side
+	press := v.o.UI.Presses.Pressable
 	level := v.o.Shell.Controls()
 	if list := v.shown(); len(list) == 0 || !list[0].Available() {
 		level = 1
 	}
 	return []gogui.View{
-		widgets.CloseCornerAt(p, "thermostat-close", x, level, func() { v.o.Shell.Remove(v.app) }),
-		widgets.SettingsCornerAt(p, "thermostat-settings", x-pad-side, level,
+		widgets.LeaveCorner(press, "thermostat-close", widgets.CornerFloating, level,
+			func() { v.o.Shell.Remove(v.app) }),
+		widgets.SettingsCorner(press, "thermostat-settings", int(vw), widgets.CornerFloating, level,
 			func() { v.o.Shell.Push(v.Page()) }),
 	}
 }

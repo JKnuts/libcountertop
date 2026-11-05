@@ -59,6 +59,7 @@ func TestSharedFlattensIntoTheEmbeddingStruct(t *testing.T) {
 		"thermostat",
 		"time",
 		"todo",
+		"tv",
 		"update",
 		"visual",
 		"voice",

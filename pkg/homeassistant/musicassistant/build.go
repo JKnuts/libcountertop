@@ -14,6 +14,10 @@ func BuildMusic(p product.Context, player func() string) *Music {
 	})
 }
 
+func BuildLikes(p product.Context, player func() string) *Likes {
+	return NewLikes(LikesOptions{HA: p.Controller, Player: player, Changed: p.Redraw})
+}
+
 func Build(p product.Context, player func() string) *Queue {
 	return New(Options{
 		HA:      p.Controller,

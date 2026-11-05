@@ -103,9 +103,10 @@ func (p *Renderer) Body(w *gogui.Window) gogui.View {
 		Color:   gogui.CurrentTheme().Cfg.ColorBackground,
 		Content: append(layers,
 			widgets.Placed(whole, content),
-			widgets.CloseCorner(
-				p.options.UI.Presses,
+			widgets.LeaveCorner(
+				p.options.UI.Presses.Pressable,
 				"player-close",
+				widgets.CornerFloating,
 				p.options.Shell.Controls(),
 				p.options.Shell.Pop,
 			),

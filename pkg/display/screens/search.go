@@ -15,10 +15,14 @@ func (a *App) searchField() gui.View {
 	if search == nil {
 		return nil
 	}
+	placeholder := search.Placeholder
+	if placeholder == "" {
+		placeholder = say.T("settings.search")
+	}
 	return a.ui.Search(gui.InputCfg{
 		ID:            searchFieldID,
 		Text:          *search.Query,
-		Placeholder:   say.T("settings.search"),
+		Placeholder:   placeholder,
 		Sizing:        gui.FillFit,
 		OnTextChanged: func(value string, ev gui.EventCtx) { *search.Query = value; ev.Window.InvalidateLayout() },
 	}, nil)

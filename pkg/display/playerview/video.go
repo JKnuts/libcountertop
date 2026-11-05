@@ -71,7 +71,10 @@ func (pv *Renderer) Video(w *gogui.Window, p *videoplayer.Page) gogui.View {
 	}
 	if look.Shown {
 		bottom := pv.railRoom()
-		layers = append(layers, floatAt(0, 0, float32(vw), 0, pv.videoHeader(p)))
+		layers = append(layers, widgets.LeaveCorner(
+			pv.options.UI.Presses.Pressable, "video-back", widgets.CornerFloating, 1,
+			func() { pv.options.Shell.Remove(p) },
+		))
 		layers = append(layers, gogui.Column(gogui.ContainerCfg{
 			Float:       true,
 			FloatAnchor: gogui.FloatBottomLeft,
@@ -180,27 +183,6 @@ func backdrop(look videoplayer.Look, vw, vh int) gogui.View {
 		HAlign:  gogui.HAlignCenter,
 		VAlign:  gogui.VAlignMiddle,
 		Content: content,
-	})
-}
-
-func (pv *Renderer) videoHeader(p *videoplayer.Page) gogui.View {
-	back := iconStyle(videoInk)
-	back.Size = reach() * 0.9
-	return gogui.Row(gogui.ContainerCfg{
-		Sizing:  gogui.FillFit,
-		Padding: gogui.PaddingLarge,
-		Color:   videoScrim,
-		Content: []gogui.View{
-			pv.options.UI.Presses.Button(
-				"video-back",
-				gogui.IconArrowLeft,
-				back,
-				gogui.Color{},
-				func(e gogui.EventCtx) {
-					pv.options.Shell.Remove(p)
-				},
-			),
-		},
 	})
 }
 

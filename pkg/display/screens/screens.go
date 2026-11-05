@@ -196,6 +196,7 @@ type Options struct {
 	DoorbellPage    func() shell.View
 	HomeAlarmPage   func() shell.View
 	ThermostatPage  func() shell.View
+	YouTubeTVPage   func() shell.View
 	Player          playerview.Player
 	PlayerPage      func() shell.View
 	Lyrics          playerview.Lyrics
@@ -294,6 +295,7 @@ func New(o Options) *App {
 		Doorbell:        o.DoorbellPage,
 		HomeAlarm:       o.HomeAlarmPage,
 		Thermostat:      o.ThermostatPage,
+		YouTubeTV:       o.YouTubeTVPage,
 		Shell:           o.Shell,
 		Logo:            esphomeLogo,
 		Marks:           settings.ModeMarks{Tessera: tesseraview.Mark, Native: a.logo},
@@ -313,6 +315,10 @@ func New(o Options) *App {
 func (a *App) Name() string { return "gui" }
 
 func (a *App) Gate(w *gogui.Window) gogui.View { return a.home.Gate(w) }
+
+func (a *App) CalendarPage() *shell.Page { return a.home.CalendarPage() }
+
+func (a *App) TodoLists() *shell.Page { return a.home.TodoLists() }
 
 func (a *App) sizeSetting() string {
 	if s := a.o.Settings().Screen.Size; s != "" {

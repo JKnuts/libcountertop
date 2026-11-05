@@ -29,8 +29,9 @@ type Page struct {
 }
 
 type Search struct {
-	Query   *string
-	Results func() *Page
+	Query       *string
+	Placeholder string
+	Results     func() *Page
 }
 
 func SettingsPage(view View) *Page {
