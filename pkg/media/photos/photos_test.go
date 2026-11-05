@@ -325,10 +325,13 @@ func face(x1, y1, x2, y2 int) map[string]any {
 
 func TestFacesComeAsSharesOfThePhotoAndSurviveARestart(t *testing.T) {
 	dir := t.TempDir()
-	srv := &server{version: "v3.3.1", key: "k", assets: 1,
+	srv := &server{version: "v3.3.1", key: "k", assets: 6,
 		perms: []string{"server.about", "asset.read", "asset.view", "face.read"}}
 	l, _ := library(t, on(schema.Immich{Server: srv.start(t), Key: "k"}), dir)
 	l.step(context.Background())
+	if srv.faces != srv.previews {
+		t.Errorf("%d face lookups for %d downloaded photos", srv.faces, srv.previews)
+	}
 
 	want := []Box{{0.1, 0.05, 0.3, 0.25}, {0.5, 0.4, 0.6, 0.5}}
 	again, _ := library(t, on(schema.Immich{Server: "http://127.0.0.1:1", Key: "k"}), dir)

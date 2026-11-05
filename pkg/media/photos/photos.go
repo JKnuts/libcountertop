@@ -273,7 +273,6 @@ func (l *Library) draw(ctx context.Context, f *feed, cfg schema.Photos) {
 				Place:  x.Place,
 				People: x.People,
 				Year:   x.Year,
-				Faces:  x.Faces,
 			}
 			if !seen[e.Source+"/"+e.ID] {
 				seen[e.Source+"/"+e.ID] = true
@@ -325,6 +324,9 @@ func (l *Library) prefetch(ctx context.Context) {
 		}
 
 		e.Size = int64(len(data))
+		if ff, ok := f.session.(faceFinder); ok {
+			e.Faces = ff.Faces(ctx, e.ID)
+		}
 		l.mu.Lock()
 		f.deck = f.deck[1:]
 		l.ready = append(l.ready, e)

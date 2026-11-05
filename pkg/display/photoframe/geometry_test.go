@@ -78,14 +78,14 @@ func TestSlowPanKeepsTheFocusInView(t *testing.T) {
 	}
 }
 
-func TestFacesSkipsTheCrowd(t *testing.T) {
+func TestFaceAreaSkipsTheCrowd(t *testing.T) {
 	near := []image.Rectangle{image.Rect(100, 500, 400, 800), image.Rect(600, 520, 880, 800)}
 	crowd := image.Rect(1200, 50, 1240, 90)
-	got := Faces(append(near, crowd))
+	got := faceArea(append(near, crowd))
 	if got.Overlaps(crowd) || !near[0].In(got) || !near[1].In(got) {
 		t.Errorf("focus %v, want both near faces and not the crowd %v", got, crowd)
 	}
-	if !Faces(nil).Empty() {
+	if !faceArea(nil).Empty() {
 		t.Errorf("no faces gave a focus")
 	}
 }

@@ -77,10 +77,9 @@ type immichSession struct {
 	c        *immich.Client
 	sel      immich.Selection
 	memories bool
-	// faces is optional: without face.read, photos crop around the centre.
-	faces bool
-	size  string
-	day   string
+	faces    bool
+	size     string
+	day      string
 }
 
 func (s *immichSession) Draw(
@@ -97,7 +96,7 @@ func (s *immichSession) Draw(
 		for _, m := range found {
 			for _, a := range m.Assets {
 				if a.Type == "" || a.Type == "IMAGE" {
-					front = append(front, s.withFaces(ctx, describe(a, m.Data.Year)))
+					front = append(front, describe(a, m.Data.Year))
 				}
 			}
 		}
@@ -109,25 +108,22 @@ func (s *immichSession) Draw(
 			return nil, nil, immichErr(err)
 		}
 		for _, a := range found {
-			back = append(back, s.withFaces(ctx, describe(a, 0)))
+			back = append(back, describe(a, 0))
 		}
 	}
 	return front, back, nil
 }
 
-// withFaces leaves a photo without faces rather than fail the deck over
-// them.
-func (s *immichSession) withFaces(ctx context.Context, f Found) Found {
+func (s *immichSession) Faces(ctx context.Context, id string) []Box {
 	if !s.faces {
-		return f
+		return nil
 	}
-	faces, err := s.c.Faces(ctx, f.ID)
+	faces, err := s.c.Faces(ctx, id)
 	if err != nil {
-		slog.Debug("reading a photo's faces failed", "asset", f.ID, "err", err)
-		return f
+		slog.Debug("reading a photo's faces failed", "asset", id, "err", err)
+		return nil
 	}
-	f.Faces = boxes(faces)
-	return f
+	return boxes(faces)
 }
 
 func (s *immichSession) Fetch(ctx context.Context, id string) ([]byte, error) {

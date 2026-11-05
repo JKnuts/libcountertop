@@ -28,11 +28,12 @@ type Found struct {
 	Place  string
 	People []string
 	Year   int
-	Faces  []Box
 }
 
-// Box is a face as fractions (0..1) of its photo's width and height, so it
-// holds for whatever size the photo is fetched at.
+type faceFinder interface {
+	Faces(ctx context.Context, id string) []Box
+}
+
 type Box struct {
 	X1 float64 `json:"x1"`
 	Y1 float64 `json:"y1"`

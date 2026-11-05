@@ -64,13 +64,10 @@ func focusOf(faces []photos.Box, w, h int) image.Rectangle {
 			int(f.X2*float64(w)), int(f.Y2*float64(h)),
 		))
 	}
-	return Faces(rects)
+	return faceArea(rects)
 }
 
-// Faces pads each face so hair and chin stay in shot, and joins them into
-// the one area a crop should keep. Faces far smaller than the largest are
-// background crowd: counting them would widen the area to the whole photo.
-func Faces(faces []image.Rectangle) image.Rectangle {
+func faceArea(faces []image.Rectangle) image.Rectangle {
 	biggest := 0
 	for _, f := range faces {
 		biggest = max(biggest, f.Dx())
@@ -86,8 +83,6 @@ func Faces(faces []image.Rectangle) image.Rectangle {
 	return all
 }
 
-// place keeps focus (in the photo's pixels) in view where the fit crops;
-// an empty focus crops around the centre.
 func place(
 	fit schema.PhotoFit,
 	iw, ih, w, h int,
@@ -194,9 +189,6 @@ func drift(
 	}
 }
 
-// within narrows a pan position p (0..1 across the slack between a window
-// of size win and its crop) to the positions that keep [lo, hi] in the
-// window, or centres the window on it when it can't fit.
 func within(p, start, crop, win, lo, hi float64) float64 {
 	slack := crop - win
 	if slack <= 0 {

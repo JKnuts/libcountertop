@@ -55,9 +55,6 @@ type Person struct {
 	Hidden bool   `json:"isHidden"`
 }
 
-// Face is in the pixels of the image Immich detected it on, which is not
-// necessarily the size of the picture fetched. Search results don't carry
-// faces, only /api/faces does.
 type Face struct {
 	X1     int `json:"boundingBoxX1"`
 	Y1     int `json:"boundingBoxY1"`
