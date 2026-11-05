@@ -55,6 +55,7 @@ type Picture struct {
 	Place  string
 	People []string
 	Year   int
+	Faces  []Box
 }
 
 type Options struct {
@@ -75,6 +76,7 @@ type entry struct {
 	Place  string   `json:"place,omitempty"`
 	People []string `json:"people,omitempty"`
 	Year   int      `json:"year,omitempty"`
+	Faces  []Box    `json:"faces,omitempty"`
 	Size   int64    `json:"size,omitempty"`
 }
 
@@ -203,6 +205,7 @@ func (l *Library) Next() (Picture, bool) {
 		Place:  e.Place,
 		People: e.People,
 		Year:   e.Year,
+		Faces:  e.Faces,
 	}, true
 }
 
@@ -270,6 +273,7 @@ func (l *Library) draw(ctx context.Context, f *feed, cfg schema.Photos) {
 				Place:  x.Place,
 				People: x.People,
 				Year:   x.Year,
+				Faces:  x.Faces,
 			}
 			if !seen[e.Source+"/"+e.ID] {
 				seen[e.Source+"/"+e.ID] = true

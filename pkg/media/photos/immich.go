@@ -3,6 +3,7 @@ package photos
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"slices"
 	"strings"
 	"time"
@@ -36,7 +37,9 @@ func (immichSource) Same(a, b schema.Photos) bool { return a.Immich == b.Immich 
 
 func (immichSource) Open(ctx context.Context, cfg schema.Photos) (Session, string, error) {
 	c := immich.New(cfg.Immich.Server, cfg.Immich.Key)
+	faces := false
 	if granted, err := c.KeyPermissions(ctx); err == nil {
+		faces = len(lacks(granted, []string{"face.read"})) == 0
 		if lacking := lacks(granted, needs(cfg.Immich)); len(lacking) > 0 {
 			return nil, "", &PermissionError{Name: strings.Join(lacking, ", ")}
 		}
@@ -58,6 +61,7 @@ func (immichSource) Open(ctx context.Context, cfg schema.Photos) (Session, strin
 		c:        c,
 		sel:      sel,
 		memories: cfg.Immich.Memories,
+		faces:    faces,
 		size:     immichSize(cfg.Immich.Quality),
 	}, about.Version, nil
 }
@@ -73,8 +77,10 @@ type immichSession struct {
 	c        *immich.Client
 	sel      immich.Selection
 	memories bool
-	size     string
-	day      string
+	// faces is optional: without face.read, photos crop around the centre.
+	faces bool
+	size  string
+	day   string
 }
 
 func (s *immichSession) Draw(
@@ -91,7 +97,7 @@ func (s *immichSession) Draw(
 		for _, m := range found {
 			for _, a := range m.Assets {
 				if a.Type == "" || a.Type == "IMAGE" {
-					front = append(front, describe(a, m.Data.Year))
+					front = append(front, s.withFaces(ctx, describe(a, m.Data.Year)))
 				}
 			}
 		}
@@ -103,10 +109,25 @@ func (s *immichSession) Draw(
 			return nil, nil, immichErr(err)
 		}
 		for _, a := range found {
-			back = append(back, describe(a, 0))
+			back = append(back, s.withFaces(ctx, describe(a, 0)))
 		}
 	}
 	return front, back, nil
+}
+
+// withFaces leaves a photo without faces rather than fail the deck over
+// them.
+func (s *immichSession) withFaces(ctx context.Context, f Found) Found {
+	if !s.faces {
+		return f
+	}
+	faces, err := s.c.Faces(ctx, f.ID)
+	if err != nil {
+		slog.Debug("reading a photo's faces failed", "asset", f.ID, "err", err)
+		return f
+	}
+	f.Faces = boxes(faces)
+	return f
 }
 
 func (s *immichSession) Fetch(ctx context.Context, id string) ([]byte, error) {
@@ -226,6 +247,21 @@ func describe(a immich.Asset, year int) Found {
 		}
 	}
 	return f
+}
+
+func boxes(faces []immich.Face) []Box {
+	var boxes []Box
+	for _, x := range faces {
+		if x.Width <= 0 || x.Height <= 0 || x.X2 <= x.X1 || x.Y2 <= x.Y1 {
+			continue
+		}
+		w, h := float64(x.Width), float64(x.Height)
+		boxes = append(boxes, Box{
+			X1: float64(x.X1) / w, Y1: float64(x.Y1) / h,
+			X2: float64(x.X2) / w, Y2: float64(x.Y2) / h,
+		})
+	}
+	return boxes
 }
 
 func place(x *immich.Exif) string {

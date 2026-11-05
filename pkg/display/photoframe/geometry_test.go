@@ -42,15 +42,57 @@ func TestCoverCropsToTheScreensShape(t *testing.T) {
 		{image.Rect(0, 0, 1440, 1080), 1920, 1200, image.Rect(0, 90, 1440, 990)},
 		{image.Rect(0, 0, 800, 1280), 1200, 1920, image.Rect(0, 0, 800, 1280)},
 	} {
-		if got := cover(c.src, c.w, c.h); got != c.want {
+		if got := cover(c.src, c.w, c.h, image.Rectangle{}); got != c.want {
 			t.Errorf("%v into %dx%d: %v, want %v", c.src, c.w, c.h, got, c.want)
 		}
 	}
 }
 
+func TestCoverKeepsTheFocusInTheCrop(t *testing.T) {
+	src := image.Rect(0, 0, 1440, 1920)
+	face := image.Rect(500, 200, 900, 600)
+	centred := cover(src, 960, 480, image.Rectangle{})
+	if centred.Min.Y <= face.Min.Y {
+		t.Fatalf("the test face is already in the centred crop %v", centred)
+	}
+	got := cover(src, 960, 480, face)
+	if !face.In(got) || got.Dx() != centred.Dx() || got.Dy() != centred.Dy() {
+		t.Errorf("crop %v misses the face %v or changed size from %v", got, face, centred)
+	}
+	if top := cover(src, 960, 480, image.Rect(500, 0, 900, 100)); top.Min.Y != 0 {
+		t.Errorf("a face at the top edge moved the crop past it: %v", top)
+	}
+}
+
+func TestSlowPanKeepsTheFocusInView(t *testing.T) {
+	face := image.Rect(700, 300, 1000, 600)
+	for _, at := range []time.Duration{0, 5 * time.Second, 15 * time.Second, 30 * time.Second, 45 * time.Second} {
+		p := place(schema.FitKenBurns, 1440, 1920, 960, 480, face, "pan", at, 30*time.Second)
+		view := image.Rect(
+			int(p.src[0]*1440), int(p.src[1]*1920),
+			int((p.src[0]+p.src[2])*1440)+1, int((p.src[1]+p.src[3])*1920)+1,
+		)
+		if !face.In(view) {
+			t.Errorf("at %v the pan shows %v, missing %v", at, view, face)
+		}
+	}
+}
+
+func TestFacesSkipsTheCrowd(t *testing.T) {
+	near := []image.Rectangle{image.Rect(100, 500, 400, 800), image.Rect(600, 520, 880, 800)}
+	crowd := image.Rect(1200, 50, 1240, 90)
+	got := Faces(append(near, crowd))
+	if got.Overlaps(crowd) || !near[0].In(got) || !near[1].In(got) {
+		t.Errorf("focus %v, want both near faces and not the crowd %v", got, crowd)
+	}
+	if !Faces(nil).Empty() {
+		t.Errorf("no faces gave a focus")
+	}
+}
+
 func TestWholeFitsShowTheWholePhotoInside(t *testing.T) {
 	for _, fit := range []schema.PhotoFit{schema.FitContain, schema.FitBars, schema.FitFramed} {
-		p := place(fit, 600, 1200, 1280, 800, "a", 0, 0)
+		p := place(fit, 600, 1200, 1280, 800, image.Rectangle{}, "a", 0, 0)
 		if p.src != [4]float32{0, 0, 1, 1} {
 			t.Errorf("%s samples %v, want the whole photo", fit, p.src)
 		}
@@ -59,7 +101,17 @@ func TestWholeFitsShowTheWholePhotoInside(t *testing.T) {
 			t.Errorf("%s draws at %v", fit, p.dst)
 		}
 	}
-	if p := place(schema.FitBars, 600, 1200, 1280, 800, "a", 0, 0); p.back != backSolid {
+	if p := place(
+		schema.FitBars,
+		600,
+		1200,
+		1280,
+		800,
+		image.Rectangle{},
+		"a",
+		0,
+		0,
+	); p.back != backSolid {
 		t.Errorf("plain edges use %d", p.back)
 	}
 	if p := place(
@@ -68,6 +120,7 @@ func TestWholeFitsShowTheWholePhotoInside(t *testing.T) {
 		1200,
 		1280,
 		800,
+		image.Rectangle{},
 		"a",
 		0,
 		0,
@@ -78,7 +131,7 @@ func TestWholeFitsShowTheWholePhotoInside(t *testing.T) {
 }
 
 func TestCoverFillsTheArea(t *testing.T) {
-	p := place(schema.FitCover, 1600, 1200, 1280, 800, "a", 0, 0)
+	p := place(schema.FitCover, 1600, 1200, 1280, 800, image.Rectangle{}, "a", 0, 0)
 	if p.dst != [4]float32{0, 0, 1280, 800} || p.back != backNone {
 		t.Fatalf("cover draws at %v back %d", p.dst, p.back)
 	}
@@ -88,8 +141,28 @@ func TestCoverFillsTheArea(t *testing.T) {
 }
 
 func TestSlowPanMovesWithinThePhoto(t *testing.T) {
-	first := place(schema.FitKenBurns, 1600, 1200, 1280, 800, "b", 0, 30*time.Second)
-	later := place(schema.FitKenBurns, 1600, 1200, 1280, 800, "b", 10*time.Second, 30*time.Second)
+	first := place(
+		schema.FitKenBurns,
+		1600,
+		1200,
+		1280,
+		800,
+		image.Rectangle{},
+		"b",
+		0,
+		30*time.Second,
+	)
+	later := place(
+		schema.FitKenBurns,
+		1600,
+		1200,
+		1280,
+		800,
+		image.Rectangle{},
+		"b",
+		10*time.Second,
+		30*time.Second,
+	)
 	if first.src == later.src {
 		t.Error("the window did not move in ten seconds")
 	}
@@ -99,11 +172,31 @@ func TestSlowPanMovesWithinThePhoto(t *testing.T) {
 			t.Errorf("window %v leaves the photo", p.src)
 		}
 	}
-	hourly := place(schema.FitKenBurns, 1600, 1200, 1280, 800, "b", 10*time.Second, time.Hour)
+	hourly := place(
+		schema.FitKenBurns,
+		1600,
+		1200,
+		1280,
+		800,
+		image.Rectangle{},
+		"b",
+		10*time.Second,
+		time.Hour,
+	)
 	if hourly.src != later.src {
 		t.Error("a long span did not cap the leg")
 	}
-	back := place(schema.FitKenBurns, 1600, 1200, 1280, 800, "b", 50*time.Second, 30*time.Second)
+	back := place(
+		schema.FitKenBurns,
+		1600,
+		1200,
+		1280,
+		800,
+		image.Rectangle{},
+		"b",
+		50*time.Second,
+		30*time.Second,
+	)
 	if back.src != later.src {
 		t.Errorf("the second leg does not retrace the first: %v vs %v", back.src, later.src)
 	}

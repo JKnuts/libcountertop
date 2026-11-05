@@ -55,6 +55,18 @@ type Person struct {
 	Hidden bool   `json:"isHidden"`
 }
 
+// Face is in the pixels of the image Immich detected it on, which is not
+// necessarily the size of the picture fetched. Search results don't carry
+// faces, only /api/faces does.
+type Face struct {
+	X1     int `json:"boundingBoxX1"`
+	Y1     int `json:"boundingBoxY1"`
+	X2     int `json:"boundingBoxX2"`
+	Y2     int `json:"boundingBoxY2"`
+	Width  int `json:"imageWidth"`
+	Height int `json:"imageHeight"`
+}
+
 type Exif struct {
 	Taken   string `json:"dateTimeOriginal"`
 	City    string `json:"city"`
@@ -168,6 +180,11 @@ func (c *Client) Memories(ctx context.Context, day time.Time) ([]Memory, error) 
 	var out []Memory
 	path := "/api/memories?type=on_this_day&for=" + day.Format(time.DateOnly)
 	return out, c.call(ctx, http.MethodGet, path, nil, &out)
+}
+
+func (c *Client) Faces(ctx context.Context, id string) ([]Face, error) {
+	var out []Face
+	return out, c.call(ctx, http.MethodGet, "/api/faces?id="+url.QueryEscape(id), nil, &out)
 }
 
 const (

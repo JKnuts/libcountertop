@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ygelfand/libcountertop/pkg/display/theme"
+	"github.com/ygelfand/libcountertop/pkg/media/photos"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
 
@@ -16,6 +17,8 @@ const (
 	matShare   = 0.022
 	kenZoom    = 1.18
 	kenLeg     = 30 * time.Second
+	facePad    = 30
+	faceShare  = 40
 )
 
 type Look struct {
@@ -53,15 +56,49 @@ func Resolve(fit schema.PhotoFit, src image.Rectangle, w, h int) schema.PhotoFit
 	return schema.FitContain
 }
 
+func focusOf(faces []photos.Box, w, h int) image.Rectangle {
+	rects := make([]image.Rectangle, 0, len(faces))
+	for _, f := range faces {
+		rects = append(rects, image.Rect(
+			int(f.X1*float64(w)), int(f.Y1*float64(h)),
+			int(f.X2*float64(w)), int(f.Y2*float64(h)),
+		))
+	}
+	return Faces(rects)
+}
+
+// Faces pads each face so hair and chin stay in shot, and joins them into
+// the one area a crop should keep. Faces far smaller than the largest are
+// background crowd: counting them would widen the area to the whole photo.
+func Faces(faces []image.Rectangle) image.Rectangle {
+	biggest := 0
+	for _, f := range faces {
+		biggest = max(biggest, f.Dx())
+	}
+	var all image.Rectangle
+	for _, f := range faces {
+		if f.Empty() || f.Dx()*100 < biggest*faceShare {
+			continue
+		}
+		pad := max(f.Dx(), f.Dy()) * facePad / 100
+		all = all.Union(f.Inset(-pad))
+	}
+	return all
+}
+
+// place keeps focus (in the photo's pixels) in view where the fit crops;
+// an empty focus crops around the centre.
 func place(
 	fit schema.PhotoFit,
 	iw, ih, w, h int,
+	focus image.Rectangle,
 	id string,
 	elapsed, span time.Duration,
 ) placement {
 	img := image.Rect(0, 0, iw, ih)
+	focus = focus.Intersect(img)
 	whole := [4]float32{0, 0, float32(w), float32(h)}
-	crop := cover(img, w, h)
+	crop := cover(img, w, h, focus)
 	switch Resolve(fit, img, w, h) {
 	case schema.FitContain:
 		return placement{
@@ -87,7 +124,7 @@ func place(
 			shade: float32(side/60 + 2),
 		}
 	case schema.FitKenBurns:
-		return placement{dst: whole, src: drift(crop, iw, ih, id, elapsed, span)}
+		return placement{dst: whole, src: drift(crop, focus, iw, ih, id, elapsed, span)}
 	}
 	return placement{dst: whole, src: uv(crop, iw, ih)}
 }
@@ -119,7 +156,12 @@ func planFor(id string) kenPlan {
 	}
 }
 
-func drift(crop image.Rectangle, iw, ih int, id string, elapsed, span time.Duration) [4]float32 {
+func drift(
+	crop, focus image.Rectangle,
+	iw, ih int,
+	id string,
+	elapsed, span time.Duration,
+) [4]float32 {
 	leg := span
 	if leg <= 0 || leg > kenLeg {
 		leg = kenLeg
@@ -138,6 +180,10 @@ func drift(crop image.Rectangle, iw, ih int, id string, elapsed, span time.Durat
 	ww, wh := cw/zoom, ch/zoom
 	px := plan.fromX + (plan.toX-plan.fromX)*ease
 	py := plan.fromY + (plan.toY-plan.fromY)*ease
+	if !focus.Empty() {
+		px = within(px, float64(crop.Min.X), cw, ww, float64(focus.Min.X), float64(focus.Max.X))
+		py = within(py, float64(crop.Min.Y), ch, wh, float64(focus.Min.Y), float64(focus.Max.Y))
+	}
 	x := float64(crop.Min.X) + (cw-ww)*px
 	y := float64(crop.Min.Y) + (ch-wh)*py
 	return [4]float32{
@@ -148,17 +194,41 @@ func drift(crop image.Rectangle, iw, ih int, id string, elapsed, span time.Durat
 	}
 }
 
-func cover(src image.Rectangle, w, h int) image.Rectangle {
+// within narrows a pan position p (0..1 across the slack between a window
+// of size win and its crop) to the positions that keep [lo, hi] in the
+// window, or centres the window on it when it can't fit.
+func within(p, start, crop, win, lo, hi float64) float64 {
+	slack := crop - win
+	if slack <= 0 {
+		return p
+	}
+	from := max((hi-win-start)/slack, 0)
+	to := min((lo-start)/slack, 1)
+	if from > to {
+		return min(max(((lo+hi-win)/2-start)/slack, 0), 1)
+	}
+	return from + (to-from)*p
+}
+
+func cover(src image.Rectangle, w, h int, focus image.Rectangle) image.Rectangle {
 	sw, sh := src.Dx(), src.Dy()
 	if sw*h > sh*w {
 		cw := sh * w / h
 		x := src.Min.X + (sw-cw)/2
+		if !focus.Empty() {
+			x = clampInt((focus.Min.X+focus.Max.X-cw)/2, src.Min.X, src.Max.X-cw)
+		}
 		return image.Rect(x, src.Min.Y, x+cw, src.Max.Y)
 	}
 	ch := sw * h / w
 	y := src.Min.Y + (sh-ch)/2
+	if !focus.Empty() {
+		y = clampInt((focus.Min.Y+focus.Max.Y-ch)/2, src.Min.Y, src.Max.Y-ch)
+	}
 	return image.Rect(src.Min.X, y, src.Max.X, y+ch)
 }
+
+func clampInt(v, lo, hi int) int { return min(max(v, lo), hi) }
 
 func contain(src, area image.Rectangle) image.Rectangle {
 	sw, sh := src.Dx(), src.Dy()
