@@ -6,6 +6,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/style"
 	"github.com/ygelfand/libcountertop/pkg/display/theme"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
 
 type Size struct {
@@ -124,7 +125,7 @@ func sizeNamed(name string) Size {
 	return sizes[0]
 }
 
-func Look(name, palette, size string, custom theme.Custom) gogui.Theme {
+func Look(name, palette, size string, font schema.Font, custom theme.Custom) gogui.Theme {
 	st := style.ByName(name)
 	p, ok := theme.Resolve(style.Theme(name, palette), custom)
 	if !ok {
@@ -136,6 +137,9 @@ func Look(name, palette, size string, custom theme.Custom) gogui.Theme {
 		cfg = gogui.ThemeLight.Cfg
 	}
 	cfg.Name = st.Name + "/" + p.Name + "/" + size
+	if font != schema.FontStyle {
+		cfg.Name += "/" + string(font)
+	}
 	cfg.ColorBackground = widgets.Color(p.Background)
 	cfg.ColorPanel = widgets.Color(p.Surface)
 	cfg.ColorInterior = widgets.Color(p.Surface)
@@ -145,7 +149,7 @@ func Look(name, palette, size string, custom theme.Custom) gogui.Theme {
 	cfg.ColorError = widgets.Color(p.Danger)
 	cfg.ColorTextSecondary = widgets.Color(p.Muted)
 	cfg.TextStyleDef.Color = widgets.Color(p.Text)
-	cfg.TextStyleDef.Family = st.Family
+	cfg.TextStyleDef.Family = style.Family(st.Name, font)
 	ink, surface := widgets.Color(p.Text), widgets.Color(p.Surface)
 	cfg.ColorHover = ink.WithOpacity(0.06).Over(surface)
 	cfg.ColorActive = ink.WithOpacity(0.12).Over(surface)

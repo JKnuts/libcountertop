@@ -429,6 +429,7 @@ display.poster: Sfondo
 display.presence: Sensori
 display.size: Dimensione
 display.style: Stile
+display.font: Carattere
 display.theme: Tema
 display.timer: Stile timer
 display.title: Schermo
@@ -1263,6 +1264,7 @@ screen.setting.keyboard: Dimensione tastiera
 screen.setting.language: Lingua
 screen.setting.marks: Indicatori privacy
 screen.setting.size: Dimensione
+screen.setting.font: Carattere
 screen.setting.style: Stile
 screen.setting.touches: Mostra tocchi
 screen.setting.theme: Tema
@@ -1320,6 +1322,8 @@ style.skeuo: Skeuo
 style.standard: Standard
 style.terminal: Terminale
 style.title: Stile
+font.title: Carattere
+font.style: Predefinito dello stile
 sync.busy: "{{.Peer}} è occupato"
 sync.cancelled: Sincronizzazione annullata
 sync.empty: Nessun altro dispositivo con cui sincronizzare

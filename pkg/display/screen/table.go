@@ -88,6 +88,11 @@ func rows(table func() *Table, uiSize func() string) []Setting {
 				return nil
 			},
 		},
+		setting.Pick(
+			Setting{Name: "font", Group: Panel, ID: "screen_font", Icon: "mdi:format-font"},
+			schema.Fonts(),
+			func(s *schema.Screen) *schema.Font { return &s.Font },
+		),
 		{
 			Name:  "size",
 			Group: Panel,

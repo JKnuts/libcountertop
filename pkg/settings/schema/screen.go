@@ -10,6 +10,7 @@ type Screen struct {
 	Mode      ScreenMode `json:"mode"`
 	Theme     string     `json:"theme"`
 	Style     string     `json:"style"`
+	Font      Font       `json:"font,omitempty"`
 	Size      string     `json:"size"`
 	Hours     HourFormat `json:"hours"`
 
@@ -110,6 +111,51 @@ func (h HourFormat) Label() string {
 }
 
 func HourFormats() []HourFormat { return []HourFormat{TwentyFourHour, TwelveHour} }
+
+type Font string
+
+const (
+	FontStyle        Font = ""
+	FontRoboto       Font = "roboto"
+	FontAtkinson     Font = "atkinson"
+	FontNunito       Font = "nunito"
+	FontFredoka      Font = "fredoka"
+	FontComfortaa    Font = "comfortaa"
+	FontBarlow       Font = "barlow_condensed"
+	FontOswald       Font = "oswald"
+	FontRobotoSlab   Font = "roboto_slab"
+	FontLora         Font = "lora"
+	FontSpaceGrotesk Font = "space_grotesk"
+	FontExo          Font = "exo2"
+)
+
+var fontNames = map[Font]string{
+	FontRoboto:       "Roboto",
+	FontAtkinson:     "Atkinson Hyperlegible",
+	FontNunito:       "Nunito",
+	FontFredoka:      "Fredoka",
+	FontComfortaa:    "Comfortaa",
+	FontBarlow:       "Barlow Condensed",
+	FontOswald:       "Oswald",
+	FontRobotoSlab:   "Roboto Slab",
+	FontLora:         "Lora",
+	FontSpaceGrotesk: "Space Grotesk",
+	FontExo:          "Exo 2",
+}
+
+func (f Font) Label() string {
+	if name, ok := fontNames[f]; ok {
+		return name
+	}
+	return say.T("font.style")
+}
+
+func Fonts() []Font {
+	return []Font{
+		FontStyle, FontRoboto, FontAtkinson, FontNunito, FontFredoka, FontComfortaa,
+		FontBarlow, FontOswald, FontRobotoSlab, FontLora, FontSpaceGrotesk, FontExo,
+	}
+}
 
 type KeyboardSize string
 

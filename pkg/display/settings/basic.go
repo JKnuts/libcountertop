@@ -271,6 +271,30 @@ func (p *BasicPages) Style() *shell.Page {
 	}
 }
 
+func (p *BasicPages) Font() *shell.Page {
+	return &shell.Page{
+		Title: say.T("font.title"),
+		Tiles: func() ([]menu.Cell, []func(int)) {
+			screen := p.state().Screen
+			var cells []menu.Cell
+			var taps []func(int)
+			for _, f := range config.Fonts() {
+				cells = append(cells, menu.Cell{
+					Label:   f.Label(),
+					Chosen:  f == screen.Font,
+					Preview: p.options.Previews.Font(style.Family(screen.Style, f)),
+				})
+				taps = append(taps, func(int) {
+					if err := p.options.Screen.Set("font", string(f)); err != nil {
+						slog.Error("the font could not be saved", "font", f, "err", err)
+					}
+				})
+			}
+			return cells, taps
+		},
+	}
+}
+
 func (p *BasicPages) Theme() *shell.Page {
 	return &shell.Page{
 		Title: say.T("theme.title"),

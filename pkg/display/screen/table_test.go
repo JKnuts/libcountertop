@@ -25,6 +25,7 @@ func TestTheEntityIdentifiersDoNotMove(t *testing.T) {
 		"language":    "screen_language",
 		"marks":       "privacy_marks",
 		"touches":     "show_touches",
+		"font":        "screen_font",
 	}
 	for _, field := range theme.CustomFields {
 		want["custom."+field] = "theme_custom_" + field

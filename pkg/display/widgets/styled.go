@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"github.com/go-gui-org/go-glyph"
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/libcountertop/pkg/display/style"
@@ -135,6 +136,29 @@ func Chosen(on bool) style.State {
 		return style.Chosen
 	}
 	return style.Rest
+}
+
+func FontSample(family string, w, h float32) gogui.View {
+	t := gogui.CurrentTheme()
+	big := t.Cfg.TextStyleDef
+	big.Family, big.Typeface, big.Size = family, glyph.TypefaceBold, h*0.42
+	small := t.Cfg.TextStyleDef
+	small.Family, small.Size, small.Color = family, h*0.15, t.Cfg.ColorTextSecondary
+	return gogui.Column(gogui.ContainerCfg{
+		Width:   w,
+		Height:  h,
+		Sizing:  gogui.FixedFixed,
+		Color:   t.Cfg.ColorPanel,
+		Radius:  gogui.RadiusLarge,
+		Padding: gogui.NoPadding,
+		HAlign:  gogui.HAlignCenter,
+		VAlign:  gogui.VAlignMiddle,
+		Clip:    true,
+		Content: []gogui.View{
+			gogui.Label("Aa", big),
+			gogui.Label("10:42 Il1 O0", small),
+		},
+	})
 }
 
 func StyleSample(name string, w, h float32) gogui.View {

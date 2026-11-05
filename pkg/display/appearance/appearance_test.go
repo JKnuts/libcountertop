@@ -6,13 +6,14 @@ import (
 
 	"github.com/ygelfand/libcountertop/pkg/display/style"
 	"github.com/ygelfand/libcountertop/pkg/display/theme"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
 
 func TestEveryStyleThemeAndSizeMakesATheme(t *testing.T) {
 	for _, st := range style.Names() {
 		for _, p := range theme.Names() {
 			for _, sz := range Sizes() {
-				th := Look(st, p, sz, theme.Custom{})
+				th := Look(st, p, sz, schema.FontStyle, theme.Custom{})
 				if want := st + "/" + p + "/" + sz; th.Cfg.Name != want {
 					t.Errorf("made %q, want %q", th.Cfg.Name, want)
 				}
@@ -22,7 +23,7 @@ func TestEveryStyleThemeAndSizeMakesATheme(t *testing.T) {
 }
 
 func TestAnUnknownThemeFallsBackToTheDefault(t *testing.T) {
-	th := Look(style.Standard, "no-such-palette", SizeCompact, theme.Custom{})
+	th := Look(style.Standard, "no-such-palette", SizeCompact, schema.FontStyle, theme.Custom{})
 	if !strings.Contains(th.Cfg.Name, "/"+theme.DefaultName+"/") {
 		t.Errorf("got %q, want the default theme %q", th.Cfg.Name, theme.DefaultName)
 	}
@@ -34,6 +35,7 @@ func TestEachStyleBringsItsTypeface(t *testing.T) {
 			st.Name,
 			theme.DefaultName,
 			SizeLarge,
+			schema.FontStyle,
 			theme.Custom{},
 		).Cfg.TextStyleDef.Family; got != st.Family {
 			t.Errorf("%s draws in %q, want %q", st.Name, got, st.Family)
@@ -41,9 +43,23 @@ func TestEachStyleBringsItsTypeface(t *testing.T) {
 	}
 }
 
+func TestAChosenFontReplacesEveryStylesOwn(t *testing.T) {
+	for _, st := range style.All {
+		got := Look(st.Name, theme.DefaultName, SizeLarge, schema.FontAtkinson, theme.Custom{})
+		family := got.Cfg.TextStyleDef.Family
+		if family != style.Family(st.Name, schema.FontAtkinson) || family == st.Family {
+			t.Errorf("%s with Atkinson draws in %q", st.Name, family)
+		}
+		plain := Look(st.Name, theme.DefaultName, SizeLarge, schema.FontStyle, theme.Custom{})
+		if got.Cfg.Name == plain.Cfg.Name {
+			t.Errorf("%s is named %q with and without a font", st.Name, got.Cfg.Name)
+		}
+	}
+}
+
 func TestSizesDiffer(t *testing.T) {
-	large := Look(style.Standard, "", SizeLarge, theme.Custom{})
-	compact := Look(style.Standard, "", SizeCompact, theme.Custom{})
+	large := Look(style.Standard, "", SizeLarge, schema.FontStyle, theme.Custom{})
+	compact := Look(style.Standard, "", SizeCompact, schema.FontStyle, theme.Custom{})
 	if large.Cfg.SizeTextMedium <= compact.Cfg.SizeTextMedium {
 		t.Errorf(
 			"large text %v is not bigger than compact %v",
@@ -62,7 +78,7 @@ func TestDefaultTakesEachStylesPalette(t *testing.T) {
 			st.Name,
 			theme.Follow,
 			SizeLarge,
-			theme.Custom{},
+			schema.FontStyle, theme.Custom{},
 		).Cfg.Name; !strings.Contains(
 			got,
 			"/"+st.Palette+"/",
@@ -80,7 +96,7 @@ func TestDefaultTakesEachStylesPalette(t *testing.T) {
 func TestSizesGrowInOrder(t *testing.T) {
 	var last float32
 	for _, sz := range Sizes() {
-		body := Look(style.Standard, "", sz, theme.Custom{}).Cfg.TextStyleDef.Size
+		body := Look(style.Standard, "", sz, schema.FontStyle, theme.Custom{}).Cfg.TextStyleDef.Size
 		if body <= last {
 			t.Errorf("%s body text %v is not bigger than the size before it (%v)", sz, body, last)
 		}
@@ -89,7 +105,13 @@ func TestSizesGrowInOrder(t *testing.T) {
 }
 
 func TestCustomTakesItsColors(t *testing.T) {
-	th := Look(style.Standard, theme.CustomName, SizeLarge, theme.Custom{Accent: "#ff0000"})
+	th := Look(
+		style.Standard,
+		theme.CustomName,
+		SizeLarge,
+		schema.FontStyle,
+		theme.Custom{Accent: "#ff0000"},
+	)
 	if !strings.Contains(th.Cfg.Name, "/"+theme.CustomName+"/") {
 		t.Errorf("got %q, want the custom theme", th.Cfg.Name)
 	}

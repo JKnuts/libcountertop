@@ -428,6 +428,7 @@ display.poster: Wallpaper
 display.presence: Sensors
 display.size: Size
 display.style: Style
+display.font: Font
 display.theme: Theme
 display.timer: Timer style
 display.title: Display
@@ -1263,6 +1264,7 @@ screen.setting.keyboard: Keyboard size
 screen.setting.language: Language
 screen.setting.marks: Privacy marks
 screen.setting.size: Size
+screen.setting.font: Font
 screen.setting.style: Style
 screen.setting.touches: Show touches
 screen.setting.theme: Theme
@@ -1320,6 +1322,8 @@ style.skeuo: Skeuo
 style.standard: Standard
 style.terminal: Terminal
 style.title: Style
+font.title: Font
+font.style: Style default
 sync.busy: "{{.Peer}} is busy"
 sync.cancelled: Sync cancelled
 sync.empty: No other devices to sync with

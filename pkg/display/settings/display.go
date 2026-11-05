@@ -46,6 +46,11 @@ func (p *BasicPages) Display() *shell.Page {
 					Value: say.T("style." + style.ByName(cfg.Screen.Style).Name),
 				},
 				{
+					Label: say.T("display.font"),
+					Kind:  menu.Chevron,
+					Value: cfg.Screen.Font.Label(),
+				},
+				{
 					Label: say.T("display.size"),
 					Kind:  menu.Slider,
 					Level: sizes.Level(slices.Index(config.ScreenSizes(), cfg.UISize)),
@@ -87,6 +92,7 @@ func (p *BasicPages) Display() *shell.Page {
 				func(int) { p.toggleAuto(auto) },
 				nil,
 				p.open(func() shell.View { return p.Style() }),
+				p.open(func() shell.View { return p.Font() }),
 				func(level int) { p.setSize(config.ScreenSizes()[sizes.Index(level)]) },
 				nil,
 				SegmentPick(config.Edges(), p.options.Screen.SetDrawer),

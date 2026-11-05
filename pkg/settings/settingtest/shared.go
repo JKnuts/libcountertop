@@ -54,6 +54,7 @@ var Shared = Coverage{
 		"Screen.Mode":               "screen.auto",
 		"Screen.Theme":              "screen.theme",
 		"Screen.Style":              "screen.style",
+		"Screen.Font":               "screen.font",
 		"Screen.Size":               "screen.size",
 		"Screen.Drawer":             "screen.drawer",
 		"Screen.DockHide":           "screen.drawer.hide",
