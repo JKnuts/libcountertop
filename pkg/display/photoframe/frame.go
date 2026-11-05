@@ -44,6 +44,7 @@ type Frame struct {
 
 type Shot struct {
 	ID      string
+	Faces   []photos.Box
 	Image   image.Image
 	Version int
 	Shown   time.Time
@@ -131,6 +132,7 @@ func (f *Frame) Current() (Shot, bool) {
 	s := Shot{Image: f.img, Version: f.version, Shown: f.shownAt}
 	if f.at >= 0 && f.at < len(f.history) {
 		s.ID = f.history[f.at].ID
+		s.Faces = f.history[f.at].Faces
 	}
 	return s, true
 }

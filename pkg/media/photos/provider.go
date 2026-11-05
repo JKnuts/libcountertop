@@ -30,6 +30,17 @@ type Found struct {
 	Year   int
 }
 
+type faceFinder interface {
+	Faces(ctx context.Context, id string) []Box
+}
+
+type Box struct {
+	X1 float64 `json:"x1"`
+	Y1 float64 `json:"y1"`
+	X2 float64 `json:"x2"`
+	Y2 float64 `json:"y2"`
+}
+
 var ErrKey = errors.New("photos: the key was refused")
 
 type TooOldError struct{ Version string }

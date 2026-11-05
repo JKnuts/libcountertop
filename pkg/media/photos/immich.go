@@ -3,6 +3,7 @@ package photos
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"slices"
 	"strings"
 	"time"
@@ -36,7 +37,9 @@ func (immichSource) Same(a, b schema.Photos) bool { return a.Immich == b.Immich 
 
 func (immichSource) Open(ctx context.Context, cfg schema.Photos) (Session, string, error) {
 	c := immich.New(cfg.Immich.Server, cfg.Immich.Key)
+	faces := false
 	if granted, err := c.KeyPermissions(ctx); err == nil {
+		faces = len(lacks(granted, []string{"face.read"})) == 0
 		if lacking := lacks(granted, needs(cfg.Immich)); len(lacking) > 0 {
 			return nil, "", &PermissionError{Name: strings.Join(lacking, ", ")}
 		}
@@ -58,6 +61,7 @@ func (immichSource) Open(ctx context.Context, cfg schema.Photos) (Session, strin
 		c:        c,
 		sel:      sel,
 		memories: cfg.Immich.Memories,
+		faces:    faces,
 		size:     immichSize(cfg.Immich.Quality),
 	}, about.Version, nil
 }
@@ -73,6 +77,7 @@ type immichSession struct {
 	c        *immich.Client
 	sel      immich.Selection
 	memories bool
+	faces    bool
 	size     string
 	day      string
 }
@@ -107,6 +112,18 @@ func (s *immichSession) Draw(
 		}
 	}
 	return front, back, nil
+}
+
+func (s *immichSession) Faces(ctx context.Context, id string) []Box {
+	if !s.faces {
+		return nil
+	}
+	faces, err := s.c.Faces(ctx, id)
+	if err != nil {
+		slog.Debug("reading a photo's faces failed", "asset", id, "err", err)
+		return nil
+	}
+	return boxes(faces)
 }
 
 func (s *immichSession) Fetch(ctx context.Context, id string) ([]byte, error) {
@@ -226,6 +243,21 @@ func describe(a immich.Asset, year int) Found {
 		}
 	}
 	return f
+}
+
+func boxes(faces []immich.Face) []Box {
+	var boxes []Box
+	for _, x := range faces {
+		if x.Width <= 0 || x.Height <= 0 || x.X2 <= x.X1 || x.Y2 <= x.Y1 {
+			continue
+		}
+		w, h := float64(x.Width), float64(x.Height)
+		boxes = append(boxes, Box{
+			X1: float64(x.X1) / w, Y1: float64(x.Y1) / h,
+			X2: float64(x.X2) / w, Y2: float64(x.Y2) / h,
+		})
+	}
+	return boxes
 }
 
 func place(x *immich.Exif) string {

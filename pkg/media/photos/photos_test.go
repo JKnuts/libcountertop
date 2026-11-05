@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -27,6 +28,7 @@ type server struct {
 	down     bool
 	searches []map[string]any
 	previews int
+	faces    int
 }
 
 func (s *server) start(t *testing.T) string {
@@ -70,6 +72,14 @@ func (s *server) start(t *testing.T) string {
 		}
 		_, _ = fmt.Fprintf(w, `[{"id":"m","type":"on_this_day","data":{"year":2019},`+
 			`"assets":[{"id":%q,"type":"IMAGE"}]}]`, s.memory)
+	}))
+	mux.HandleFunc("GET /api/faces", auth(func(w http.ResponseWriter, r *http.Request) {
+		s.mu.Lock()
+		s.faces++
+		s.mu.Unlock()
+		_ = json.NewEncoder(w).Encode([]map[string]any{
+			face(100, 50, 300, 250), face(500, 400, 600, 500), face(0, 0, 0, 0),
+		})
 	}))
 	mux.HandleFunc("POST /api/search/random", auth(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]any
@@ -303,6 +313,42 @@ func TestCachedPicturesSurviveARestartWithoutTheServer(t *testing.T) {
 	p, ok := again.Next()
 	if !ok || string(p.Data) != "jpeg "+p.ID || p.Place != "Lisbon, Portugal" {
 		t.Errorf("after a restart got %+v %v", p, ok)
+	}
+}
+
+func face(x1, y1, x2, y2 int) map[string]any {
+	return map[string]any{
+		"boundingBoxX1": x1, "boundingBoxY1": y1, "boundingBoxX2": x2, "boundingBoxY2": y2,
+		"imageWidth": 1000, "imageHeight": 1000,
+	}
+}
+
+func TestFacesComeAsSharesOfThePhotoAndSurviveARestart(t *testing.T) {
+	dir := t.TempDir()
+	srv := &server{version: "v3.3.1", key: "k", assets: 6,
+		perms: []string{"server.about", "asset.read", "asset.view", "face.read"}}
+	l, _ := library(t, on(schema.Immich{Server: srv.start(t), Key: "k"}), dir)
+	l.step(context.Background())
+	if srv.faces != srv.previews {
+		t.Errorf("%d face lookups for %d downloaded photos", srv.faces, srv.previews)
+	}
+
+	want := []Box{{0.1, 0.05, 0.3, 0.25}, {0.5, 0.4, 0.6, 0.5}}
+	again, _ := library(t, on(schema.Immich{Server: "http://127.0.0.1:1", Key: "k"}), dir)
+	p, ok := again.Next()
+	if !ok || !slices.Equal(p.Faces, want) {
+		t.Errorf("faces %+v, want %+v", p.Faces, want)
+	}
+}
+
+func TestFacesAreOnlyAskedForWithFaceRead(t *testing.T) {
+	srv := &server{version: "v3.3.1", key: "k", assets: 3,
+		perms: []string{"server.about", "asset.read", "asset.view"}}
+	l, _ := library(t, on(schema.Immich{Server: srv.start(t), Key: "k"}), t.TempDir())
+	l.step(context.Background())
+	p, ok := l.Next()
+	if srv.faces != 0 || !ok || len(p.Faces) != 0 {
+		t.Errorf("without face.read: %d face lookups, picture %+v %v", srv.faces, p, ok)
 	}
 }
 

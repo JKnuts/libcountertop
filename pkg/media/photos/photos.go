@@ -55,6 +55,7 @@ type Picture struct {
 	Place  string
 	People []string
 	Year   int
+	Faces  []Box
 }
 
 type Options struct {
@@ -75,6 +76,7 @@ type entry struct {
 	Place  string   `json:"place,omitempty"`
 	People []string `json:"people,omitempty"`
 	Year   int      `json:"year,omitempty"`
+	Faces  []Box    `json:"faces,omitempty"`
 	Size   int64    `json:"size,omitempty"`
 }
 
@@ -203,6 +205,7 @@ func (l *Library) Next() (Picture, bool) {
 		Place:  e.Place,
 		People: e.People,
 		Year:   e.Year,
+		Faces:  e.Faces,
 	}, true
 }
 
@@ -321,6 +324,9 @@ func (l *Library) prefetch(ctx context.Context) {
 		}
 
 		e.Size = int64(len(data))
+		if ff, ok := f.session.(faceFinder); ok {
+			e.Faces = ff.Faces(ctx, e.ID)
+		}
 		l.mu.Lock()
 		f.deck = f.deck[1:]
 		l.ready = append(l.ready, e)

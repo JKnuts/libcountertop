@@ -42,6 +42,7 @@ type StageOptions struct {
 type pair struct {
 	id      string
 	w, h    int
+	focus   image.Rectangle
 	shown   time.Time
 	version int
 	set     bool
@@ -217,6 +218,7 @@ func (s *Stage) load(k int, shot Shot) error {
 		id:      shot.ID,
 		w:       b.Dx(),
 		h:       b.Dy(),
+		focus:   focusOf(shot.Faces, b.Dx(), b.Dy()),
 		shown:   shot.Shown,
 		version: shot.Version,
 		set:     true,
@@ -245,7 +247,7 @@ func (s *Stage) values(now time.Time) []float32 {
 		if !pr.set || (k != s.newest && p >= 1) {
 			continue
 		}
-		pl := place(look.Fit, pr.w, pr.h, w, h, pr.id, now.Sub(pr.shown), look.Span)
+		pl := place(look.Fit, pr.w, pr.h, w, h, pr.focus, pr.id, now.Sub(pr.shown), look.Span)
 		at := u[pairBase+k*pairFloats:]
 		copy(at[0:4], pl.dst[:])
 		copy(at[4:8], pl.src[:])
