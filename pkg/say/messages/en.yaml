@@ -123,6 +123,7 @@ speaker.setting.eq: Speaker EQ
 speaker.setting.resampling: Voice resampling
 speaker.setting.speaker_output: Speaker
 speaker.setting.headphone_output: Headphone jack
+speaker.setting.speaker_gain: Speaker gain
 bluetooth.setting.proxy: Bluetooth proxy
 bluetooth.setting.scan: Bluetooth scanning
 bluetooth.setting.speaker: Bluetooth speaker

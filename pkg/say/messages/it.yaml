@@ -124,6 +124,7 @@ speaker.setting.eq: Equalizzatore
 speaker.setting.resampling: Ricampionamento voce
 speaker.setting.speaker_output: Altoparlante
 speaker.setting.headphone_output: Jack cuffie
+speaker.setting.speaker_gain: Guadagno altoparlante
 bluetooth.setting.proxy: Proxy Bluetooth
 bluetooth.setting.scan: Scansione Bluetooth
 bluetooth.setting.speaker: Altoparlante Bluetooth
