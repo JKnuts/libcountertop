@@ -78,6 +78,52 @@ func TestSlowPanKeepsTheFocusInView(t *testing.T) {
 	}
 }
 
+func shown(p placement, iw, ih int) image.Rectangle {
+	return image.Rect(
+		int(p.src[0]*float32(iw)), int(p.src[1]*float32(ih)),
+		int((p.src[0]+p.src[2])*float32(iw))+1, int((p.src[1]+p.src[3])*float32(ih))+1,
+	)
+}
+
+func TestFillZoomsOutToFacesThatDoNotFit(t *testing.T) {
+	faces := faceArea(
+		[]image.Rectangle{image.Rect(134, 343, 522, 861), image.Rect(818, 942, 1056, 1228)},
+	)
+	for _, fit := range []schema.PhotoFit{schema.FitCover, schema.FitKenBurns} {
+		p := place(fit, 1440, 1920, 1280, 800, faces, "far", 10*time.Second, 30*time.Second)
+		if !faces.Intersect(image.Rect(0, 0, 1440, 1920)).In(shown(p, 1440, 1920)) {
+			t.Errorf("%s shows %v, missing the faces %v", fit, shown(p, 1440, 1920), faces)
+		}
+		x, y, w, h := p.dst[0], p.dst[1], p.dst[2], p.dst[3]
+		if p.back != backBlur || y != 0 || h != 800 || w >= 1280 || w <= 600 || x+w/2 < 639 ||
+			x+w/2 > 641 {
+			t.Errorf(
+				"%s draws at %v back %d, want full height, narrower than the screen, wider than Fit",
+				fit,
+				p.dst,
+				p.back,
+			)
+		}
+	}
+}
+
+func TestFacesThatFitKeepTheFill(t *testing.T) {
+	face := image.Rect(500, 200, 900, 600)
+	p := place(schema.FitCover, 1440, 1920, 1280, 800, face, "near", 0, 0)
+	if p.dst != [4]float32{0, 0, 1280, 800} || p.back != backNone ||
+		!face.In(shown(p, 1440, 1920)) {
+		t.Errorf("draws at %v back %d showing %v", p.dst, p.back, shown(p, 1440, 1920))
+	}
+}
+
+func TestZoomingOutStopsAtFit(t *testing.T) {
+	faces := image.Rect(0, 0, 1440, 1920)
+	p := place(schema.FitCover, 1440, 1920, 1280, 800, faces, "edges", 0, 0)
+	if p.src != [4]float32{0, 0, 1, 1} || p.dst[2] != 600 || p.dst[3] != 800 {
+		t.Errorf("samples %v into %v, want the whole photo at 600x800", p.src, p.dst)
+	}
+}
+
 func TestFaceAreaSkipsTheCrowd(t *testing.T) {
 	near := []image.Rectangle{image.Rect(100, 500, 400, 800), image.Rect(600, 520, 880, 800)}
 	crowd := image.Rect(1200, 50, 1240, 90)
