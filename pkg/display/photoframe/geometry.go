@@ -140,8 +140,8 @@ func zoomOut(iw, ih, w, h int, crop, focus image.Rectangle) (placement, bool) {
 		min(fw/float64(iw), fh/float64(ih)),
 	)
 	vw, vh := fw/scale, fh/scale
-	x0 := centreOn(float64(focus.Min.X+focus.Max.X)/2, vw, float64(iw)) - vw/2
-	y0 := centreOn(float64(focus.Min.Y+focus.Max.Y)/2, vh, float64(ih)) - vh/2
+	x0 := centerOn(float64(focus.Min.X+focus.Max.X)/2, vw, float64(iw)) - vw/2
+	y0 := centerOn(float64(focus.Min.Y+focus.Max.Y)/2, vh, float64(ih)) - vh/2
 	sx0, sy0 := max(x0, 0), max(y0, 0)
 	sx1, sy1 := min(x0+vw, float64(iw)), min(y0+vh, float64(ih))
 	return placement{
@@ -162,7 +162,7 @@ func zoomOut(iw, ih, w, h int, crop, focus image.Rectangle) (placement, bool) {
 	}, true
 }
 
-func centreOn(c, win, size float64) float64 {
+func centerOn(c, win, size float64) float64 {
 	if win >= size {
 		return size / 2
 	}
