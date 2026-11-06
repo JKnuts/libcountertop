@@ -19,15 +19,19 @@ require (
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/go-gui-org/go-glyph v1.26.4
 	github.com/go-gui-org/go-gui v0.94.0
+	github.com/gopacket/gopacket v1.7.7
 	github.com/gorilla/websocket v1.5.3
 	github.com/hajimehoshi/go-mp3 v0.3.4
+	github.com/huatuo-ai/go-pcap v0.0.0-20261024150547-bf02efa66c5d
 	github.com/insomniacslk/dhcp v0.0.0-20260901064844-234b97448fae
 	github.com/jfreymuth/vorbis v1.0.2
 	github.com/jsimonetti/rtnetlink v1.4.2
 	github.com/kkdai/youtube/v2 v2.10.6
 	github.com/libp2p/zeroconf/v2 v2.2.0
+	github.com/mdlayher/arp v0.0.0-20260923112748-e9ee4960293e
 	github.com/mdlayher/genetlink v1.4.0
-	github.com/mdlayher/netlink v1.9.0
+	github.com/mdlayher/netlink v1.11.2
+	github.com/mdlayher/wifi v0.10.0
 	github.com/mewkiz/flac v1.0.13
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/pion/ice/v4 v4.4.4
@@ -45,7 +49,7 @@ require (
 	github.com/ygelfand/go-esphome-device v0.0.19
 	github.com/ygelfand/reolinkproxy v0.0.0-20261026000641-3a2fddcfed4f
 	github.com/zserge/microwakeword v0.0.0-20260330234603-bfaf3840114e
-	golang.org/x/crypto v0.57.0
+	golang.org/x/crypto v0.58.0
 	golang.org/x/exp/shiny v0.0.0-20260908205506-85c1c2202aba
 	golang.org/x/image v0.47.0
 	golang.org/x/sync v0.24.0
@@ -92,6 +96,7 @@ require (
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
+	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118 // indirect
 	github.com/mdlayher/packet v1.1.2 // indirect
 	github.com/mdlayher/socket v0.6.0 // indirect
 	github.com/mewkiz/pkg v0.0.0-20250417130911-3f050ff8c56d // indirect
@@ -112,6 +117,7 @@ require (
 	github.com/pion/transport/v5 v5.1.1 // indirect
 	github.com/pion/turn/v5 v5.1.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	github.com/tphakala/simd v1.9.0 // indirect
@@ -122,7 +128,7 @@ require (
 	github.com/yuin/goldmark-emoji v1.0.6 // indirect
 	golang.org/x/exp v0.0.0-20260212183809-81e46e3db34a // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.51.0 // indirect
 )
