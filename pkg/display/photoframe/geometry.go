@@ -119,9 +119,54 @@ func place(
 			shade: float32(side/60 + 2),
 		}
 	case schema.FitKenBurns:
+		if p, ok := zoomOut(iw, ih, w, h, crop, focus); ok {
+			return p
+		}
 		return placement{dst: whole, src: drift(crop, focus, iw, ih, id, elapsed, span)}
 	}
+	if p, ok := zoomOut(iw, ih, w, h, crop, focus); ok {
+		return p
+	}
 	return placement{dst: whole, src: uv(crop, iw, ih)}
+}
+
+func zoomOut(iw, ih, w, h int, crop, focus image.Rectangle) (placement, bool) {
+	if focus.Empty() || focus.Dx() <= crop.Dx() && focus.Dy() <= crop.Dy() {
+		return placement{}, false
+	}
+	fw, fh := float64(w), float64(h)
+	scale := max(
+		min(fw/float64(focus.Dx()), fh/float64(focus.Dy())),
+		min(fw/float64(iw), fh/float64(ih)),
+	)
+	vw, vh := fw/scale, fh/scale
+	x0 := centreOn(float64(focus.Min.X+focus.Max.X)/2, vw, float64(iw)) - vw/2
+	y0 := centreOn(float64(focus.Min.Y+focus.Max.Y)/2, vh, float64(ih)) - vh/2
+	sx0, sy0 := max(x0, 0), max(y0, 0)
+	sx1, sy1 := min(x0+vw, float64(iw)), min(y0+vh, float64(ih))
+	return placement{
+		dst: [4]float32{
+			float32((sx0 - x0) * scale),
+			float32((sy0 - y0) * scale),
+			float32((sx1 - sx0) * scale),
+			float32((sy1 - sy0) * scale),
+		},
+		src: [4]float32{
+			float32(sx0 / float64(iw)),
+			float32(sy0 / float64(ih)),
+			float32((sx1 - sx0) / float64(iw)),
+			float32((sy1 - sy0) / float64(ih)),
+		},
+		back: backBlur,
+		blur: uv(crop, iw, ih),
+	}, true
+}
+
+func centreOn(c, win, size float64) float64 {
+	if win >= size {
+		return size / 2
+	}
+	return min(max(c, win/2), size-win/2)
 }
 
 type kenPlan struct {
