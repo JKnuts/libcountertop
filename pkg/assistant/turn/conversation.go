@@ -20,6 +20,9 @@ import (
 // Home Assistant's reply to satellites that lost the wake race: "Duplicate wake-up detected for Glados".
 const errDuplicate = "duplicate_wake_up_detected"
 
+// Home Assistant's reply when nothing was said after the wake word: "No text recognized".
+const errNoText = "stt-no-text-recognized"
+
 type phase = Phase
 
 const (
@@ -360,6 +363,12 @@ func (c *Conversation) handle(e event) {
 			c.clearPending()
 			c.idle("answered elsewhere", activity.Cancelled)
 			c.options.Presentation.Elsewhere()
+			return
+		}
+		if e.code == errNoText {
+			slog.Info("nothing heard", "slot", c.slot+1, "message", e.msg)
+			c.clearPending()
+			c.idle("nothing heard", activity.Cancelled)
 			return
 		}
 
