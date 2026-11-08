@@ -13,6 +13,13 @@ type Bus struct {
 	src   Source
 
 	srcBuf []int16
+	parts  []Part
+}
+
+type Part struct {
+	Stream  schema.Stream
+	Samples []int16
+	Level   float32
 }
 
 type lane struct {
@@ -111,15 +118,26 @@ func (b *Bus) Attach(src Source) {
 }
 
 func (b *Bus) Next(at uint64, out []int32) (queued int, rendered bool) {
-	clear(out)
+	queued, rendered = b.gather(at, len(out))
+	b.sum(out)
+	return queued, rendered
+}
 
+// Parts and their samples are reused by the next call.
+func (b *Bus) Parts(at uint64, n int) (parts []Part, queued int, rendered bool) {
+	queued, rendered = b.gather(at, n)
+	return b.parts, queued, rendered
+}
+
+func (b *Bus) gather(at uint64, n int) (queued int, rendered bool) {
+	b.parts = b.parts[:0]
 	now := time.Now()
 	b.mu.Lock()
-	for _, l := range b.lanes {
-		chunk := l.Next(len(out))
+	for s, l := range b.lanes {
+		chunk := l.Next(n)
 		queued = max(queued, len(chunk))
-		add(out, chunk, l.level())
 		if len(chunk) > 0 {
+			b.parts = append(b.parts, Part{Stream: s, Samples: chunk, Level: l.level()})
 			l.heard = now
 		}
 	}
@@ -132,14 +150,21 @@ func (b *Bus) Next(at uint64, out []int32) (queued int, rendered bool) {
 	if src == nil {
 		return queued, false
 	}
-	if cap(b.srcBuf) < len(out) {
-		b.srcBuf = make([]int16, len(out))
+	if cap(b.srcBuf) < n {
+		b.srcBuf = make([]int16, n)
 	}
-	buf := b.srcBuf[:len(out)]
+	buf := b.srcBuf[:n]
 	clear(buf)
 	src.Render(at, buf)
-	add(out, buf, media)
+	b.parts = append(b.parts, Part{Stream: schema.StreamMedia, Samples: buf, Level: media})
 	return queued, true
+}
+
+func (b *Bus) sum(out []int32) {
+	clear(out)
+	for _, p := range b.parts {
+		add(out, p.Samples, p.Level)
+	}
 }
 
 func add(into []int32, samples []int16, gain float32) {

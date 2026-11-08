@@ -26,6 +26,41 @@ func TestBusScalesEachStreamByItsOwnGain(t *testing.T) {
 	}
 }
 
+func TestBusPartsHandEachPlayingStreamOverUnscaled(t *testing.T) {
+	var b Bus
+	b.SetGain(schema.StreamMedia, 0.5)
+	b.SetGain(schema.StreamVoice, 0.25)
+	b.SetGain(schema.StreamAlerts, 1)
+	b.Mute(schema.StreamVoice, true)
+	b.Push(schema.StreamMedia, []int16{1000, 1000})
+	b.Push(schema.StreamVoice, []int16{400, 400})
+	b.Attach(steady(7))
+
+	parts, queued, rendered := b.Parts(0, 2)
+	if queued != 2 || !rendered {
+		t.Errorf("queued %d rendered %t, want 2 and true", queued, rendered)
+	}
+	got := map[schema.Stream][]Part{}
+	for _, p := range parts {
+		got[p.Stream] = append(got[p.Stream], p)
+	}
+	if len(got[schema.StreamAlerts]) != 0 {
+		t.Error("a stream with nothing queued was handed over")
+	}
+	if v := got[schema.StreamVoice]; len(v) != 1 || v[0].Level != 0 || v[0].Samples[0] != 400 {
+		t.Errorf("muted voice %+v, want its samples at level 0", v)
+	}
+	media := got[schema.StreamMedia]
+	if len(media) != 2 {
+		t.Fatalf("media parts %+v, want the queue and the source", media)
+	}
+	for _, p := range media {
+		if p.Level != 0.5 || (p.Samples[0] != 1000 && p.Samples[0] != 7) {
+			t.Errorf("media part %+v, want unscaled samples at level 0.5", p)
+		}
+	}
+}
+
 func TestBusAppliesAGainChangeToWhatIsAlreadyQueued(t *testing.T) {
 	var b Bus
 	b.Push(schema.StreamMedia, []int16{1000, 1000, 1000, 1000})
