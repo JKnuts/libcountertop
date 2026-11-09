@@ -190,9 +190,32 @@ func TestCacheHoldsThenExpires(t *testing.T) {
 	f.mu.Lock()
 	f.clock = f.clock.Add(cacheFor + time.Second)
 	f.mu.Unlock()
+	if s := p.Snapshot(); s.Loading || len(s.Areas) == 0 {
+		t.Errorf("an expired list should still show while it refreshes: %+v", s)
+	}
+	f.wait(t)
+	f.mu.Lock()
+	calls := f.calls
+	f.mu.Unlock()
+	if calls != 2 {
+		t.Errorf("%d fetches after the window, want 2", calls)
+	}
+}
+
+func TestFailedRefreshKeepsTheList(t *testing.T) {
+	f := newFake()
+	pick := config.HomePick{}
+	p := picker(f, &pick)
 	loaded(t, p, f)
-	if f.calls != 2 {
-		t.Errorf("%d fetches after the window, want 2", f.calls)
+
+	f.mu.Lock()
+	f.clock = f.clock.Add(cacheFor + time.Second)
+	f.fail = errors.New("down")
+	f.mu.Unlock()
+	p.Snapshot()
+	f.wait(t)
+	if s := p.Snapshot(); s.Loading || s.Err != nil || len(s.Areas) == 0 {
+		t.Errorf("a failed refresh replaced the list: %+v", s)
 	}
 }
 

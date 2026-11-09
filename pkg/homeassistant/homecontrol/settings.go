@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"maps"
 	"strconv"
+	"strings"
 
 	"github.com/ygelfand/libcountertop/pkg/say"
 	setting "github.com/ygelfand/libcountertop/pkg/settings"
@@ -28,6 +29,12 @@ const (
 	tesseraTurn    = "tessera.turn"
 	tesseraBottom  = "tessera.bottom"
 	tesseraFollow  = "tessera.follow"
+	ringsLook      = "rings.look"
+	ringsDepth     = "rings.depth"
+	ringsSide      = "rings.side"
+	ringsAreas     = "rings.hidden_areas"
+	ringsKinds     = "rings.hidden_kinds"
+	ringsLabels    = "rings.labels"
 )
 
 func (e *Engine) Controls() *setting.Controls[config.Home] { return e.knobs }
@@ -94,6 +101,32 @@ func (e *Engine) table() *setting.Table[config.Home] {
 			Setting{Name: tesseraFollow, Group: Group, Icon: "mdi:gesture-swipe-horizontal"},
 			func(h *config.Home) *bool { return &h.Follow },
 		),
+		setting.Pick(
+			Setting{Name: ringsLook, Group: Group, Icon: "mdi:chart-donut"},
+			config.RingsLooks(),
+			func(h *config.Home) *config.RingsLook { return &h.Rings.Look },
+		),
+		depthRow(),
+		setting.Pick(
+			Setting{Name: ringsSide, Group: Group, Icon: "mdi:dock-right"},
+			config.RingsSides(),
+			func(h *config.Home) *config.RingsSide { return &h.Rings.Side },
+		),
+		listRow(
+			ringsAreas,
+			"mdi:floor-plan",
+			func(h *config.Home) *[]string { return &h.Rings.Areas },
+		),
+		listRow(
+			ringsKinds,
+			"mdi:shape-outline",
+			func(h *config.Home) *[]string { return &h.Rings.Kinds },
+		),
+		listRow(
+			ringsLabels,
+			"mdi:label-outline",
+			func(h *config.Home) *[]string { return &h.Rings.Labels },
+		),
 	}
 	for _, s := range e.selections {
 		rows = append(rows, controlRow(s.Key), groupRow(s.Key))
@@ -124,6 +157,34 @@ func controlRow(key string) Setting {
 				delete(control, key)
 			}
 			h.Control = control
+			return nil
+		},
+	}
+}
+
+func depthRow() Setting {
+	s := Setting{
+		Name:  ringsDepth,
+		Group: Group,
+		Icon:  "mdi:layers-outline",
+		Min:   1,
+		Max:   config.RingsDeepest,
+	}
+	s = setting.Count(s, func(h *config.Home) *int { return &h.Rings.Depth })
+	s.Read = func(h *config.Home) string { return strconv.Itoa(h.Rings.Deep()) }
+	return s
+}
+
+func listRow(name, icon string, field func(*config.Home) *[]string) Setting {
+	return Setting{
+		Name:     name,
+		Group:    Group,
+		Icon:     icon,
+		NoEntity: true,
+		Kind:     setting.Text,
+		Read:     func(h *config.Home) string { return strings.Join(*field(h), ",") },
+		Write: func(h *config.Home, v string) error {
+			*field(h) = config.ParseList(v)
 			return nil
 		},
 	}

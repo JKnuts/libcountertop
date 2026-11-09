@@ -501,6 +501,43 @@ mode.tessera: Tessera
 mode.tessera_native: Tessera nativa
 mode.firmware: Tessera
 mode.lovelace: Home Assistant
+mode.rings: Anelli
+rings.look: Aspetto
+rings.look.wheel: Ruota
+rings.look.icicle: Ghiacciolo
+rings.look.burst: Raggiera
+rings.depth: Profondità
+home.setting.rings.depth: Profondità anelli
+card.light.brightness: Luminosità
+card.light.hue: Colore
+card.light.warmth: Temperatura colore
+card.light.waiting: In attesa
+card.lock.lock: Blocca
+card.lock.unlock: Sblocca
+card.lock.open: Apri
+rings.side: Dettagli
+rings.side.left: Sinistra / in alto
+rings.side.right: Destra / in basso
+home.setting.rings.side: "Anelli: lato dettagli"
+rings.home: Casa
+rings.nofloor: Nessun piano
+rings.areas: Aree
+rings.kinds: Tipi
+rings.summary: "{{.On}} accesi · {{.N}} dispositiv{{if eq .N 1}}o{{else}}i{{end}}"
+rings.kind.lights: Luci
+rings.kind.switches: Interruttori
+rings.kind.media: Media
+rings.kind.climate: Clima
+rings.kind.fans: Ventilatori
+rings.kind.covers: Tapparelle
+rings.kind.locks: Serrature
+rings.kind.access: Accessi
+rings.kind.presence: Presenza
+rings.kind.cameras: Videocamere
+home.setting.rings.look: Aspetto anelli
+home.setting.rings.hidden_areas: "Anelli: aree nascoste"
+home.setting.rings.hidden_kinds: "Anelli: tipi nascosti"
+home.setting.rings.labels: "Anelli: etichette"
 home.noarea: Nessuna area
 home.none: Nessuno
 home.off: Home Assistant disattivato
@@ -1279,6 +1316,9 @@ screen.setting.size: Dimensione
 screen.setting.font: Carattere
 screen.setting.style: Stile
 screen.setting.touches: Mostra tocchi
+touches.off: Spento
+touches.dots: Punti
+touches.details: Dettagli
 screen.setting.theme: Tema
 screen.setting.timer: Stile timer
 screen.setting.custom.background: Sfondo tema personalizzato

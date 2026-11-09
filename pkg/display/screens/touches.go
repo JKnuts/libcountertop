@@ -5,20 +5,30 @@ import (
 	"image"
 	"slices"
 	"sync"
+	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/libcountertop/pkg/display/style"
 	"github.com/ygelfand/libcountertop/pkg/input/touch"
 	"github.com/ygelfand/libcountertop/pkg/say"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
 
 const priorityTouches = priorityMarks + 50
 
+const touchLinger = 350 * time.Millisecond
+
+type lift struct {
+	at   image.Point
+	when time.Time
+}
+
 type touches struct {
-	mu   sync.Mutex
-	down map[int]image.Point
-	last string
+	mu     sync.Mutex
+	down   map[int]image.Point
+	lifted []lift
+	last   string
 }
 
 func (t *touches) contact(c touch.Contact) {
@@ -31,8 +41,25 @@ func (t *touches) contact(c touch.Contact) {
 	case touch.Down, touch.Move:
 		t.down[c.ID] = image.Pt(c.X, c.Y)
 	case touch.Up:
+		if at, ok := t.down[c.ID]; ok {
+			t.lifted = append(t.lifted, lift{at: at, when: time.Now()})
+		}
 		delete(t.down, c.ID)
 	}
+}
+
+func (t *touches) fading(now time.Time) []image.Point {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.lifted = slices.DeleteFunc(
+		t.lifted,
+		func(l lift) bool { return now.Sub(l.when) > touchLinger },
+	)
+	out := make([]image.Point, len(t.lifted))
+	for i, l := range t.lifted {
+		out[i] = l.at
+	}
+	return out
 }
 
 func (t *touches) gesture(name string) {
@@ -62,9 +89,39 @@ func gestureName(g touch.Gesture) string {
 }
 
 func (a *App) touchMarks(w *gogui.Window) gogui.View {
-	if !a.o.Settings().Screen.Touches {
-		return nil
+	switch a.o.Settings().Screen.Touches {
+	case schema.TouchesDots:
+		return a.touchDots(w)
+	case schema.TouchesDetails:
+		return a.touchDetails(w)
 	}
+	return nil
+}
+
+func (a *App) touchDots(w *gogui.Window) gogui.View {
+	down, _ := a.touched.now()
+	spots := a.touched.fading(time.Now())
+	for _, at := range down {
+		spots = append(spots, at)
+	}
+	vw, vh := w.WindowSize()
+	radius := style.Reach() * 0.45
+	fill := gogui.RGBA(0xff, 0xff, 0xff, 0x90)
+	edge := gogui.RGBA(0, 0, 0, 0x60)
+	return gogui.DrawCanvas(gogui.DrawCanvasCfg{
+		Width:  float32(vw),
+		Height: float32(vh),
+		OnDraw: func(dc *gogui.DrawContext) {
+			for _, at := range spots {
+				x, y := float32(at.X), float32(at.Y)
+				dc.FilledCircle(x, y, radius, fill)
+				dc.Circle(x, y, radius, edge, max(radius*0.08, 1.5))
+			}
+		},
+	})
+}
+
+func (a *App) touchDetails(w *gogui.Window) gogui.View {
 	down, last := a.touched.now()
 	vw, vh := w.WindowSize()
 	reach := style.Reach()

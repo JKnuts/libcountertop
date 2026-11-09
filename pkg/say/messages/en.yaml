@@ -500,6 +500,43 @@ mode.tessera: Tessera
 mode.tessera_native: Tessera native
 mode.firmware: Tessera
 mode.lovelace: Home Assistant
+mode.rings: Rings
+rings.look: Look
+rings.look.wheel: Wheel
+rings.look.icicle: Icicle
+rings.look.burst: Burst
+rings.depth: Depth
+home.setting.rings.depth: Rings depth
+card.light.brightness: Brightness
+card.light.hue: Color
+card.light.warmth: Color temperature
+card.light.waiting: Waiting
+card.lock.lock: Lock
+card.lock.unlock: Unlock
+card.lock.open: Open
+rings.side: Details
+rings.side.left: Left / top
+rings.side.right: Right / bottom
+home.setting.rings.side: "Rings: details side"
+rings.home: Home
+rings.nofloor: No floor
+rings.areas: Areas
+rings.kinds: Types
+rings.summary: "{{.On}} on · {{.N}} device{{if ne .N 1}}s{{end}}"
+rings.kind.lights: Lights
+rings.kind.switches: Switches
+rings.kind.media: Media
+rings.kind.climate: Climate
+rings.kind.fans: Fans
+rings.kind.covers: Covers
+rings.kind.locks: Locks
+rings.kind.access: Access
+rings.kind.presence: Presence
+rings.kind.cameras: Cameras
+home.setting.rings.look: Rings look
+home.setting.rings.hidden_areas: "Rings: hidden areas"
+home.setting.rings.hidden_kinds: "Rings: hidden types"
+home.setting.rings.labels: "Rings: labels"
 home.noarea: No area
 home.none: None
 home.off: Home Assistant is off
@@ -1279,6 +1316,9 @@ screen.setting.size: Size
 screen.setting.font: Font
 screen.setting.style: Style
 screen.setting.touches: Show touches
+touches.off: "Off"
+touches.dots: Dots
+touches.details: Details
 screen.setting.theme: Theme
 screen.setting.timer: Timer style
 screen.setting.custom.background: Custom theme background

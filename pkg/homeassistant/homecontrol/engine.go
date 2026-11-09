@@ -2,6 +2,7 @@ package homecontrol
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -18,6 +19,8 @@ type Client interface {
 	Entities(context.Context, ha.Filter) ([]ha.Entity, error)
 	Labels(context.Context) ([]ha.Label, error)
 	Call(context.Context, string, map[string]string) error
+	Perform(ctx context.Context, action string, data, templates map[string]string) error
+	Template(context.Context, string) (json.RawMessage, error)
 	Enable(bool)
 	Probe()
 	Watch(func(ha.Access)) func()
@@ -46,6 +49,8 @@ type Engine struct {
 	home       *Home
 	dashboard  *Dashboard
 	selections []Selection
+	rings      Selection
+	facts      factBook
 	knobs      *setting.Controls[config.Home]
 	mu         sync.Mutex
 	unwatch    func()
@@ -58,6 +63,8 @@ func New(o Dependencies) *Engine {
 		{Key: "lights", Filter: ha.Filter{Domains: []string{"light"}}, engine: e},
 		{Key: "switches", Filter: ha.Filter{Domains: []string{"switch"}}, engine: e},
 	}
+	e.rings = Selection{Key: "rings", Filter: ringsFilter(), engine: e}
+	e.facts = factBook{got: map[string]*fact{}}
 	e.knobs = e.controls()
 	e.cache = &cache{
 		ctx:   ctx,

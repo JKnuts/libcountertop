@@ -36,6 +36,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/panel"
 	"github.com/ygelfand/libcountertop/pkg/display/playerview"
 	"github.com/ygelfand/libcountertop/pkg/display/poster"
+	"github.com/ygelfand/libcountertop/pkg/display/ringsview"
 	"github.com/ygelfand/libcountertop/pkg/display/screen"
 	"github.com/ygelfand/libcountertop/pkg/display/settings"
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
@@ -225,6 +226,7 @@ type App struct {
 	timers  timerview.View
 	weather weatherview.View
 	alarms  alarmview.View
+	rings   *ringsview.View
 
 	ticking atomic.Bool
 	touched touches
@@ -251,6 +253,9 @@ func New(o Options) *App {
 			Display: o.Display,
 			Visible: a.papered.Load,
 		})
+	}
+	if o.Home != nil {
+		a.rings = ringsview.New(ringsview.Options{UI: o.UI, Home: o.Home})
 	}
 	a.alerts = alertview.View{UI: o.UI, Messages: o.Messages, Again: a.again}
 	a.timers = timerview.View{UI: o.UI, Timers: o.Timers, Again: a.again}
@@ -436,8 +441,13 @@ func (a *App) Run(ctx context.Context) error {
 	stopTouch := a.o.Touch.Contacts.Listen(func(t touch.Contact) {
 		sh.Touch()
 		a.touched.contact(t)
-		if a.o.Settings().Screen.Touches {
+		if marks := a.o.Settings().Screen.Touches; marks.Shown() {
 			w.QueueCommand(func(w *gogui.Window) { w.InvalidateLayout() })
+			if marks == schema.TouchesDots && t.Phase == touch.Up {
+				time.AfterFunc(touchLinger, func() {
+					w.QueueCommand(func(w *gogui.Window) { w.InvalidateLayout() })
+				})
+			}
 		}
 		if _, held := a.wakeBy(); held {
 			return

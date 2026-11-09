@@ -2,6 +2,7 @@ package homecontrol
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
@@ -73,9 +74,14 @@ type homeClient struct{}
 func (homeClient) Entities(context.Context, ha.Filter) ([]ha.Entity, error) { return nil, nil }
 func (homeClient) Labels(context.Context) ([]ha.Label, error)               { return nil, nil }
 func (homeClient) Call(context.Context, string, map[string]string) error    { return nil }
-func (homeClient) Enable(bool)                                              {}
-func (homeClient) Probe()                                                   {}
-func (homeClient) Watch(func(ha.Access)) func()                             { return func() {} }
+func (homeClient) Perform(context.Context, string, map[string]string, map[string]string) error {
+	return nil
+}
+
+func (homeClient) Template(context.Context, string) (json.RawMessage, error) { return nil, nil }
+func (homeClient) Enable(bool)                                               {}
+func (homeClient) Probe()                                                    {}
+func (homeClient) Watch(func(ha.Access)) func()                              { return func() {} }
 
 type homeStates struct{}
 

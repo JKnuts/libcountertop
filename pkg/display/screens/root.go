@@ -149,6 +149,9 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 	case lovelace:
 		whole := ui.Rect{W: vw, H: vh}
 		layers = []gogui.View{widgets.Placed(whole, a.o.Lovelace.Home.Draw(whole))}
+	case a.rings != nil && a.o.Home.Speaks() == schema.HomeRings:
+		whole := ui.Rect{W: vw, H: vh}
+		layers = []gogui.View{widgets.Placed(whole, a.rings.Draw(w, whole))}
 	case a.o.Firmware != nil && a.o.Firmware.On():
 		whole := ui.Rect{W: vw, H: vh}
 		layers = []gogui.View{widgets.Placed(whole, a.o.Firmware.Draw(whole))}

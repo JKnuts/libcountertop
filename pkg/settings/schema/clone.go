@@ -27,5 +27,6 @@ func (h Home) Clone() Home {
 	for key, p := range h.Picks {
 		h.Picks[key] = p.Clone()
 	}
+	h.Rings = h.Rings.Clone()
 	return h
 }

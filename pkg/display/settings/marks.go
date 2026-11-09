@@ -28,6 +28,8 @@ func (m ModeMarks) mark(mode string) menu.Mark {
 		return menu.Mark{SVG: m.Tessera}
 	case string(config.HomeLovelace):
 		return menu.Mark{SVG: icons.HomeAssistant}
+	case string(config.HomeRings):
+		return menu.Mark{SVG: icons.Rings}
 	case string(config.HomeNative):
 		if m.Native != nil {
 			return menu.Mark{Image: m.Native()}

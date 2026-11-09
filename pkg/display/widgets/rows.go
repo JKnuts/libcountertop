@@ -35,9 +35,14 @@ func (kit *Toolkit) Row(
 	glyphs bool,
 	render RowRenderer,
 ) gogui.View {
-	label := []gogui.View{gogui.Label(r.Label, gogui.TextStyle{})}
+	label := []gogui.View{gogui.Text(gogui.TextCfg{Text: r.Label, Mode: gogui.TextModeWrap})}
 	if r.Hint != "" {
-		label = append(label, gogui.Label(r.Hint, Secondary()))
+		label = append(
+			label,
+			gogui.Text(
+				gogui.TextCfg{Text: r.Hint, TextStyle: Secondary(), Mode: gogui.TextModeWrap},
+			),
+		)
 	}
 	head := gogui.Column(
 		gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Content: label},

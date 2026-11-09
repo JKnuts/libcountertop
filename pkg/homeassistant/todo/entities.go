@@ -27,7 +27,7 @@ func NewTable() *Table {
 			Kind:     setting.Text,
 			Read:     func(c *schema.Todo) string { return strings.Join(c.Entities, ",") },
 			Write: func(c *schema.Todo, v string) error {
-				c.Entities = schema.ParseTodoLists(v)
+				c.Entities = schema.ParseList(v)
 				return nil
 			},
 		},

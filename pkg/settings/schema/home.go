@@ -21,6 +21,7 @@ type Home struct {
 	Turn    TesseraTurn         `json:"tessera_turn"`
 	Bottom  TesseraBottom       `json:"tessera_bottom"`
 	Follow  bool                `json:"tessera_follow"`
+	Rings   Rings               `json:"rings"`
 }
 
 type TesseraBottom string
@@ -65,6 +66,7 @@ const (
 	HomeTessera  HomeMode = "tessera"
 	HomeFirmware HomeMode = "firmware"
 	HomeLovelace HomeMode = "lovelace"
+	HomeRings    HomeMode = "rings"
 )
 
 func (m HomeMode) Label() string {
@@ -77,13 +79,15 @@ func (m HomeMode) Label() string {
 		return say.T("mode.firmware")
 	case HomeLovelace:
 		return say.T("mode.lovelace")
+	case HomeRings:
+		return say.T("mode.rings")
 	}
 	return string(m)
 }
 
 func (m HomeMode) Tessera() bool { return m == HomeTessera || m == HomeFirmware }
 
-func HomeModes() []HomeMode { return []HomeMode{HomeNative, HomeFirmware, HomeLovelace} }
+func HomeModes() []HomeMode { return []HomeMode{HomeNative, HomeRings, HomeFirmware, HomeLovelace} }
 
 func MigrateHome(_ []byte, home *Home) error {
 	if home.Mode == HomeTessera {
@@ -165,7 +169,7 @@ func (h Home) Grouped(key string) int {
 }
 
 func (h Home) Speaks() HomeMode {
-	if h.Mode.Tessera() || h.Mode == HomeLovelace {
+	if h.Mode.Tessera() || slices.Contains(HomeModes(), h.Mode) {
 		return h.Mode
 	}
 	return HomeNative

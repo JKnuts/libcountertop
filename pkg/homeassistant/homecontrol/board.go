@@ -276,33 +276,57 @@ func (b *Board) send(action string, ids []string) {
 		byDomain[d] = append(byDomain[d], id)
 	}
 	for _, d := range order {
-		ids := byDomain[d]
-		b.mu.Lock()
-		if b.closed {
-			b.mu.Unlock()
-			return
-		}
-		b.workers.Add(1)
-		b.mu.Unlock()
-		go func() {
-			defer b.workers.Done()
-			ctx, cancel := context.WithTimeout(b.engine.ctx, callWait)
-			defer cancel()
-			if err := b.call(
-				ctx,
-				d+"."+action,
-				map[string]string{"entity_id": strings.Join(ids, ",")},
-			); err != nil {
-				slog.Warn(
-					"Home Assistant did not take the action",
-					"action",
-					d+"."+action,
-					"entities",
-					len(ids),
-					"err",
-					err,
-				)
-			}
-		}()
+		b.run(d+"."+action, map[string]string{"entity_id": strings.Join(byDomain[d], ",")})
 	}
+}
+
+func (b *Board) read(entity, attribute string) string {
+	v, _ := b.value(entity, attribute).Get()
+	return v
+}
+
+func (b *Board) perform(action string, data, templates map[string]string) {
+	b.mu.Lock()
+	if b.closed {
+		b.mu.Unlock()
+		return
+	}
+	b.workers.Add(1)
+	b.mu.Unlock()
+	go func() {
+		defer b.workers.Done()
+		ctx, cancel := context.WithTimeout(b.engine.ctx, callWait)
+		defer cancel()
+		if err := b.engine.options.Client.Perform(ctx, action, data, templates); err != nil {
+			slog.Warn(
+				"Home Assistant did not take the action",
+				"action", action,
+				"entities", data["entity_id"],
+				"err", err,
+			)
+		}
+	}()
+}
+
+func (b *Board) run(action string, data map[string]string) {
+	b.mu.Lock()
+	if b.closed {
+		b.mu.Unlock()
+		return
+	}
+	b.workers.Add(1)
+	b.mu.Unlock()
+	go func() {
+		defer b.workers.Done()
+		ctx, cancel := context.WithTimeout(b.engine.ctx, callWait)
+		defer cancel()
+		if err := b.call(ctx, action, data); err != nil {
+			slog.Warn(
+				"Home Assistant did not take the action",
+				"action", action,
+				"entities", data["entity_id"],
+				"err", err,
+			)
+		}
+	}()
 }

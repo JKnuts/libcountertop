@@ -25,8 +25,8 @@ func TestMigrateTodoLeavesChosenListsAlone(t *testing.T) {
 	}
 }
 
-func TestParseTodoListsDropsBlanksAndRepeats(t *testing.T) {
-	got := ParseTodoLists(" todo.a, ,todo.b,todo.a ")
+func TestParseListDropsBlanksAndRepeats(t *testing.T) {
+	got := ParseList(" todo.a, ,todo.b,todo.a ")
 	if want := []string{"todo.a", "todo.b"}; !slices.Equal(got, want) {
 		t.Errorf("parsed %v, want %v", got, want)
 	}

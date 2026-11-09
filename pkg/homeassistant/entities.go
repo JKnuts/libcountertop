@@ -9,12 +9,14 @@ import (
 )
 
 type Entity struct {
-	ID     string   `json:"id"`
-	Name   string   `json:"name"`
-	State  string   `json:"state"`
-	AreaID string   `json:"area_id"`
-	Area   string   `json:"area"`
-	Labels []string `json:"labels"`
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	State   string   `json:"state"`
+	AreaID  string   `json:"area_id"`
+	Area    string   `json:"area"`
+	FloorID string   `json:"floor_id"`
+	Floor   string   `json:"floor"`
+	Labels  []string `json:"labels"`
 
 	Attributes map[string]string `json:"attributes,omitempty"`
 }
@@ -41,7 +43,7 @@ const (
 {%- set at.d = dict(at.d, **{k: s.attributes[k] | string}) -%}
 {%- endfor -%}`
 
-	entityItem = `{'id': s.entity_id, 'name': s.name, 'state': s.state, 'area_id': area_id(s.entity_id) or '', 'area': area_name(s.entity_id) or '', 'labels': labels(s.entity_id), 'attributes': at.d}`
+	entityItem = `{'id': s.entity_id, 'name': s.name, 'state': s.state, 'area_id': area_id(s.entity_id) or '', 'area': area_name(s.entity_id) or '', 'floor_id': floor_id(s.entity_id) or '', 'floor': floor_name(s.entity_id) or '', 'labels': labels(s.entity_id), 'attributes': at.d}`
 
 	entitySmall = `{'id': s.entity_id, 'name': s.name[:200], 'state': s.state[:200]}`
 )

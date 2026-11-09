@@ -20,16 +20,6 @@ func (t Todo) Clone() Todo {
 	return t
 }
 
-func ParseTodoLists(v string) []string {
-	out := []string{}
-	for part := range strings.SplitSeq(v, ",") {
-		if part = strings.TrimSpace(part); part != "" && !slices.Contains(out, part) {
-			out = append(out, part)
-		}
-	}
-	return out
-}
-
 func MigrateTodo(data []byte, todo *Todo) error {
 	var old struct {
 		Todo struct {
@@ -50,14 +40,7 @@ type TodoWriter struct{ s storage.Section[Todo] }
 func NewTodoWriter(s storage.Section[Todo]) TodoWriter { return TodoWriter{s: s} }
 
 func (w TodoWriter) Show(entity string, on bool) error {
-	return w.s.Update(func(c *Todo) {
-		c.Entities = slices.DeleteFunc(slices.Clone(c.Entities), func(e string) bool {
-			return e == entity
-		})
-		if on {
-			c.Entities = append(c.Entities, entity)
-		}
-	})
+	return w.s.Update(func(c *Todo) { c.Entities = Toggled(c.Entities, entity, on) })
 }
 
 func (w TodoWriter) Completed(v bool) error {

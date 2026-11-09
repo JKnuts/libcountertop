@@ -5,6 +5,20 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
+type TouchMarks string
+
+const (
+	TouchesOff     TouchMarks = "off"
+	TouchesDots    TouchMarks = "dots"
+	TouchesDetails TouchMarks = "details"
+)
+
+func (m TouchMarks) Label() string { return say.T("touches." + string(m)) }
+
+func (m TouchMarks) Shown() bool { return m == TouchesDots || m == TouchesDetails }
+
+func TouchModes() []TouchMarks { return []TouchMarks{TouchesOff, TouchesDots, TouchesDetails} }
+
 type Screen struct {
 	Backlight int        `json:"backlight"`
 	Mode      ScreenMode `json:"mode"`
@@ -28,7 +42,7 @@ type Screen struct {
 
 	Marks bool `json:"marks"`
 
-	Touches bool `json:"touches,omitempty"`
+	Touches TouchMarks `json:"touch_marks,omitempty"`
 
 	Language string `json:"language"`
 
@@ -58,6 +72,7 @@ func DefaultScreen() Screen {
 		Alert:     DefaultAlertStyle,
 		Timer:     DefaultTimerStyle,
 		Marks:     DefaultMarks,
+		Touches:   TouchesOff,
 	}
 }
 

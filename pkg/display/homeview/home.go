@@ -641,6 +641,8 @@ func (view *Renderer) dashboardRows() ([]menu.Row, []func(int)) {
 	case view.options.Engine.Tessera():
 		add(view.saverRows())
 		add(view.tesseraRows())
+	case view.options.Engine.Speaks() == schema.HomeRings:
+		add(view.ringsRows())
 	default:
 		add(view.nativeRows())
 	}

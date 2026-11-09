@@ -166,9 +166,9 @@ func rows(table func() *Table, uiSize func() string) []Setting {
 		setting.Flag(Setting{
 			Name: "marks", Group: Panel, ID: "privacy_marks", Icon: "mdi:shield-account-outline",
 		}, func(s *schema.Screen) *bool { return &s.Marks }),
-		setting.Flag(Setting{
+		setting.Pick(Setting{
 			Name: "touches", Group: Panel, ID: "show_touches", Icon: "mdi:gesture-tap",
-		}, func(s *schema.Screen) *bool { return &s.Touches }),
+		}, schema.TouchModes(), func(s *schema.Screen) *schema.TouchMarks { return &s.Touches }),
 	}, customColors(table)...)
 }
 

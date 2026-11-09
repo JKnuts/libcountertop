@@ -139,12 +139,7 @@ func (p *BasicPages) Debug() *shell.Page {
 					Kind:  menu.Toggle,
 					On:    adb,
 				},
-				{
-					Glyph: gogui.IconTarget,
-					Label: say.T("screen.setting.touches"),
-					Kind:  menu.Toggle,
-					On:    touches,
-				},
+				ModeRow(ModeMarks{}, say.T("screen.setting.touches"), config.TouchModes(), touches),
 				{Label: say.T("debug.visuals"), Kind: menu.Chevron},
 				{
 					Label: say.T("debug.fps"),
@@ -169,11 +164,11 @@ func (p *BasicPages) Debug() *shell.Page {
 				},
 			}, []func(int){
 				func(int) { p.options.Access.SetADB(!adb) },
-				func(int) {
-					if err := p.options.Screen.Set("touches", setting.OnOff(!touches)); err != nil {
+				ModePick(config.TouchModes(), func(m config.TouchMarks) {
+					if err := p.options.Screen.Set("touches", string(m)); err != nil {
 						slog.Warn("show touches could not be saved", "err", err)
 					}
-				},
+				}),
 				p.open(p.options.VisualPage),
 				func(level int) { p.options.Visuals.SetMaxFPS(config.MaxFPSSteps[FpsIndex(level)]) },
 				func(level int) { p.options.Visuals.SetSeed(SeedOf(level)) },

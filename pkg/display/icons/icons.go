@@ -21,6 +21,9 @@ var AirPlay string
 //go:embed musicassistant.svg
 var MusicAssistant string
 
+//go:embed rings.svg
+var Rings string
+
 const Family = "Material Design Icons"
 
 const (

@@ -2,6 +2,7 @@ package homecontrol
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -14,11 +15,12 @@ const (
 )
 
 type result struct {
-	entities []homeassistant.Entity
-	labels   []homeassistant.Label
-	err      error
-	at       time.Time
-	asking   bool
+	entities   []homeassistant.Entity
+	labels     []homeassistant.Label
+	err        error
+	at         time.Time
+	asking     bool
+	refreshing bool
 }
 
 type cache struct {
@@ -39,12 +41,17 @@ func (c *cache) get(s Selection) result {
 		return result{err: context.Canceled}
 	}
 	r := c.got[s.Key]
-	if r == nil || (!r.asking && r.err == nil && c.now().Sub(r.at) > cacheFor) {
+	switch {
+	case r == nil:
 		r = &result{asking: true}
 		c.got[s.Key] = r
-		c.workers.Add(1)
-		go func() { defer c.workers.Done(); c.load(s, r) }()
+	case !r.asking && !r.refreshing && r.err == nil && c.now().Sub(r.at) > cacheFor:
+		r.refreshing = true
+	default:
+		return *r
 	}
+	c.workers.Add(1)
+	go func() { defer c.workers.Done(); c.load(s, r) }()
 	return *r
 }
 
@@ -56,11 +63,18 @@ func (c *cache) load(s Selection, r *result) {
 	ctx, cancel := context.WithTimeout(parent, fetchWait)
 	defer cancel()
 	entities, labels, err := c.fetch(ctx, s.Filter)
+	if err != nil {
+		slog.Warn("Home Assistant did not list the entities", "selection", s.Key, "err", err)
+	}
 	if err == nil && entities == nil {
 		entities = []homeassistant.Entity{}
 	}
 	c.mu.Lock()
-	if c.got[s.Key] == r {
+	switch {
+	case c.got[s.Key] != r:
+	case err != nil && r.refreshing:
+		r.refreshing, r.at = false, c.now()
+	default:
 		c.got[s.Key] = &result{entities: entities, labels: labels, err: err, at: c.now()}
 	}
 	active := !c.closed
