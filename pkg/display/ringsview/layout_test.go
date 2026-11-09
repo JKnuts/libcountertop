@@ -129,3 +129,21 @@ func TestLooksLocateWhatTheyPlace(t *testing.T) {
 		}
 	}
 }
+
+func TestFullRingsLabelAtTheBottom(t *testing.T) {
+	full := shape{0, 1, 0.3, 0.6}
+	for _, look := range schema.RingsLooks() {
+		g := lay(look, 1280, 800)
+		round := look != schema.RingsIcicle
+		if closed(g, full) != round {
+			t.Errorf("%s: full ring closed %v, want %v", look, !round, round)
+		}
+		if !round {
+			continue
+		}
+		b := bottom(g, full, 20)
+		if !near(b.a0+b.a1, 1) || b.a1-b.a0 < 0.02 || b.a1-b.a0 > 0.5 {
+			t.Errorf("%s: label span %v..%v, want a slice centered on the bottom", look, b.a0, b.a1)
+		}
+	}
+}

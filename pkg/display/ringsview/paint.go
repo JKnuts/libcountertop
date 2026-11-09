@@ -94,15 +94,53 @@ func wedge(g geometry, sh shape) *gogui.CanvasPath {
 		}
 		p.LineTo(x, y)
 	}
+	full := closed(g, sh)
+	if full {
+		p.Close()
+	}
 	for i := n; i >= 0; i-- {
 		x, y := g.point(lerp(sh.a0, sh.a1, float32(i)/float32(n)), sh.r0)
+		if full && i == n {
+			p.MoveTo(x, y)
+			continue
+		}
 		p.LineTo(x, y)
 	}
 	p.Close()
 	return &p
 }
 
+func closed(g geometry, sh shape) bool {
+	x0, y0 := g.point(sh.a0, sh.r1)
+	x1, y1 := g.point(sh.a1, sh.r1)
+	return span(x0, y0, x1, y1) < 1
+}
+
+func span(ax, ay, bx, by float32) float32 {
+	return float32(math.Hypot(float64(bx-ax), float64(by-ay)))
+}
+
+func bottom(g geometry, sh shape, height float32) shape {
+	rm := (sh.r0 + sh.r1) / 2
+	ix, iy := g.point(0.5, sh.r0)
+	ox, oy := g.point(0.5, sh.r1)
+	mx, my := g.point(0.5, rm)
+	slack := (span(ix, iy, ox, oy) - height) / 2
+	h := float32(0.25)
+	for ; h > 0.01; h /= 1.25 {
+		lx, ly := g.point(0.5-h, rm)
+		rx, ry := g.point(0.5+h, rm)
+		if span(mx, my, (lx+rx)/2, (ly+ry)/2) <= slack {
+			break
+		}
+	}
+	return shape{0.5 - h, 0.5 + h, sh.r0, sh.r1}
+}
+
 func caption(dc *gogui.DrawContext, g geometry, sh shape, text string, st gogui.TextStyle) {
+	if closed(g, sh) {
+		sh = bottom(g, sh, dc.FontHeight(st))
+	}
 	am, rm := (sh.a0+sh.a1)/2, (sh.r0+sh.r1)/2
 	ix, iy := g.point(am, sh.r0)
 	ox, oy := g.point(am, sh.r1)
