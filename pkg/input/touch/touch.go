@@ -63,6 +63,7 @@ type Screen struct {
 
 	device string
 	panel  Panel
+	scale  bool
 
 	feed sync.Mutex
 
@@ -71,6 +72,7 @@ type Screen struct {
 	err  error
 	rec  *Recognizer
 	view view
+	axes axes
 
 	started time.Time
 	last    time.Time
@@ -80,6 +82,14 @@ type Screen struct {
 
 func New(device string, panel Panel) *Screen {
 	return &Screen{device: device, panel: panel, started: time.Now()}
+}
+
+// NewWithAxisNormalization maps the device's ABS_MT position ranges onto the
+// native panel before rotation. Start fails if either range is unavailable or invalid.
+func NewWithAxisNormalization(device string, panel Panel) *Screen {
+	s := New(device, panel)
+	s.scale = true
+	return s
 }
 
 func (s *Screen) Name() string { return "touch" }
@@ -110,9 +120,17 @@ func (s *Screen) Startup() startup.Progress {
 
 func (s *Screen) Start(context.Context) error {
 	f, err := open(s.device)
+	var ranges axes
+	if err == nil && s.scale {
+		ranges, err = readAxes(f)
+		if err != nil {
+			_ = f.Close()
+			f = nil
+		}
+	}
 
 	s.mu.Lock()
-	s.f, s.err = f, err
+	s.f, s.err, s.axes = f, err, ranges
 	s.mu.Unlock()
 
 	if err == nil {
@@ -208,6 +226,13 @@ func (s *Screen) place(px, py int) (int, int) {
 			slog.Warn("no panel, so touches are reported where the hardware put them")
 		})
 		return px, py
+	}
+	if s.scale {
+		s.mu.Lock()
+		ranges := s.axes
+		s.mu.Unlock()
+		px = ranges.x.pixel(px, w)
+		py = ranges.y.pixel(py, h)
 	}
 	return s.panel.Orientation().Unproject(w, h, px, py)
 }
