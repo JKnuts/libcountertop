@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { Button, Group, Stack, Text } from "@mantine/core";
+import { IconDownload } from "@tabler/icons-react";
 import { api, SignedOut } from "./api";
 
 const idleTimeout = 2 * 60 * 1000;
@@ -294,10 +295,11 @@ export function Desktop({ enabled, children, actions, onAuthLost }: { enabled: b
           />
         </div>
       )}
-      {enabled && phase !== "idle" && <Group justify="center" gap="xs" className="ct-desktop-controls">
-        <Button size="xs" variant="light" onClick={stop}>Release control</Button>
+      <Group justify="center" gap="xs" className="ct-desktop-controls">
+        {enabled && phase !== "idle" && <Button size="xs" variant="light" onClick={stop}>Release control</Button>}
         {phase === "live" && <Button size="xs" variant="subtle" onClick={toggleFullscreen}>{fullscreen ? "Exit fullscreen" : "Fullscreen"}</Button>}
-      </Group>}
+        <Button size="xs" variant="subtle" component="a" href="/api/v1/screenshot" download leftSection={<IconDownload size={14} />}>Screenshot</Button>
+      </Group>
       {phase === "live" && <input
         ref={keyboard}
         className="ct-desktop-keyboard"

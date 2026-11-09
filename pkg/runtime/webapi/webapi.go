@@ -160,8 +160,11 @@ func (a *API) Routes() map[string]http.Handler {
 		"GET " + Prefix + "/logs":                     auth(a.logs),
 		"GET " + Prefix + "/diagnostics":              auth(a.diagnostics),
 		"GET " + Prefix + "/screen":                   a.requireControl(http.HandlerFunc(a.screen)),
-		"POST " + Prefix + "/control/pairing":         auth(a.pairControl),
-		"POST " + Prefix + "/control/pairing/redeem":  http.HandlerFunc(a.redeemControl),
+		"GET " + Prefix + "/screenshot": a.requireControl(
+			http.HandlerFunc(a.screenshot),
+		),
+		"POST " + Prefix + "/control/pairing":        auth(a.pairControl),
+		"POST " + Prefix + "/control/pairing/redeem": http.HandlerFunc(a.redeemControl),
 		"GET " + Prefix + "/control/session": a.requireInput(
 			http.HandlerFunc(a.controlInfo),
 		),

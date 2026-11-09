@@ -3,7 +3,9 @@ package webapi
 import (
 	"bytes"
 	"image/jpeg"
+	"image/png"
 	"log/slog"
+	"mime"
 	"net/http"
 	"sync"
 	"time"
@@ -44,5 +46,30 @@ func (a *API) screen(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	if _, err := w.Write(a.shot.jpeg); err != nil {
 		slog.Debug("writing the screen failed", "err", err)
+	}
+}
+
+func (a *API) screenshot(w http.ResponseWriter, r *http.Request) {
+	if a.o.Screen == nil {
+		http.NotFound(w, r)
+		return
+	}
+	img, err := a.o.Screen()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	var b bytes.Buffer
+	if err := png.Encode(&b, img); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	name := a.o.Device().Name + " " + a.o.Now().Format("2006-01-02 15.04.05") + ".png"
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().
+		Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": name}))
+	if _, err := w.Write(b.Bytes()); err != nil {
+		slog.Debug("writing the screenshot failed", "err", err)
 	}
 }

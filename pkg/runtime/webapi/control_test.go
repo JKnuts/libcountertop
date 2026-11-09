@@ -3,6 +3,7 @@ package webapi
 import (
 	"encoding/json"
 	"image"
+	"image/png"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -65,7 +66,7 @@ func TestKeyboardPairIsFieldBoundAndNotScreenAccess(t *testing.T) {
 		t.Fatalf("redeem = %d: %s", w.Code, w.Body.String())
 	}
 	cookie := w.Result().Cookies()[0]
-	for _, path := range []string{"/screen", "/desktop", "/settings", "/device"} {
+	for _, path := range []string{"/screen", "/screenshot", "/desktop", "/settings", "/device"} {
 		if w := controlRequest(
 			a,
 			http.MethodGet,
@@ -204,6 +205,7 @@ func TestControlPairingGrantsOnlyScreenAccess(t *testing.T) {
 	}{
 		{http.MethodGet, "/control/session", http.StatusOK},
 		{http.MethodGet, "/screen", http.StatusOK},
+		{http.MethodGet, "/screenshot", http.StatusOK},
 		{http.MethodPost, "/desktop", http.StatusNoContent},
 		{http.MethodPost, "/desktop/session-id", http.StatusNoContent},
 		{http.MethodGet, "/settings", http.StatusUnauthorized},
@@ -384,5 +386,25 @@ func TestPairingRejectsInvalidBrowserURLs(t *testing.T) {
 				t.Fatalf("URL accepted: %d", w.Code)
 			}
 		})
+	}
+}
+
+func TestScreenshotDownloadsANamedPNG(t *testing.T) {
+	a, settings := controlFixture(t)
+	a.o.Now = func() time.Time { return time.Date(2026, 11, 9, 15, 4, 5, 0, time.UTC) }
+	w := controlRequest(a, http.MethodGet, "/screenshot", "", nil, settings.v.Password)
+	if w.Code != http.StatusOK {
+		t.Fatalf("screenshot = %d: %s", w.Code, w.Body.String())
+	}
+	if got := w.Header().Get("Content-Type"); got != "image/png" {
+		t.Errorf("content type %q, want image/png", got)
+	}
+	if got, want := w.Header().
+		Get("Content-Disposition"),
+		`attachment; filename="panel 2026-11-09 15.04.05.png"`; got != want {
+		t.Errorf("disposition %q, want %q", got, want)
+	}
+	if _, err := png.Decode(w.Body); err != nil {
+		t.Errorf("body is not a PNG: %v", err)
 	}
 }
