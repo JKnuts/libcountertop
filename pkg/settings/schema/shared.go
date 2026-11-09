@@ -91,6 +91,7 @@ func (s Shared) Clone() Shared {
 	s.HomeAlarm = s.HomeAlarm.Clone()
 	s.Thermostat = s.Thermostat.Clone()
 	s.Apps = s.Apps.Clone()
+	s.Todo = s.Todo.Clone()
 	s.Radio = s.Radio.Clone()
 	s.Voice = s.Voice.Clone()
 	return s

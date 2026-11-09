@@ -60,8 +60,8 @@ func (s *Shopping) Screen(v shell.View) *navigation.Screen {
 }
 
 func (s *Shopping) title() string {
-	if e := s.o.Todo.Entity(); e != "" {
-		return s.o.Todo.Title(e)
+	if lists := s.o.Todo.Lists(); len(lists) == 1 {
+		return s.o.Todo.Title(lists[0])
 	}
 	return say.T("todo.app")
 }
@@ -72,9 +72,13 @@ func (s *Shopping) build(w *gogui.Window) gogui.View {
 	}
 	ui := s.o.UI
 	items, err, loaded := s.o.Todo.Items()
-	views := []gogui.View{s.field()}
+	var views []gogui.View
+	if lists := s.o.Todo.Lists(); len(lists) > 1 {
+		views = append(views, s.tabs(lists))
+	}
+	views = append(views, s.field())
 	switch {
-	case s.o.Todo.Entity() == "":
+	case s.o.Todo.Showing() == "":
 		views = append(views, ui.Row("none", page, menu.Row{Label: say.T("todo.pick")}, nil, false))
 	case !loaded:
 		views = append(
@@ -128,6 +132,19 @@ func (s *Shopping) build(w *gogui.Window) gogui.View {
 		Padding: gogui.NoPadding,
 		Spacing: gogui.SpacingMedium,
 		Content: views,
+	})
+}
+
+func (s *Shopping) tabs(lists []string) gogui.View {
+	tabs := make([]widgets.Tab, 0, len(lists))
+	for _, entity := range lists {
+		tabs = append(tabs, widgets.Tab{Key: entity, Label: s.o.Todo.Title(entity)})
+	}
+	return s.o.UI.TabStrip(widgets.TabStripCfg{
+		ID:     "shopping-tabs",
+		Tabs:   tabs,
+		Chosen: s.o.Todo.Showing(),
+		Pick:   s.o.Todo.Show,
 	})
 }
 

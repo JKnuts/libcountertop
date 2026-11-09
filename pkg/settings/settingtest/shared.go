@@ -168,7 +168,7 @@ var Shared = Coverage{
 		"Call.Ringback":             "call.ringback",
 		"Calendar.Entities":         "calendar.entities",
 		"Calendar.Span":             "calendar.span",
-		"Todo.Entity":               "todo.entity",
+		"Todo.Entities":             "todo.entities",
 		"Todo.Completed":            "todo.completed",
 		"TV.Default":                "tv.default",
 		"Voice.Commands":            "voice.commands",

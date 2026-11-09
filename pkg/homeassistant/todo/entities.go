@@ -1,14 +1,14 @@
 package todo
 
 import (
+	"strings"
+
 	esphome "github.com/ygelfand/go-esphome-device"
 
 	"github.com/ygelfand/libcountertop/pkg/say"
 	setting "github.com/ygelfand/libcountertop/pkg/settings"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
-
-const entityMost = 128
 
 type (
 	Setting = setting.Setting[schema.Todo]
@@ -19,11 +19,18 @@ const Group setting.Group = "Todo"
 
 func NewTable() *Table {
 	return setting.NewTable("todo", []setting.Group{Group}, []Setting{
-		setting.Words(
-			Setting{Name: "entity", Group: Group, Icon: "mdi:cart-outline", NoEntity: true},
-			entityMost,
-			func(c *schema.Todo) *string { return &c.Entity },
-		),
+		{
+			Name:     "entities",
+			Group:    Group,
+			Icon:     "mdi:cart-outline",
+			NoEntity: true,
+			Kind:     setting.Text,
+			Read:     func(c *schema.Todo) string { return strings.Join(c.Entities, ",") },
+			Write: func(c *schema.Todo, v string) error {
+				c.Entities = schema.ParseTodoLists(v)
+				return nil
+			},
+		},
 		setting.Flag(
 			Setting{
 				Name:     "completed",

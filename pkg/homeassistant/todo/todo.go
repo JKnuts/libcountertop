@@ -53,6 +53,8 @@ type Todo struct {
 	fetching bool
 	fetched  bool
 
+	showing   string
+	names     map[string]*states.Value
 	following string
 	count     *states.Value
 	items     []Item
@@ -98,8 +100,8 @@ func (t *Todo) Fetch() {
 		if err != nil {
 			slog.Info("todo lists", "err", err)
 		}
-		if err == nil && len(list) > 0 && t.Entity() == "" {
-			t.SetEntity(pick(list))
+		if err == nil && len(list) > 0 && len(t.Lists()) == 0 {
+			t.SetShown(pick(list), true)
 		}
 		t.opts.Redraw()
 	}()
@@ -115,9 +117,34 @@ func pick(list []homeassistant.Entity) string {
 	return list[0].ID
 }
 
-func (t *Todo) Entity() string { return strings.TrimSpace(t.opts.Settings.Read().Entity) }
+func (t *Todo) Lists() []string { return slices.Clone(t.opts.Settings.Read().Entities) }
+
+func (t *Todo) Shown(entity string) bool { return slices.Contains(t.Lists(), entity) }
+
+func (t *Todo) Showing() string {
+	lists := t.Lists()
+	if len(lists) == 0 {
+		return ""
+	}
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if slices.Contains(lists, t.showing) {
+		return t.showing
+	}
+	return lists[0]
+}
+
+func (t *Todo) Show(entity string) {
+	t.mu.Lock()
+	t.showing = entity
+	t.mu.Unlock()
+	t.opts.Redraw()
+}
 
 func (t *Todo) Title(entity string) string {
+	if name, ok := t.name(entity).Get(); ok && name != "" {
+		return name
+	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	for _, e := range t.offered {
@@ -128,8 +155,25 @@ func (t *Todo) Title(entity string) string {
 	return entity
 }
 
+func (t *Todo) name(entity string) *states.Value {
+	t.mu.Lock()
+	v, ok := t.names[entity]
+	if !ok {
+		if t.names == nil {
+			t.names = map[string]*states.Value{}
+		}
+		v = t.opts.States.Follow(entity, "friendly_name")
+		t.names[entity] = v
+	}
+	t.mu.Unlock()
+	if !ok {
+		v.Changed.Listen(func(string) { t.opts.Redraw() })
+	}
+	return v
+}
+
 func (t *Todo) Items() ([]Item, error, bool) {
-	entity := t.Entity()
+	entity := t.Showing()
 	if entity == "" {
 		if _, _, fetched := t.Offered(); !fetched &&
 			t.opts.Controller.Access() == homeassistant.Allowed {
@@ -158,7 +202,7 @@ func (t *Todo) follow(entity string) {
 }
 
 func (t *Todo) Refresh() {
-	entity := t.Entity()
+	entity := t.Showing()
 	if entity == "" {
 		return
 	}
@@ -232,7 +276,7 @@ func (t *Todo) mark(uid, status string) {
 }
 
 func (t *Todo) perform(action string, data map[string]string) {
-	entity := t.Entity()
+	entity := t.Showing()
 	if entity == "" {
 		return
 	}
@@ -258,9 +302,9 @@ func (t *Todo) SetCompleted(on bool) {
 	t.opts.Redraw()
 }
 
-func (t *Todo) SetEntity(v string) {
-	if err := schema.NewTodoWriter(t.opts.Settings).Entity(strings.TrimSpace(v)); err != nil {
-		slog.Error("saving the todo list failed", "err", err)
+func (t *Todo) SetShown(entity string, on bool) {
+	if err := schema.NewTodoWriter(t.opts.Settings).Show(entity, on); err != nil {
+		slog.Error("saving the todo lists failed", "err", err)
 	}
 	t.knobs.Publish()
 	t.opts.Redraw()

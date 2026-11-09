@@ -1540,14 +1540,15 @@ todo.add: Aggiungi elemento
 todo.app: Lista della spesa
 todo.clear: Cancella completati
 todo.empty: Lista vuota
-todo.entity: Lista di cose da fare
+todo.entity: Liste di cose da fare
 todo.group.todo: Lista della spesa
+todo.lists: "{{.Count}} liste"
 todo.none: Nessuna lista di cose da fare in Home Assistant
 todo.off: "Off"
 todo.pick: Scegli una lista in Impostazioni → Controllo casa → Lista della spesa
 todo.setting.completed: Mostra elementi completati
-todo.example.entity: todo.shopping_list
-todo.setting.entity: Lista di cose da fare
+todo.example.entities: todo.shopping_list,todo.hardware
+todo.setting.entities: Liste di cose da fare
 todo.title: Lista della spesa
 tone.alert: Avviso
 tone.info: Info

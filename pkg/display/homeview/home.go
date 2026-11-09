@@ -53,8 +53,12 @@ func (view *Renderer) homeRows() ([]menu.Row, []func(int)) {
 	taps = append(taps, func(int) { view.options.Shell.Push(view.options.WeatherEntities()) })
 	if t := view.options.Todo; t != nil {
 		list := say.T("todo.off")
-		if e := t.Entity(); e != "" {
-			list = t.Title(e)
+		switch lists := t.Lists(); len(lists) {
+		case 0:
+		case 1:
+			list = t.Title(lists[0])
+		default:
+			list = say.F("todo.lists", map[string]any{"Count": len(lists)})
 		}
 		rows = append(rows, menu.Row{Label: say.T("todo.title"), Kind: menu.Chevron, Value: list})
 		taps = append(taps, func(int) { view.options.Shell.Push(view.TodoLists()) })
@@ -317,41 +321,19 @@ func (view *Renderer) Picker(p *homecontrol.Picker) gogui.View {
 		)
 	}
 
-	var strip []gogui.View
-	for _, it := range []struct {
-		tab   homecontrol.Tab
-		label string
-	}{{homecontrol.TabLabels, say.T("home.tab.labels")}, {homecontrol.TabManual, say.T("home.tab.manual")}} {
-		st := gogui.CurrentTheme().Cfg.TextStyleDef
-		cfg := gogui.ContainerCfg{
-			ID:      "home-tab-" + string(it.tab),
-			Padding: gogui.PaddingMedium,
-			VAlign:  gogui.VAlignMiddle,
-		}
-		view.options.UI.Toolkit.Tab(&cfg, &st, widgets.Chosen(s.Tab == it.tab))
-		cfg.Content = []gogui.View{gogui.Label(it.label, st)}
-		pick := it.tab
-		strip = append(
-			strip,
-			view.options.UI.Toolkit.Pressable(
-				gogui.Row,
-				cfg,
-				func(gogui.EventCtx) { p.SetTab(pick) },
-			),
-		)
-	}
 	shown := view.labelsTab(p, s)
 	if s.Tab == homecontrol.TabManual {
 		shown = view.manualTab(p, s)
 	}
-	tabs := gogui.Row(
-		gogui.ContainerCfg{
-			Sizing:  gogui.FillFit,
-			Padding: gogui.NoPadding,
-			Spacing: gogui.SpacingSmall,
-			Content: strip,
+	tabs := view.options.UI.TabStrip(widgets.TabStripCfg{
+		ID: "home-tab",
+		Tabs: []widgets.Tab{
+			{Key: string(homecontrol.TabLabels), Label: say.T("home.tab.labels")},
+			{Key: string(homecontrol.TabManual), Label: say.T("home.tab.manual")},
 		},
-	)
+		Chosen: string(s.Tab),
+		Pick:   func(key string) { p.SetTab(homecontrol.Tab(key)) },
+	})
 	return Column([]gogui.View{search, tabs, shown})
 }
 
@@ -775,10 +757,10 @@ func (view *Renderer) TodoLists() *shell.Page {
 			case len(list) == 0:
 				return append(rows, menu.Row{Label: say.T("todo.none")}), append(taps, nil)
 			}
-			now := t.Entity()
 			for _, e := range list {
-				rows = append(rows, menu.Row{Label: e.Name, Hint: e.ID, Chosen: e.ID == now})
-				taps = append(taps, func(int) { t.SetEntity(e.ID) })
+				on := t.Shown(e.ID)
+				rows = append(rows, menu.Row{Label: t.Title(e.ID), Kind: menu.Toggle, On: on})
+				taps = append(taps, func(int) { t.SetShown(e.ID, !on) })
 			}
 			return rows, taps
 		},

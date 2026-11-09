@@ -207,37 +207,21 @@ func (a *App) sorted(tvs []yttv.TV) []yttv.TV {
 }
 
 func (a *App) picker(tvs []yttv.TV, chosen yttv.TV, width float32) gogui.View {
-	var chips []gogui.View
-	for _, t := range a.sorted(tvs) {
-		cfg := gogui.ContainerCfg{
-			ID:      "tv-pick-" + t.Entity,
-			Sizing:  gogui.FitFit,
-			Padding: gogui.PaddingMedium,
-			Radius:  gogui.RadiusLarge,
-		}
-		st := gogui.CurrentTheme().Cfg.TextStyleDef
-		a.o.UI.Toolkit.Tab(&cfg, &st, widgets.Chosen(t.Entity == chosen.Entity))
-		cfg.Content = []gogui.View{gogui.Label(a.label(t), st)}
-		entity := t.Entity
-		chips = append(chips, a.o.UI.Toolkit.Pressable(gogui.Row, cfg, func(e gogui.EventCtx) {
+	sorted := a.sorted(tvs)
+	tabs := make([]widgets.Tab, 0, len(sorted))
+	for _, t := range sorted {
+		tabs = append(tabs, widgets.Tab{Key: t.Entity, Label: a.label(t)})
+	}
+	return a.o.UI.TabStrip(widgets.TabStripCfg{
+		ID:     "tv-picker",
+		Tabs:   tabs,
+		Chosen: chosen.Entity,
+		Width:  width,
+		Pick: func(entity string) {
 			a.mu.Lock()
 			a.chosen, a.problem = entity, ""
 			a.mu.Unlock()
-			e.Consume()
-			e.Window.InvalidateLayout()
-		}))
-	}
-	bar := gogui.CurrentTheme().ScrollbarStyle
-	return gogui.Row(gogui.ContainerCfg{
-		ID:         "tv-picker",
-		Width:      width,
-		Sizing:     gogui.FixedFit,
-		Padding:    gogui.NewPadding(0, 0, bar.Size+2*bar.GapEdge, 0),
-		Spacing:    gogui.SpacingMedium,
-		Scrollable: true,
-		ScrollMode: gogui.ScrollHorizontalOnly,
-		Clip:       true,
-		Content:    chips,
+		},
 	})
 }
 

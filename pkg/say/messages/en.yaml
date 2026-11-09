@@ -1540,14 +1540,15 @@ todo.add: Add an item
 todo.app: Shopping list
 todo.clear: Clear completed
 todo.empty: Nothing on the list
-todo.entity: To-do list
+todo.entity: To-do lists
 todo.group.todo: Shopping list
+todo.lists: "{{.Count}} lists"
 todo.none: No to-do lists in Home Assistant
 todo.off: "Off"
 todo.pick: Pick a list in Settings → Home control → Shopping list
 todo.setting.completed: Show completed items
-todo.example.entity: todo.shopping_list
-todo.setting.entity: To-do list
+todo.example.entities: todo.shopping_list,todo.hardware
+todo.setting.entities: To-do lists
 todo.title: Shopping list
 tone.alert: Alert
 tone.info: Info
