@@ -187,6 +187,21 @@ func BuildRings(entities []ha.Entity, cfg config.Rings, read Reading) *Ring {
 	}
 	root := &Ring{Key: "home", Name: say.T("rings.home"), Level: LevelHome}
 	order, levels := hues(entities), floorHues(entities)
+	if cfg.Grouping() == config.BySystem {
+		for _, p := range keep {
+			hue := order[areaKey(p.e.AreaID)]
+			parent := child(root, "kind:"+p.kind, KindName(p.kind), LevelKind, p.kind)
+			area := p.e.Area
+			if p.e.AreaID == "" {
+				area = say.T("home.noarea")
+			}
+			parent = child(parent, parent.Key+"/area:"+p.e.AreaID, area, LevelArea, "")
+			parent.Hue = hue
+			parent.Children = append(parent.Children, leaf(p.e, p.kind, hue, read))
+		}
+		settle(root)
+		return root
+	}
 	byFloor := len(floors) > 1
 	for _, p := range keep {
 		parent := root
@@ -207,18 +222,22 @@ func BuildRings(entities []ha.Entity, cfg config.Rings, read Reading) *Ring {
 		parent.Hue = hue
 		parent = child(parent, parent.Key+"/kind:"+p.kind, KindName(p.kind), LevelKind, p.kind)
 		parent.Hue = hue
-		d := device(p.e, p.kind, read)
-		parent.Children = append(parent.Children, &Ring{
-			Key:    "device:" + d.ID,
-			Name:   d.Name,
-			Level:  LevelDevice,
-			Kind:   p.kind,
-			Hue:    hue,
-			Device: &d,
-		})
+		parent.Children = append(parent.Children, leaf(p.e, p.kind, hue, read))
 	}
 	settle(root)
 	return root
+}
+
+func leaf(e ha.Entity, kind string, hue int, read Reading) *Ring {
+	d := device(e, kind, read)
+	return &Ring{
+		Key:    "device:" + d.ID,
+		Name:   d.Name,
+		Level:  LevelDevice,
+		Kind:   kind,
+		Hue:    hue,
+		Device: &d,
+	}
 }
 
 func hues(entities []ha.Entity) map[string]int {
@@ -391,6 +410,12 @@ func (e *Engine) Rings() (*Ring, bool, error) {
 func (e *Engine) RingsLook() config.RingsLook { return e.options.Settings.Read().Rings.Shape() }
 
 func (e *Engine) SetRingsLook(l config.RingsLook) { e.set(ringsLook, string(l)) }
+
+func (e *Engine) RingsGroup() config.RingsGroup {
+	return e.options.Settings.Read().Rings.Grouping()
+}
+
+func (e *Engine) SetRingsGroup(g config.RingsGroup) { e.set(ringsGroup, string(g)) }
 
 func (e *Engine) RingsDepth() int { return e.options.Settings.Read().Rings.Deep() }
 

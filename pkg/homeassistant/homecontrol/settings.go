@@ -30,6 +30,7 @@ const (
 	tesseraBottom  = "tessera.bottom"
 	tesseraFollow  = "tessera.follow"
 	ringsLook      = "rings.look"
+	ringsGroup     = "rings.group"
 	ringsDepth     = "rings.depth"
 	ringsSide      = "rings.side"
 	ringsFloors    = "rings.hidden_floors"
@@ -106,6 +107,11 @@ func (e *Engine) table() *setting.Table[config.Home] {
 			Setting{Name: ringsLook, Group: Group, Icon: "mdi:chart-donut"},
 			config.RingsLooks(),
 			func(h *config.Home) *config.RingsLook { return &h.Rings.Look },
+		),
+		setting.Pick(
+			Setting{Name: ringsGroup, Group: Group, Icon: "mdi:file-tree-outline"},
+			config.RingsGroups(),
+			func(h *config.Home) *config.RingsGroup { return &h.Rings.Group },
 		),
 		depthRow(),
 		setting.Pick(

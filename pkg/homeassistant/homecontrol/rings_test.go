@@ -152,6 +152,50 @@ func TestBuildRingsAddsFloorsFromTwo(t *testing.T) {
 	}
 }
 
+func TestBuildRingsBySystemPutsTypesFirstWithoutFloors(t *testing.T) {
+	entities := append(sample(), ha.Entity{
+		ID: "light.attic", Name: "Attic", State: "off", AreaID: "attic", Area: "Attic",
+		FloorID: "top", Floor: "Attic",
+	})
+	root := BuildRings(entities, config.Rings{Group: config.BySystem}, none)
+	if got, want := names(root.Children), []string{
+		"Lights", "Switches", "Media", "Access",
+	}; !slices.Equal(got, want) {
+		t.Fatalf("types %v, want %v", got, want)
+	}
+	lights := root.Children[0]
+	if lights.Level != LevelKind || lights.Hue != 0 {
+		t.Errorf(
+			"lights level %v hue %d, want a kind ring without a room hue",
+			lights.Level,
+			lights.Hue,
+		)
+	}
+	if got, want := names(
+		lights.Children,
+	), []string{
+		"Attic",
+		"Bedroom",
+		"Porch",
+	}; !slices.Equal(
+		got,
+		want,
+	) {
+		t.Errorf("light rooms %v, want %v", got, want)
+	}
+	byRoom := BuildRings(entities, config.Rings{}, none)
+	if got, want := root.Find(
+		"kind:lights/area:bed",
+	).Hue, byRoom.Find(
+		"floor:up/area:bed",
+	).Hue; got != want {
+		t.Errorf("bedroom hue %d by system, %d by room", got, want)
+	}
+	if lights.Children[1].Children[0].Device == nil {
+		t.Error("rooms by system hold devices directly")
+	}
+}
+
 func TestBuildRingsHidesAreasKindsAndFollowsLabels(t *testing.T) {
 	entities := sample()
 	entities[0].Labels = []string{"kitchen"}

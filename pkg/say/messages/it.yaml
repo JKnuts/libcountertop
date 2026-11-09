@@ -508,6 +508,10 @@ rings.look.icicle: Ghiacciolo
 rings.look.burst: Raggiera
 rings.depth: Profondità
 home.setting.rings.depth: Profondità anelli
+rings.group: Raggruppa per
+rings.group.room: Stanza
+rings.group.system: Sistema
+home.setting.rings.group: "Anelli: raggruppa per"
 card.light.brightness: Luminosità
 card.light.hue: Colore
 card.light.warmth: Temperatura colore

@@ -29,6 +29,12 @@ func (view *Renderer) ringsRows() ([]menu.Row, []func(int)) {
 			schema.RingsLooks(),
 			engine.RingsLook(),
 		),
+		settings.ModeRow(
+			settings.ModeMarks{},
+			say.T("rings.group"),
+			schema.RingsGroups(),
+			engine.RingsGroup(),
+		),
 		depthRow(engine.RingsDepth()),
 		settings.ModeRow(
 			settings.ModeMarks{},
@@ -63,6 +69,7 @@ func (view *Renderer) ringsRows() ([]menu.Row, []func(int)) {
 	}
 	taps := []func(int){
 		settings.ModePick(schema.RingsLooks(), engine.SetRingsLook),
+		settings.ModePick(schema.RingsGroups(), engine.SetRingsGroup),
 		func(level int) { engine.SetRingsDepth(depthOf(level)) },
 		settings.ModePick(schema.RingsSides(), engine.SetRingsSide),
 		nil, nil, nil, nil,

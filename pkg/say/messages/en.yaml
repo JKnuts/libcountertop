@@ -506,6 +506,10 @@ rings.look.wheel: Wheel
 rings.look.icicle: Icicle
 rings.look.burst: Burst
 rings.depth: Depth
+rings.group: Group by
+rings.group.room: Room
+rings.group.system: System
+home.setting.rings.group: "Rings: group by"
 home.setting.rings.depth: Rings depth
 card.light.brightness: Brightness
 card.light.hue: Color

@@ -19,6 +19,17 @@ func (l RingsLook) Label() string { return say.T("rings.look." + string(l)) }
 
 func RingsLooks() []RingsLook { return []RingsLook{RingsWheel, RingsIcicle, RingsBurst} }
 
+type RingsGroup string
+
+const (
+	ByRoom   RingsGroup = "room"
+	BySystem RingsGroup = "system"
+)
+
+func (g RingsGroup) Label() string { return say.T("rings.group." + string(g)) }
+
+func RingsGroups() []RingsGroup { return []RingsGroup{ByRoom, BySystem} }
+
 type RingsSide string
 
 const (
@@ -31,13 +42,14 @@ func (s RingsSide) Label() string { return say.T("rings.side." + string(s)) }
 func RingsSides() []RingsSide { return []RingsSide{SideLeft, SideRight} }
 
 type Rings struct {
-	Look   RingsLook `json:"look"`
-	Depth  int       `json:"depth"`
-	Side   RingsSide `json:"side"`
-	Floors []string  `json:"hidden_floors"`
-	Areas  []string  `json:"hidden_areas"`
-	Kinds  []string  `json:"hidden_kinds"`
-	Labels []string  `json:"labels"`
+	Look   RingsLook  `json:"look"`
+	Group  RingsGroup `json:"group"`
+	Depth  int        `json:"depth"`
+	Side   RingsSide  `json:"side"`
+	Floors []string   `json:"hidden_floors"`
+	Areas  []string   `json:"hidden_areas"`
+	Kinds  []string   `json:"hidden_kinds"`
+	Labels []string   `json:"labels"`
 }
 
 func (r Rings) Clone() Rings {
@@ -65,6 +77,13 @@ func (r Rings) Placed() RingsSide {
 		return SideLeft
 	}
 	return SideRight
+}
+
+func (r Rings) Grouping() RingsGroup {
+	if slices.Contains(RingsGroups(), r.Group) {
+		return r.Group
+	}
+	return ByRoom
 }
 
 func (r Rings) Shape() RingsLook {

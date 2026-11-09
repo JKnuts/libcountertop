@@ -53,6 +53,8 @@ func toneOf(pal theme.Theme, r *homecontrol.Ring) tone {
 		fill = mix(pal.Surface, pal.Background, 0.55)
 	case r.Device != nil:
 		fill = shade(0.82)
+	case r.Level == homecontrol.LevelKind && !hued:
+		fill = mix(kindColor(pal, r.Kind), pal.Background, 0.35)
 	case r.Level == homecontrol.LevelKind && r.Active > 0:
 		fill = mix(kindColor(pal, r.Kind), pal.Background, 0.35)
 	case r.Level == homecontrol.LevelKind:
