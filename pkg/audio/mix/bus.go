@@ -70,6 +70,10 @@ func (b *Bus) Clear() {
 	}
 }
 
+func (b *Bus) ClearStream(s schema.Stream) { b.lane(s).Clear() }
+
+func (b *Bus) StreamLen(s schema.Stream) int { return b.lane(s).Len() }
+
 func (b *Bus) Len() int {
 	b.mu.Lock()
 	defer b.mu.Unlock()

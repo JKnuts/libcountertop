@@ -25,6 +25,7 @@ const (
 	reply       = "{{ response | to_json }}"
 	askTime     = 15 * time.Second
 	stale       = time.Minute
+	refresh     = 15 * time.Minute
 	maxPages    = 64
 	// ytimg serves *_live.jpg with max-age=300.
 	liveEvery = 5 * time.Minute
@@ -143,12 +144,13 @@ type Follower interface {
 }
 
 type Options struct {
-	HA       HA
-	States   Follower
-	Settings storage.Section[schema.TV]
-	Self     func() string
-	Redraw   func()
-	DeviceID uint32
+	HA        HA
+	Connected func() bool
+	States    Follower
+	Settings  storage.Section[schema.TV]
+	Self      func() string
+	Redraw    func()
+	DeviceID  uint32
 }
 
 type Guide struct {
@@ -209,14 +211,11 @@ func (g *Guide) store(s Setting, v string) error {
 
 func (g *Guide) Load() (channels []Channel, tvs []TV, err error, loaded bool) {
 	g.mu.Lock()
-	due := !g.asking && time.Since(g.asked) >= stale
-	if due {
-		g.asking, g.asked = true, time.Now()
-	}
+	due := time.Since(g.asked) >= stale
 	channels, tvs, err, loaded = g.channels, g.tvs, g.err, g.loaded
 	g.mu.Unlock()
 	if due {
-		safe.Go("yttv guide", g.fetch)
+		g.ask()
 	}
 	return channels, tvs, err, loaded
 }
@@ -225,6 +224,32 @@ func (g *Guide) Refresh() {
 	g.mu.Lock()
 	g.asked = time.Time{}
 	g.mu.Unlock()
+}
+
+func (g *Guide) Run(ctx context.Context) error {
+	t := time.NewTicker(refresh)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-t.C:
+		}
+		if g.o.Connected == nil || g.o.Connected() {
+			g.ask()
+		}
+	}
+}
+
+func (g *Guide) ask() {
+	g.mu.Lock()
+	if g.asking {
+		g.mu.Unlock()
+		return
+	}
+	g.asking, g.asked = true, time.Now()
+	g.mu.Unlock()
+	safe.Go("yttv guide", g.fetch)
 }
 
 func (g *Guide) fetch() {

@@ -1209,6 +1209,17 @@ actions.call_answer.done: Rispondo alla chiamata
 actions.call_hangup: Chiudi una chiamata
 actions.call_hangup.none: Nessuna chiamata da chiudere
 actions.call_hangup.done: Chiamata terminata
+actions.youtube_tv: Guarda YouTube TV
+actions.youtube_tv.channel: Di' un canale o un programma
+actions.youtube_tv.unknown: "Ho cercato {{.Channel}} su YouTube TV, ma non è disponibile o al momento non si può riprodurre"
+actions.youtube_tv.device: "Non c'è nessun dispositivo chiamato {{.Device}}"
+actions.youtube_tv.nowhere: Scegli una TV predefinita nell'app TV
+actions.youtube_tv.here: "Riproduco {{.Show}} su {{.Channel}}"
+actions.youtube_tv.here.channel: "Riproduco {{.Channel}}"
+actions.youtube_tv.watching: "Riproduco {{.Show}} su {{.Channel}} su {{.Device}}"
+actions.youtube_tv.watching.channel: "Riproduco {{.Channel}} su {{.Device}}"
+actions.youtube_tv.airing: "Su {{.Channel}} c'è {{.Title}}"
+actions.youtube_tv.nothing: "Al momento non c'è niente in programma su {{.Channel}}"
 lock.again: Inseriscilo di nuovo
 lock.change: Cambia PIN
 lock.clear: Rimuovi PIN
@@ -1638,6 +1649,7 @@ voice.setting.action.alarm: Gestisci sveglie
 voice.setting.action.call_answer: Rispondi a una chiamata
 voice.setting.action.call_hangup: Chiudi una chiamata
 voice.setting.action.call: Chiama un dispositivo
+voice.setting.action.youtube_tv: Guarda YouTube TV
 voice.setting.actions: Tutte le azioni
 voice.setting.command.mirror: Specchio
 voice.setting.command.radar: Radar

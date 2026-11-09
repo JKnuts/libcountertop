@@ -19,7 +19,6 @@ import (
 
 type Speaker interface {
 	sound.Player
-	pcm.Sink
 	PlayVoice(mono []int16)
 }
 
@@ -30,7 +29,7 @@ type Volume interface {
 }
 
 type Options[P Speaker] struct {
-	Speaker        P
+	Media          pcm.Sink
 	Sound          *sound.Driver[P]
 	Rate, Channels int
 	DuckDB         func() float64
@@ -110,7 +109,7 @@ func New[P Speaker](o Options[P]) *Player[P] {
 	p.queue = &queue[P]{p: p}
 	p.mp.OnCommand = p.command
 	p.stream = pcm.New(pcm.Options{
-		Sink:        o.Speaker,
+		Sink:        o.Media,
 		Rate:        o.Rate,
 		Channels:    o.Channels,
 		Changed:     p.Changed,

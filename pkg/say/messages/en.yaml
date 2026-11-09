@@ -1209,6 +1209,17 @@ actions.call_answer.done: Answering the call
 actions.call_hangup: Hang up a call
 actions.call_hangup.none: No call to hang up
 actions.call_hangup.done: Call ended
+actions.youtube_tv: Watch YouTube TV
+actions.youtube_tv.channel: Say a channel or a show
+actions.youtube_tv.unknown: "I looked for {{.Channel}} on YouTube TV, but it either isn't available or can't be played right now"
+actions.youtube_tv.device: "There's no device called {{.Device}}"
+actions.youtube_tv.nowhere: Choose a default TV in the TV app
+actions.youtube_tv.here: "Playing {{.Show}} on {{.Channel}}"
+actions.youtube_tv.here.channel: "Playing {{.Channel}}"
+actions.youtube_tv.watching: "Playing {{.Show}} on {{.Channel}} on {{.Device}}"
+actions.youtube_tv.watching.channel: "Playing {{.Channel}} on {{.Device}}"
+actions.youtube_tv.airing: "{{.Channel}} is showing {{.Title}}"
+actions.youtube_tv.nothing: "Nothing is listed on {{.Channel}} right now"
 lock.again: Enter it again
 lock.change: Change PIN
 lock.clear: Remove PIN
@@ -1638,6 +1649,7 @@ voice.setting.action.alarm: Manage alarms
 voice.setting.action.call_answer: Answer a call
 voice.setting.action.call_hangup: Hang up a call
 voice.setting.action.call: Call a device
+voice.setting.action.youtube_tv: Watch YouTube TV
 voice.setting.actions: All actions
 voice.setting.command.mirror: Mirror
 voice.setting.command.radar: Radar

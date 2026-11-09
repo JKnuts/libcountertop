@@ -8,6 +8,23 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
 
+func TestBusClearsAndCountsOneStreamAlone(t *testing.T) {
+	var b Bus
+	b.Push(schema.StreamMedia, []int16{1, 2, 3, 4})
+	b.Push(schema.StreamVoice, []int16{5, 6})
+
+	if got := b.StreamLen(schema.StreamVoice); got != 2 {
+		t.Errorf("voice holds %d samples, want 2", got)
+	}
+	b.ClearStream(schema.StreamMedia)
+	if got := b.StreamLen(schema.StreamMedia); got != 0 {
+		t.Errorf("media holds %d samples after clearing it, want 0", got)
+	}
+	if got := b.StreamLen(schema.StreamVoice); got != 2 {
+		t.Errorf("voice holds %d samples after clearing media, want 2", got)
+	}
+}
+
 func TestBusScalesEachStreamByItsOwnGain(t *testing.T) {
 	var b Bus
 	b.SetGain(schema.StreamMedia, 0.5)

@@ -44,7 +44,7 @@ var Get = sync.OnceValue(func() *Player[*speaker] {
 	s := &speaker{}
 	return New(
 		Options[*speaker]{
-			Speaker:  s,
+			Media:    s,
 			Sound:    sound.NewDriver(s),
 			Rate:     48000,
 			Channels: 2,
