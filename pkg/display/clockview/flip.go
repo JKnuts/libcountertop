@@ -27,10 +27,10 @@ func Flip(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
 	pairW := float32(2 + flipInner)
 	var tw, width, height float32
 	if across {
-		tw = min(bw*0.9/(2*pairW+flipPair), bh*0.62/flipTall)
+		tw = min(bw*r.share(0.9)/(2*pairW+flipPair), bh*r.share(0.62)/flipTall)
 		width, height = tw*(2*pairW+flipPair), tw*flipTall
 	} else {
-		tw = min(bw*0.86/pairW, bh*0.7/(2*flipTall+flipPair))
+		tw = min(bw*r.share(0.86)/pairW, bh*r.share(0.7)/(2*flipTall+flipPair))
 		width, height = tw*pairW, tw*(2*flipTall+flipPair)
 	}
 	th := tw * flipTall

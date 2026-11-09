@@ -55,9 +55,13 @@ func Segments(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.Vi
 		widest = max(widest, wide)
 	}
 	bw, bh := float32(box.W), float32(box.H)
-	height := min(bw*0.78/widest, bh*0.25)
+	height := min(bw*r.share(0.78)/widest, bh*0.25)
 	if len(rows) > 1 {
-		height = min(bw*0.78/widest, bh*0.2)
+		height = min(bw*r.share(0.78)/widest, bh*0.2)
+	}
+	if r.Fill {
+		n := float32(len(rows))
+		height = min(bw/widest, bh/(n+0.22*(n-1)))
 	}
 	gap := height * 0.22
 	tall := height*float32(len(rows)) + gap*float32(len(rows)-1)

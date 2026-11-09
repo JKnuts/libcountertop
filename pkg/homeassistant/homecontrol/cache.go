@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	fetchWait = 10 * time.Second
-	cacheFor  = 10 * time.Minute
+	fetchWait  = 10 * time.Second
+	cacheFor   = 10 * time.Minute
+	retryAfter = 5 * time.Second
 )
 
 type result struct {
@@ -47,6 +48,8 @@ func (c *cache) get(s Selection) result {
 		c.got[s.Key] = r
 	case !r.asking && !r.refreshing && r.err == nil && c.now().Sub(r.at) > cacheFor:
 		r.refreshing = true
+	case !r.asking && r.err != nil && c.now().Sub(r.at) > retryAfter:
+		r.asking = true
 	default:
 		return *r
 	}
@@ -109,4 +112,18 @@ func (c *cache) clear() {
 	c.done()
 }
 
-func (e *Engine) Refresh() { e.cache.clear(); e.options.Client.Probe() }
+func (c *cache) stale() {
+	c.mu.Lock()
+	for k, r := range c.got {
+		switch {
+		case r.err != nil:
+			delete(c.got, k)
+		case !r.asking:
+			r.at = time.Time{}
+		}
+	}
+	c.mu.Unlock()
+	c.done()
+}
+
+func (e *Engine) Refresh() { e.cache.stale(); e.options.Client.Probe() }

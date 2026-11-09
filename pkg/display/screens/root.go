@@ -202,6 +202,17 @@ func (a *App) tesseraDash(w *gogui.Window, vw, vh, top, margin int) []gogui.View
 	return a.o.Tessera.Draw(w, ui.Rect{Y: top, W: vw, H: vh - top})
 }
 
+func (a *App) ringsClock(w *gogui.Window, at ui.Rect) gogui.View {
+	cfg := a.o.Settings()
+	face, ok := clockview.Of(cfg.Clock.Face)
+	if !ok {
+		face, _ = clockview.Of(schema.DefaultFace)
+	}
+	r := clockview.Read(time.Now(), cfg.Screen.Hours == schema.TwentyFourHour).Undated()
+	r.Fill = true
+	return widgets.Placed(at, face.Draw(w, at, r, cfg.Clock.Ink.Over(a.o.UI.Palette())))
+}
+
 func (a *App) nativeDash(w *gogui.Window, vw, vh, top, margin int, pal theme.Theme) []gogui.View {
 	cfg := a.o.Settings()
 	ink := cfg.Clock.Ink.Over(pal)

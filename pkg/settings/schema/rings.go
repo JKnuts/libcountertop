@@ -34,12 +34,14 @@ type Rings struct {
 	Look   RingsLook `json:"look"`
 	Depth  int       `json:"depth"`
 	Side   RingsSide `json:"side"`
+	Floors []string  `json:"hidden_floors"`
 	Areas  []string  `json:"hidden_areas"`
 	Kinds  []string  `json:"hidden_kinds"`
 	Labels []string  `json:"labels"`
 }
 
 func (r Rings) Clone() Rings {
+	r.Floors = slices.Clone(r.Floors)
 	r.Areas = slices.Clone(r.Areas)
 	r.Kinds = slices.Clone(r.Kinds)
 	r.Labels = slices.Clone(r.Labels)

@@ -155,7 +155,8 @@ func (r *Ring) Leaves() []*Device {
 type Reading func(entity, attribute string) (string, bool)
 
 func shown(cfg config.Rings, e ha.Entity, kind string) bool {
-	if slices.Contains(cfg.Kinds, kind) || slices.Contains(cfg.Areas, areaKey(e.AreaID)) {
+	if slices.Contains(cfg.Kinds, kind) || slices.Contains(cfg.Areas, areaKey(e.AreaID)) ||
+		slices.Contains(cfg.Floors, areaKey(e.FloorID)) {
 		return false
 	}
 	if len(cfg.Labels) == 0 {
@@ -399,7 +400,21 @@ func (e *Engine) SetRingsSide(s config.RingsSide) { e.set(ringsSide, string(s)) 
 
 func (e *Engine) SetRingsDepth(n int) { e.set(ringsDepth, strconv.Itoa(n)) }
 
+func (e *Engine) RingFloors() ([]Place, bool) {
+	return e.places(
+		func(ent ha.Entity) (string, string) { return ent.FloorID, ent.Floor },
+		say.T("rings.nofloor"),
+	)
+}
+
 func (e *Engine) RingAreas() ([]Place, bool) {
+	return e.places(
+		func(ent ha.Entity) (string, string) { return ent.AreaID, ent.Area },
+		say.T("home.noarea"),
+	)
+}
+
+func (e *Engine) places(of func(ha.Entity) (id, name string), none string) ([]Place, bool) {
 	got := e.cache.get(e.rings)
 	if got.asking || got.err != nil {
 		return nil, got.asking
@@ -408,21 +423,22 @@ func (e *Engine) RingAreas() ([]Place, bool) {
 	var out []Place
 	loose := false
 	for _, ent := range got.entities {
-		if _, ok := kindOf(ent); !ok || seen[ent.AreaID] {
+		id, name := of(ent)
+		if _, ok := kindOf(ent); !ok || seen[id] {
 			continue
 		}
-		seen[ent.AreaID] = true
-		if ent.AreaID == "" {
+		seen[id] = true
+		if id == "" {
 			loose = true
 			continue
 		}
-		out = append(out, Place{ID: ent.AreaID, Name: ent.Area})
+		out = append(out, Place{ID: id, Name: name})
 	}
 	slices.SortFunc(out, func(a, b Place) int {
 		return cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
 	})
 	if loose {
-		out = append(out, Place{ID: NoArea, Name: say.T("home.noarea")})
+		out = append(out, Place{ID: NoArea, Name: none})
 	}
 	return out, false
 }
@@ -449,6 +465,10 @@ func (e *Engine) RingLabels() ([]Place, bool) {
 }
 
 func (e *Engine) RingsShown() config.Rings { return e.options.Settings.Read().Rings.Clone() }
+
+func (e *Engine) ShowRingFloor(id string, on bool) {
+	e.set(ringsFloors, strings.Join(config.Toggled(e.RingsShown().Floors, id, !on), ","))
+}
 
 func (e *Engine) ShowRingArea(id string, on bool) {
 	e.set(ringsAreas, strings.Join(config.Toggled(e.RingsShown().Areas, id, !on), ","))

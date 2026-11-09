@@ -52,7 +52,7 @@ func Bars(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
 		cols, rows = 4, 6
 	}
 	bw, bh := float32(box.W), float32(box.H)
-	tile := min(bw*0.86/(float32(cols)+0.5), bh*0.6/(float32(rows)+0.5))
+	tile := min(bw*r.share(0.86)/(float32(cols)+0.5), bh*r.share(0.6)/(float32(rows)+0.5))
 	frame := tile * 0.25
 	width, height := float32(cols)*tile+2*frame, float32(rows)*tile+2*frame
 	version := canvasVersion(box, r, ink, false)

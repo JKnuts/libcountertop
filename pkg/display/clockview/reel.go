@@ -28,6 +28,9 @@ func Reel(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
 
 	bw, bh := float32(box.W), float32(box.H)
 	big := min(bh*0.3, bw*0.16)
+	if r.Fill {
+		big = min(bh/2.15, bw*0.16)
+	}
 	small := big * 0.34
 	slot := big * 0.95
 	rowGap := big * 0.15

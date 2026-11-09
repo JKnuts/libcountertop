@@ -13,6 +13,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/menu"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
 	"github.com/ygelfand/libcountertop/pkg/display/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/ui"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 	"github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
 	"github.com/ygelfand/libcountertop/pkg/say"
@@ -150,6 +151,31 @@ func (v *View) shut(pal theme.Theme) gogui.View {
 			e.Consume()
 		})},
 	})
+}
+
+func (v *View) reload(pal theme.Theme, ox, oy, cw float32, right bool) gogui.View {
+	st := gogui.CurrentTheme().TextStyleIconMedium
+	st.Color = widgets.Color(pal.Muted)
+	reach := style.Reach()
+	x := ox + reach*0.3
+	if right {
+		x = ox + cw - reach*1.5
+	}
+	at := ui.Rect{X: int(x), Y: int(oy + reach*0.3), W: int(reach * 1.2), H: int(reach * 1.2)}
+	return widgets.Placed(at, v.o.UI.Toolkit.Pressable(gogui.Column, gogui.ContainerCfg{
+		ID:      "rings-reload",
+		Width:   reach * 1.2,
+		Height:  reach * 1.2,
+		Sizing:  gogui.FixedFixed,
+		HAlign:  gogui.HAlignCenter,
+		VAlign:  gogui.VAlignMiddle,
+		Padding: gogui.NoPadding,
+		Radius:  gogui.RadiusMedium,
+		Content: []gogui.View{gogui.Label(gogui.IconSync, st)},
+	}, func(e gogui.EventCtx) {
+		v.o.Home.Refresh()
+		e.Consume()
+	}))
 }
 
 func (v *View) detail(

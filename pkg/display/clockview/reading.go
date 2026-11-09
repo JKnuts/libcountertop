@@ -15,8 +15,16 @@ type Reading struct {
 	Date   string
 
 	Second int
+	Fill   bool
 
 	Behind func(*gogui.ContainerCfg)
+}
+
+func (r Reading) share(n float32) float32 {
+	if r.Fill {
+		return 1
+	}
+	return n
 }
 
 func Read(at time.Time, twentyFour bool) Reading {

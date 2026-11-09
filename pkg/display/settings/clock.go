@@ -41,20 +41,9 @@ func (p *ClockPages) Page() *shell.Page {
 		Build: func() ([]menu.Row, []func(int)) {
 			cfg := p.options.Preferences.ClockState()
 
-			rows := []menu.Row{
-				{
-					Label: say.T("clock.face"),
-					Kind:  menu.Chevron,
-					Value: cfg.Clock.Face.Label(),
-				},
-			}
-			taps := []func(int){
-				p.open(Tiles(say.T("clock.face"),
-					clockview.Names(),
-					func() config.Face { return p.options.Preferences.ClockState().Clock.Face },
-					p.options.Controller.SetFace,
-					p.options.Previews.ClockFace)),
-			}
+			face, pick := p.faceRow(cfg.Clock)
+			rows := []menu.Row{face}
+			taps := []func(int){pick}
 			placed, placing := Placing{
 				Positions: config.Positions(),
 				Aligns:    config.Aligns(),
@@ -64,12 +53,9 @@ func (p *ClockPages) Page() *shell.Page {
 				Set:     p.options.Controller,
 				Preview: p.placed,
 			}.Rows(p.options.Shell)
+			color, paint := p.colorRow(cfg.Clock)
 			rows = append(append(rows, placed...),
-				menu.Row{
-					Label: say.T("clock.color"),
-					Kind:  menu.Chevron,
-					Value: cfg.Clock.Ink.Label(),
-				},
+				color,
 				menu.Row{
 					Label: say.T("clock.backing"),
 					Kind:  menu.Chevron,
@@ -78,7 +64,7 @@ func (p *ClockPages) Page() *shell.Page {
 				menu.Row{Label: say.T("clock.date"), Kind: menu.Toggle, On: cfg.Clock.Date},
 			)
 			taps = append(append(taps, placing...),
-				p.open(p.Colors()),
+				paint,
 				p.open(Choose(
 					say.T("clock.backing"),
 					config.Backings(),
@@ -91,6 +77,38 @@ func (p *ClockPages) Page() *shell.Page {
 			return rows, taps
 		},
 	}
+}
+
+func (p *ClockPages) Compact() *shell.Page {
+	return &shell.Page{
+		Title: say.T("clock.title"),
+		Build: func() ([]menu.Row, []func(int)) {
+			cfg := p.options.Preferences.ClockState()
+			face, pick := p.faceRow(cfg.Clock)
+			color, paint := p.colorRow(cfg.Clock)
+			return []menu.Row{face, color}, []func(int){pick, paint}
+		},
+	}
+}
+
+func (p *ClockPages) faceRow(c config.Clock) (menu.Row, func(int)) {
+	return menu.Row{
+		Label: say.T("clock.face"),
+		Kind:  menu.Chevron,
+		Value: c.Face.Label(),
+	}, p.open(Tiles(say.T("clock.face"),
+		clockview.Names(),
+		func() config.Face { return p.options.Preferences.ClockState().Clock.Face },
+		p.options.Controller.SetFace,
+		p.options.Previews.ClockFace))
+}
+
+func (p *ClockPages) colorRow(c config.Clock) (menu.Row, func(int)) {
+	return menu.Row{
+		Label: say.T("clock.color"),
+		Kind:  menu.Chevron,
+		Value: c.Ink.Label(),
+	}, p.open(p.Colors())
 }
 
 func (p *ClockPages) Colors() *shell.Page {

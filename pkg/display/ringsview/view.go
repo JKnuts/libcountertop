@@ -24,8 +24,9 @@ const (
 )
 
 type Options struct {
-	UI   *widgets.UI
-	Home *homecontrol.Engine
+	UI    *widgets.UI
+	Home  *homecontrol.Engine
+	Clock func(w *gogui.Window, at ui.Rect) gogui.View
 }
 
 type View struct {
@@ -102,6 +103,7 @@ func (v *View) Draw(w *gogui.Window, at ui.Rect) gogui.View {
 		},
 	})
 	content := []gogui.View{canvas}
+	var ox, oy float32
 	if open > 0 {
 		pw, ph := vw-cw, vh
 		if tall {
@@ -110,7 +112,20 @@ func (v *View) Draw(w *gogui.Window, at ui.Rect) gogui.View {
 		content = append(content, v.panel(w, root, pal, pw, ph))
 		if v.o.Home.RingsSide() == schema.SideLeft {
 			slices.Reverse(content)
+			if tall {
+				oy = ph
+			} else {
+				ox = pw
+			}
 		}
+	}
+	if v.clocked(root, loading, err) {
+		f, _ := split(lay(v.o.Home.RingsLook(), cw, ch).label())
+		at := ui.Rect{X: int(ox + f.x), Y: int(oy + f.y), W: int(f.w), H: int(f.h)}
+		content = append(content, v.o.Clock(w, at))
+	}
+	if root != nil {
+		content = append(content, v.reload(pal, ox, oy, cw, open > 0 && ox > 0))
 	}
 	frame := gogui.ContainerCfg{
 		ID:      "rings",
@@ -174,7 +189,26 @@ func (v *View) paint(
 		}
 		caption(dc, g, sh, s.ring.Name, label)
 	}
-	v.hub(dc, g, segs, find(segs, focus), loading, err, pal)
+	v.hub(dc, g, segs, find(segs, focus), v.clocked(root, loading, err), loading, err, pal)
+}
+
+func (v *View) clocked(root *homecontrol.Ring, loading bool, err error) bool {
+	if v.o.Clock == nil || root == nil || loading || err != nil || root.Devices == 0 {
+		return false
+	}
+	_, focus, _ := v.state()
+	return focus == root.Key
+}
+
+func split(b box) (face, line box) {
+	lh := min(summaryStyle().Size*1.5, b.h*0.3)
+	return box{b.x, b.y, b.w, b.h - lh}, box{b.x, b.y + b.h - lh, b.w, lh}
+}
+
+func summaryStyle() gogui.TextStyle {
+	st := gogui.CurrentTheme().TextStyleDef
+	st.Size *= 0.75
+	return st
 }
 
 func (v *View) hub(
@@ -182,17 +216,20 @@ func (v *View) hub(
 	g geometry,
 	segs []seg,
 	focus int,
+	clock bool,
 	loading bool,
 	err error,
 	pal theme.Theme,
 ) {
 	dc.FilledPolygon(g.hub(), widgets.Color(pal.Surface))
 	b := g.label()
+	if clock {
+		_, b = split(b)
+	}
 	title := gogui.CurrentTheme().TextStyleDef
 	title.Typeface = glyph.TypefaceBold
 	title.Color = widgets.Color(pal.Text)
-	small := gogui.CurrentTheme().TextStyleDef
-	small.Size *= 0.75
+	small := summaryStyle()
 	small.Color = widgets.Color(pal.Muted)
 	var lines []struct {
 		text string
@@ -216,8 +253,15 @@ func (v *View) hub(
 		add(say.T("home.empty"), title)
 	default:
 		r := segs[focus].ring
-		add(r.Name, title)
-		add(say.F("rings.summary", map[string]any{"On": r.Active, "N": r.Devices}), small)
+		if !clock {
+			add(r.Name, title)
+		}
+		sum := say.F("rings.summary", map[string]any{"On": r.Active, "N": r.Devices})
+		st := small
+		if w, room := dc.TextWidth(sum, st), b.w*0.92; w > room {
+			st.Size *= room / w
+		}
+		add(sum, st)
 		if focus != 0 {
 			arrow := small
 			arrow.Family = gogui.CurrentTheme().TextStyleIconMedium.Family

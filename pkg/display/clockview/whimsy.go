@@ -166,7 +166,7 @@ func Binary(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View
 	digits := []byte{hour[0], hour[1], minute[0], minute[1], second[0], second[1]}
 	bits := []int{2, 4, 3, 4, 3, 4}
 	bw, bh := float32(box.W), float32(box.H)
-	cell := min(bw*0.8/(6+5*0.45+2*0.6), bh*0.5/(4+3*0.45))
+	cell := min(bw*r.share(0.8)/(6+5*0.45+2*0.6), bh*r.share(0.5)/(4+3*0.45))
 	gap, pair := cell*0.45, cell*0.6
 	width := 6*cell + 5*gap + 2*pair
 	height := 4*cell + 3*gap

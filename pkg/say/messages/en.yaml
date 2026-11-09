@@ -520,6 +520,7 @@ rings.side.right: Right / bottom
 home.setting.rings.side: "Rings: details side"
 rings.home: Home
 rings.nofloor: No floor
+rings.floors: Floors
 rings.areas: Areas
 rings.kinds: Types
 rings.summary: "{{.On}} on · {{.N}} device{{if ne .N 1}}s{{end}}"
@@ -534,6 +535,7 @@ rings.kind.access: Access
 rings.kind.presence: Presence
 rings.kind.cameras: Cameras
 home.setting.rings.look: Rings look
+home.setting.rings.hidden_floors: "Rings: hidden floors"
 home.setting.rings.hidden_areas: "Rings: hidden areas"
 home.setting.rings.hidden_kinds: "Rings: hidden types"
 home.setting.rings.labels: "Rings: labels"

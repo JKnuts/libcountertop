@@ -30,10 +30,10 @@ func Nixie(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 	across := bw >= bh
 	var tw, width, height float32
 	if across {
-		tw = min(bw*0.9/(4+2*nixieGap+nixieColon), bh*0.6/nixieTall)
+		tw = min(bw*r.share(0.9)/(4+2*nixieGap+nixieColon), bh*r.share(0.6)/nixieTall)
 		width, height = tw*(4+2*nixieGap+nixieColon), tw*nixieTall
 	} else {
-		tw = min(bw*0.8/(2+nixieGap), bh*0.66/(2*nixieTall+2*nixieGap))
+		tw = min(bw*r.share(0.8)/(2+nixieGap), bh*r.share(0.66)/(2*nixieTall+2*nixieGap))
 		width, height = tw*(2+nixieGap), tw*(2*nixieTall+2*nixieGap)
 	}
 	th := tw * nixieTall

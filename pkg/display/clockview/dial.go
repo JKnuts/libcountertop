@@ -139,7 +139,7 @@ func dialCanvas(
 	draw func(dc *gogui.DrawContext, cx, cy, d float32),
 ) gogui.View {
 	bw, bh := float32(box.W), float32(box.H)
-	d := min(bw, bh) * dialShare
+	d := min(bw, bh) * r.share(dialShare)
 	if r.Behind != nil {
 		bw, bh = d, d
 		if r.Dated() {

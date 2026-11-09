@@ -32,6 +32,7 @@ const (
 	ringsLook      = "rings.look"
 	ringsDepth     = "rings.depth"
 	ringsSide      = "rings.side"
+	ringsFloors    = "rings.hidden_floors"
 	ringsAreas     = "rings.hidden_areas"
 	ringsKinds     = "rings.hidden_kinds"
 	ringsLabels    = "rings.labels"
@@ -111,6 +112,11 @@ func (e *Engine) table() *setting.Table[config.Home] {
 			Setting{Name: ringsSide, Group: Group, Icon: "mdi:dock-right"},
 			config.RingsSides(),
 			func(h *config.Home) *config.RingsSide { return &h.Rings.Side },
+		),
+		listRow(
+			ringsFloors,
+			"mdi:home-floor-1",
+			func(h *config.Home) *[]string { return &h.Rings.Floors },
 		),
 		listRow(
 			ringsAreas,

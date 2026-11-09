@@ -34,6 +34,25 @@ func Fitted(w *gogui.Window, text string, st gogui.TextStyle, maxW, maxH float32
 	return size
 }
 
+const probe = 100
+
+func lineAt(w *gogui.Window, st gogui.TextStyle, size float32) float32 {
+	st.Size = size
+	if tm := w.TextMeasurer(); tm != nil {
+		return tm.FontHeight(st)
+	}
+	return size * 1.4
+}
+
+func widthAt(w *gogui.Window, text string, st gogui.TextStyle, size float32) float32 {
+	st.Size = size
+	return w.TextWidth(text, st)
+}
+
+func filled(box ui.Rect, wide, tall float32) float32 {
+	return probe * min(float32(box.W)/max(wide, 1), float32(box.H)/max(tall, 1))
+}
+
 func stack(r Reading, gap float32, content ...gogui.View) gogui.View {
 	inner := gogui.ContainerCfg{
 		Padding: gogui.NoPadding,
@@ -69,6 +88,13 @@ func dateLine(r Reading, size float32, ink theme.Theme) []gogui.View {
 func Plain(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View {
 	big := Lettering(glyph.TypefaceBold, 0, ink.Text)
 	size := Fitted(w, r.Time+r.Suffix, big, float32(box.W)*0.86, float32(box.H)*0.34)
+	if r.Fill {
+		wide := widthAt(w, r.Time, big, probe)
+		if r.Suffix != "" {
+			wide += widthAt(w, r.Suffix, big, probe*0.24) + probe*0.08
+		}
+		size = filled(box, wide, lineAt(w, big, probe))
+	}
 	big.Size = size
 
 	line := []gogui.View{gogui.Label(r.Time, big)}
@@ -96,6 +122,14 @@ func Stack(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 	}
 	big := Lettering(glyph.TypefaceBold, 0, ink.Text)
 	size := Fitted(w, hour, big, float32(box.W)*0.80, float32(box.H)*0.34)
+	if r.Fill {
+		top := widthAt(w, hour, big, probe)
+		if r.Suffix != "" {
+			top += widthAt(w, r.Suffix, big, probe*0.22) + probe*0.06
+		}
+		wide := max(top, widthAt(w, minute, big, probe))
+		size = filled(box, wide, 2*lineAt(w, big, probe)-probe*0.22)
+	}
 	big.Size = size
 	tight := gogui.SpacingPx(-size * 0.22)
 
@@ -132,9 +166,9 @@ func Cards(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 		return Plain(w, box, r, ink)
 	}
 	across := box.W >= box.H
-	long, short := float32(box.W)*0.88, float32(box.H)*0.74
+	long, short := float32(box.W)*r.share(0.88), float32(box.H)*r.share(0.74)
 	if !across {
-		long, short = float32(box.H)*0.74, float32(box.W)*0.88
+		long, short = float32(box.H)*r.share(0.74), float32(box.W)*r.share(0.88)
 	}
 	side := min(short, long/2.055)
 	gap := side * 0.055
@@ -211,6 +245,14 @@ func Words(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.View 
 		}
 	}
 	size := Fitted(w, longest, big, float32(box.W)*0.86, float32(box.H)*0.26)
+	if r.Fill {
+		var wide float32
+		for _, line := range said {
+			wide = max(wide, widthAt(w, line, big, probe))
+		}
+		n := float32(len(said))
+		size = filled(box, wide, n*lineAt(w, big, probe)-(n-1)*probe*0.1)
+	}
 	big.Size = size
 
 	var lines []gogui.View
@@ -234,6 +276,14 @@ func Overlap(w *gogui.Window, box ui.Rect, r Reading, ink theme.Theme) gogui.Vie
 	}
 	big := Lettering(glyph.TypefaceBold, 0, ink.Text)
 	size := Fitted(w, hour, big, float32(box.W)*0.78/1.18, float32(box.H)*0.46)
+	if r.Fill {
+		top := widthAt(w, hour, big, probe)
+		if r.Suffix != "" {
+			top += widthAt(w, r.Suffix, big, probe*0.20)
+		}
+		wide := max(top, probe*0.18+widthAt(w, minute, big, probe))
+		size = filled(box, wide, 2*lineAt(w, big, probe)-probe*0.45)
+	}
 	big.Size = size
 	faint := big
 	faint.Color = widgets.Color(ink.Muted)

@@ -198,6 +198,7 @@ var Shared = Coverage{
 		"Home.Rings.Look":           "home.rings.look",
 		"Home.Rings.Depth":          "home.rings.depth",
 		"Home.Rings.Side":           "home.rings.side",
+		"Home.Rings.Floors":         "home.rings.hidden_floors",
 		"Home.Rings.Areas":          "home.rings.hidden_areas",
 		"Home.Rings.Kinds":          "home.rings.hidden_kinds",
 		"Home.Rings.Labels":         "home.rings.labels",

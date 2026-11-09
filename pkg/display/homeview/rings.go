@@ -17,6 +17,7 @@ func (view *Renderer) ringsRows() ([]menu.Row, []func(int)) {
 	cfg := engine.RingsShown()
 	kinds := homecontrol.Kinds()
 	areas, _ := engine.RingAreas()
+	floors, _ := engine.RingFloors()
 	labels := say.T("home.all")
 	if len(cfg.Labels) > 0 {
 		labels = say.F("home.picked.labels", map[string]any{"N": len(cfg.Labels)})
@@ -35,6 +36,12 @@ func (view *Renderer) ringsRows() ([]menu.Row, []func(int)) {
 			schema.RingsSides(),
 			engine.RingsSide(),
 		),
+		{
+			Label: say.T("rings.floors"),
+			Kind:  menu.Chevron,
+			Value: count(len(floors)-hidden(floors, cfg.Floors), len(floors)),
+			Open:  func() shell.View { return view.ringFloors() },
+		},
 		{
 			Label: say.T("rings.areas"),
 			Kind:  menu.Chevron,
@@ -58,7 +65,7 @@ func (view *Renderer) ringsRows() ([]menu.Row, []func(int)) {
 		settings.ModePick(schema.RingsLooks(), engine.SetRingsLook),
 		func(level int) { engine.SetRingsDepth(depthOf(level)) },
 		settings.ModePick(schema.RingsSides(), engine.SetRingsSide),
-		nil, nil, nil,
+		nil, nil, nil, nil,
 	}
 	return rows, taps
 }
@@ -94,6 +101,23 @@ func hidden(places []homecontrol.Place, ids []string) int {
 		}
 	}
 	return n
+}
+
+func (view *Renderer) ringFloors() *shell.Page {
+	engine := view.options.Engine
+	return &shell.Page{
+		Title: say.T("rings.floors"),
+		Build: func() ([]menu.Row, []func(int)) {
+			floors, loading := engine.RingFloors()
+			off := engine.RingsShown().Floors
+			return toggles(
+				floors,
+				loading,
+				func(id string) bool { return !slices.Contains(off, id) },
+				engine.ShowRingFloor,
+			)
+		},
+	}
 }
 
 func (view *Renderer) ringAreas() *shell.Page {

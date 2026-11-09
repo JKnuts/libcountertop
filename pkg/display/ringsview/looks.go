@@ -115,7 +115,7 @@ func (g burst) hub() []float32 {
 }
 
 func (g burst) label() box {
-	w, h := g.bw*1.6, g.bh*1.6
+	w, h := g.bw*1.68, g.bh*1.68
 	return box{g.cx - w/2, g.cy - h/2, w, h}
 }
 

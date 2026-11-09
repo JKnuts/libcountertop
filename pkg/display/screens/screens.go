@@ -255,7 +255,7 @@ func New(o Options) *App {
 		})
 	}
 	if o.Home != nil {
-		a.rings = ringsview.New(ringsview.Options{UI: o.UI, Home: o.Home})
+		a.rings = ringsview.New(ringsview.Options{UI: o.UI, Home: o.Home, Clock: a.ringsClock})
 	}
 	a.alerts = alertview.View{UI: o.UI, Messages: o.Messages, Again: a.again}
 	a.timers = timerview.View{UI: o.UI, Timers: o.Timers, Again: a.again}

@@ -521,6 +521,7 @@ rings.side.right: Destra / in basso
 home.setting.rings.side: "Anelli: lato dettagli"
 rings.home: Casa
 rings.nofloor: Nessun piano
+rings.floors: Piani
 rings.areas: Aree
 rings.kinds: Tipi
 rings.summary: "{{.On}} accesi · {{.N}} dispositiv{{if eq .N 1}}o{{else}}i{{end}}"
@@ -535,6 +536,7 @@ rings.kind.access: Accessi
 rings.kind.presence: Presenza
 rings.kind.cameras: Videocamere
 home.setting.rings.look: Aspetto anelli
+home.setting.rings.hidden_floors: "Anelli: piani nascosti"
 home.setting.rings.hidden_areas: "Anelli: aree nascoste"
 home.setting.rings.hidden_kinds: "Anelli: tipi nascosti"
 home.setting.rings.labels: "Anelli: etichette"

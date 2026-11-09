@@ -521,6 +521,7 @@ type SaverMode interface {
 
 type Visuals interface {
 	LocalRows() ([]menu.Row, []func(int))
+	CompactClockRow() (menu.Row, func(int))
 	WeatherRow() (menu.Row, func(int))
 	MediaRow() (menu.Row, func(int))
 }
@@ -642,6 +643,8 @@ func (view *Renderer) dashboardRows() ([]menu.Row, []func(int)) {
 		add(view.saverRows())
 		add(view.tesseraRows())
 	case view.options.Engine.Speaks() == schema.HomeRings:
+		clock, open := view.options.Visuals.CompactClockRow()
+		add([]menu.Row{clock}, []func(int){open})
 		add(view.ringsRows())
 	default:
 		add(view.nativeRows())
