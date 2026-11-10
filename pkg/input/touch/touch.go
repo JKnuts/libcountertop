@@ -63,7 +63,6 @@ type Screen struct {
 
 	device string
 	panel  Panel
-	scale  bool
 
 	feed sync.Mutex
 
@@ -82,14 +81,6 @@ type Screen struct {
 
 func New(device string, panel Panel) *Screen {
 	return &Screen{device: device, panel: panel, started: time.Now()}
-}
-
-// NewWithAxisNormalization maps the device's ABS_MT position ranges onto the
-// native panel before rotation. Start fails if either range is unavailable or invalid.
-func NewWithAxisNormalization(device string, panel Panel) *Screen {
-	s := New(device, panel)
-	s.scale = true
-	return s
 }
 
 func (s *Screen) Name() string { return "touch" }
@@ -120,21 +111,18 @@ func (s *Screen) Startup() startup.Progress {
 
 func (s *Screen) Start(context.Context) error {
 	f, err := open(s.device)
-	var ranges axes
-	if err == nil && s.scale {
-		ranges, err = readAxes(f)
-		if err != nil {
-			_ = f.Close()
-			f = nil
-		}
+	var a axes
+	if err == nil {
+		a = readAxes(f)
 	}
 
 	s.mu.Lock()
-	s.f, s.err, s.axes = f, err, ranges
+	s.f, s.err, s.axes = f, err, a
 	s.mu.Unlock()
 
 	if err == nil {
-		slog.Info("touchscreen", "name", s.device, "path", f.Name())
+		slog.Info("touchscreen", "name", s.device, "path", f.Name(),
+			"x", fmt.Sprintf("%d..%d", a.x.lo, a.x.hi), "y", fmt.Sprintf("%d..%d", a.y.lo, a.y.hi))
 	}
 	return err
 }
@@ -227,12 +215,5 @@ func (s *Screen) place(px, py int) (int, int) {
 		})
 		return px, py
 	}
-	if s.scale {
-		s.mu.Lock()
-		ranges := s.axes
-		s.mu.Unlock()
-		px = ranges.x.pixel(px, w)
-		py = ranges.y.pixel(py, h)
-	}
-	return s.panel.Orientation().Unproject(w, h, px, py)
+	return s.panel.Orientation().Unproject(w, h, s.axes.x.pixel(px, w), s.axes.y.pixel(py, h))
 }
