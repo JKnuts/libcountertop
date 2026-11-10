@@ -23,6 +23,7 @@ type server struct {
 	memory  string
 	perms   []string
 	deny    string
+	gone    string
 
 	mu       sync.Mutex
 	down     bool
@@ -108,6 +109,11 @@ func (s *server) start(t *testing.T) string {
 			s.mu.Lock()
 			s.previews++
 			s.mu.Unlock()
+			if r.PathValue("id") == s.gone {
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"message":"Asset media not found"}`))
+				return
+			}
 			_, _ = w.Write([]byte("jpeg " + r.PathValue("id")))
 		}),
 	)
@@ -349,6 +355,25 @@ func TestFacesAreOnlyAskedForWithFaceRead(t *testing.T) {
 	p, ok := l.Next()
 	if srv.faces != 0 || !ok || len(p.Faces) != 0 {
 		t.Errorf("without face.read: %d face lookups, picture %+v %v", srv.faces, p, ok)
+	}
+}
+
+func TestAPhotoTheServerHasLostIsSkipped(t *testing.T) {
+	srv := &server{version: "v3.3.1", key: "k", assets: 5, gone: "a0"}
+	l, _ := library(t, on(schema.Immich{Server: srv.start(t), Key: "k"}), t.TempDir())
+	l.step(context.Background())
+	l.step(context.Background())
+	if got := l.State("immich").Status; got != Ready {
+		t.Errorf("status %v, want Ready", got)
+	}
+	for range 4 {
+		p, ok := l.Next()
+		if !ok || p.ID == "a0" {
+			t.Fatalf("got %q %v", p.ID, ok)
+		}
+	}
+	if srv.previews != 5 {
+		t.Errorf("%d preview requests, want each of the 5 once", srv.previews)
 	}
 }
 
