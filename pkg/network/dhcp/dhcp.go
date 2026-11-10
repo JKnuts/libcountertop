@@ -2,6 +2,7 @@ package dhcp
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -44,6 +45,26 @@ func (c *Client) Wait(ctx context.Context) bool {
 		return true
 	case <-ctx.Done():
 		return false
+	}
+}
+
+func (c *Client) Fresh(ctx context.Context) error {
+	got := make(chan struct{}, 1)
+	stop := c.Leased.Listen(func(l *Lease) {
+		if l == nil {
+			return
+		}
+		select {
+		case got <- struct{}{}:
+		default:
+		}
+	})
+	defer stop()
+	select {
+	case <-got:
+		return nil
+	case <-ctx.Done():
+		return fmt.Errorf("dhcp: no address: %w", ctx.Err())
 	}
 }
 

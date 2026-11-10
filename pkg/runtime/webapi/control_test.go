@@ -211,6 +211,7 @@ func TestControlPairingGrantsOnlyScreenAccess(t *testing.T) {
 		{http.MethodGet, "/settings", http.StatusUnauthorized},
 		{http.MethodGet, "/logs", http.StatusUnauthorized},
 		{http.MethodGet, "/device", http.StatusUnauthorized},
+		{http.MethodPost, "/wifi", http.StatusUnauthorized},
 		{http.MethodPost, "/buttons/reboot", http.StatusUnauthorized},
 		{http.MethodPost, "/call", http.StatusUnauthorized},
 		{http.MethodPost, "/control/pairing", http.StatusUnauthorized},

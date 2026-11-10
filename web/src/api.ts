@@ -24,7 +24,12 @@ export type Device = {
   version: string;
   pages: string[] | null;
   screen: boolean;
+  wifi: boolean;
 };
+
+export type WifiMove = { ssid: string; until: string; moving: boolean; failed?: string };
+export type WifiState = { network: string; move?: WifiMove; now: string };
+export type WifiNetwork = { ssid: string; signal: number; security: string; supported: boolean };
 
 export type ControlPair = { url: string; qr: string; expires_at: string };
 export type ControlSession = { name: string; expires_at: string; target?: string };
@@ -136,6 +141,9 @@ export const api = {
   desktopAlive: (id: string) => post(`/desktop/${id}`),
   desktopStop: (id: string) => call<void>(`/desktop/${id}`, { method: "DELETE", keepalive: true }),
   device: () => call<Device>("/device"),
+  wifi: (signal?: AbortSignal) => call<WifiState>("/wifi", { signal }),
+  wifiNetworks: () => call<WifiNetwork[] | null>("/wifi/networks").then((n) => n ?? []),
+  wifiMove: (ssid: string, password: string) => post("/wifi", { ssid, password }),
   name: () => call<{ name: string }>("/name").then((r) => r.name),
   settings: () => call<Domain[] | null>("/settings").then((d) => d ?? []),
   entities: () => call<Description[] | null>("/entities").then((d) => d ?? []),

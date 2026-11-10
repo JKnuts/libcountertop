@@ -24,6 +24,8 @@ type Options struct {
 type Radio struct {
 	Associated hook.Hook[bool]
 
+	scanned hook.Hook[struct{}]
+
 	opts     Options
 	networks wpa.NetworksClient
 	dials    atomic.Uint64
@@ -148,6 +150,8 @@ func (r *Radio) Run(ctx context.Context) error {
 		case e.Is(wpa.EventTerminating):
 			r.apply(false, "")
 			slog.Warn("the supplicant is going away")
+		case e.Is(wpa.EventScanResults):
+			r.scanned.Emit(struct{}{})
 		}
 	})
 }

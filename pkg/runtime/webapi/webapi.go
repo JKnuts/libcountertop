@@ -37,6 +37,7 @@ type Device struct {
 	Version string   `json:"version"`
 	Pages   []string `json:"pages"`
 	Screen  bool     `json:"screen"`
+	Wifi    bool     `json:"wifi"`
 }
 
 type States interface {
@@ -66,6 +67,7 @@ type Options struct {
 	Now      func() time.Time
 	Address  func() string
 	Input    *textentry.Controller
+	Wifi     Wifi
 }
 
 type API struct {
@@ -174,6 +176,9 @@ func (a *API) Routes() map[string]http.Handler {
 		"GET " + Prefix + "/control/keyboard":  a.requireInput(http.HandlerFunc(a.keyboard)),
 		"POST " + Prefix + "/control/keyboard": a.requireInput(http.HandlerFunc(a.keyboard)),
 		"GET " + Prefix + "/devices/{board}":   auth(a.picture),
+		"GET " + Prefix + "/wifi":              auth(a.wifiState),
+		"GET " + Prefix + "/wifi/networks":     auth(a.wifiScan),
+		"POST " + Prefix + "/wifi":             auth(a.wifiMove),
 	}
 	for name, h := range a.o.Pages {
 		at := Prefix + "/" + name
@@ -210,6 +215,7 @@ func (a *API) device(w http.ResponseWriter, _ *http.Request) {
 	d := a.o.Device()
 	d.Pages = slices.Sorted(maps.Keys(a.o.Pages))
 	d.Screen = a.o.Screen != nil
+	d.Wifi = a.o.Wifi != nil
 	reply(w, d)
 }
 

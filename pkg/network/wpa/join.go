@@ -39,12 +39,24 @@ func Scanned(ctx context.Context, c Conn) ([]Network, error) {
 		}
 	}
 
-	networks := make([]Network, 0, len(best))
-	for _, n := range best {
+	return sorted(best), nil
+}
+
+func Results(c Conn) ([]Network, error) {
+	out, err := c.Cmd("scan_results")
+	if err != nil {
+		return nil, err
+	}
+	return sorted(ParseScan(out)), nil
+}
+
+func sorted(found map[string]Network) []Network {
+	networks := make([]Network, 0, len(found))
+	for _, n := range found {
 		networks = append(networks, n)
 	}
 	slices.SortFunc(networks, func(a, b Network) int { return b.Signal - a.Signal })
-	return networks, nil
+	return networks
 }
 
 func Configured(c Conn) ([]string, error) {

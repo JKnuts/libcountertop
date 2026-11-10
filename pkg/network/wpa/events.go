@@ -13,6 +13,7 @@ const (
 	EventStateChange  = "CTRL-EVENT-STATE-CHANGE"
 	EventDisconnected = "CTRL-EVENT-DISCONNECTED"
 	EventTerminating  = "CTRL-EVENT-TERMINATING"
+	EventScanResults  = "CTRL-EVENT-SCAN-RESULTS"
 )
 
 // wpa_state COMPLETED.

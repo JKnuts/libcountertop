@@ -66,6 +66,20 @@ func (n NetworksClient) Join(ctx context.Context, ssid, passphrase string) error
 	return Switch(ctx, Commands{c}, ssid, passphrase)
 }
 
+func (n NetworksClient) Move(
+	ctx context.Context,
+	ssid, passphrase string,
+	ready func(context.Context) error,
+) error {
+	c, err := n.Dial()
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	return Move(ctx, Commands{c}, ssid, passphrase, ready)
+}
+
 func (n NetworksClient) Forget(ssid string) error {
 	c, err := n.Dial()
 	if err != nil {

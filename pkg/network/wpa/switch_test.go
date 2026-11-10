@@ -2,6 +2,7 @@ package wpa
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -11,7 +12,9 @@ import (
 type fake struct {
 	on string
 
-	joins map[string]bool
+	joins   map[string]bool
+	refuses map[string]bool
+	blocked map[string]bool
 
 	configured map[string]string
 	next       int
@@ -24,6 +27,8 @@ func newFake(on string) *fake {
 	return &fake{
 		on:         on,
 		joins:      map[string]bool{},
+		refuses:    map[string]bool{},
+		blocked:    map[string]bool{},
 		configured: map[string]string{},
 	}
 }
@@ -41,7 +46,11 @@ func (f *fake) Cmd(words ...string) (string, error) {
 	case "list_networks":
 		out := "network id / ssid / bssid / flags"
 		for id, name := range f.configured {
-			out += fmt.Sprintf("\n%s\t%s\tany\t[CURRENT]", id, name)
+			flags := "[CURRENT]"
+			if f.blocked[id] {
+				flags = "[TEMP-DISABLED]"
+			}
+			out += fmt.Sprintf("\n%s\t%s\tany\t%s", id, name, flags)
 		}
 		return out, nil
 
@@ -65,6 +74,9 @@ func (f *fake) Cmd(words ...string) (string, error) {
 		name := f.configured[words[1]]
 		if f.joins[name] {
 			f.on = name
+		}
+		if f.refuses[name] {
+			f.blocked[words[1]] = true
 		}
 		return "OK", nil
 
@@ -141,6 +153,76 @@ func TestAFailedSwitchKeepsTheOldNetwork(t *testing.T) {
 
 	if f.configured["0"] != "old" {
 		t.Errorf("the old network is gone after a failed switch: %v", f.configured)
+	}
+}
+
+func TestAMoveThatNeverGetsReadyGoesBack(t *testing.T) {
+	f := newFake("old")
+	f.configured["0"], f.next = "old", 1
+	f.joins["new"] = true
+
+	err := Move(context.Background(), f, "new", "a good passphrase",
+		func(context.Context) error { return errors.New("no address") })
+	if err == nil {
+		t.Fatal("a move that never got ready succeeded")
+	}
+	if f.configured["0"] != "old" || len(f.configured) != 1 {
+		t.Errorf("after the move went back, configured %v, want only the old network", f.configured)
+	}
+}
+
+func TestAMoveThatGetsReadyKeepsOnlyTheNewNetwork(t *testing.T) {
+	f := newFake("old")
+	f.configured["0"], f.next = "old", 1
+	f.joins["new"] = true
+
+	asked := false
+	err := Move(context.Background(), f, "new", "a good passphrase",
+		func(context.Context) error { asked = f.on == "new"; return nil })
+	if err != nil || !asked {
+		t.Fatalf("move: %v, ready asked while on the new network: %v", err, asked)
+	}
+	if len(f.configured) != 1 || f.saved == 0 {
+		t.Errorf(
+			"configured %v, saved %d times, want only the new network saved",
+			f.configured,
+			f.saved,
+		)
+	}
+}
+
+func TestARefusedPasswordGoesBackAtOnce(t *testing.T) {
+	f := newFake("old")
+	f.configured["0"], f.next = "old", 1
+	f.refuses["new"] = true
+
+	start := time.Now()
+	err := Move(context.Background(), f, "new", "the wrong passphrase", nil)
+	if !errors.Is(err, ErrRefused) {
+		t.Fatalf("move with a refused password: %v, want ErrRefused", err)
+	}
+	if took := time.Since(start); took > 2*time.Second {
+		t.Errorf("going back took %v, want it at once", took)
+	}
+	if f.configured["0"] != "old" || len(f.configured) != 1 {
+		t.Errorf("after going back, configured %v, want only the old network", f.configured)
+	}
+}
+
+func TestAMoveGivesUpJoiningAfterSettle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("waits out Settle")
+	}
+	f := newFake("old")
+	f.configured["0"], f.next = "old", 1
+
+	start := time.Now()
+	err := Move(context.Background(), f, "new", "a good passphrase", nil)
+	if err == nil {
+		t.Fatal("a move to a network that never answers succeeded")
+	}
+	if took := time.Since(start); took > Settle+3*time.Second {
+		t.Errorf("gave up after %v, want about %v", took, Settle)
 	}
 }
 

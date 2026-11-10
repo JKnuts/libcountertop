@@ -29,6 +29,7 @@ import { sections, type Section } from "./sections";
 import { Settings } from "./Settings";
 import { SettingsLink } from "./SettingsLink";
 import { Theme } from "./Theme";
+import { Wifi } from "./Wifi";
 
 const seenMost = 500;
 const overview = "overview";
@@ -267,7 +268,12 @@ export function Shell({ device, onOut }: { device: Device; onOut: () => void }) 
 
       <AppShell.Main>
         {current ? (
-          <Settings section={current} focus={focus} change={change} />
+          <Settings
+            section={current}
+            focus={focus}
+            change={change}
+            extra={current.slug === "network" && device.wifi ? <Wifi name={device.name} /> : undefined}
+          />
         ) : app === alarms ? (
           <Alarms onSignedOut={signedOut} />
         ) : app === calls ? (
