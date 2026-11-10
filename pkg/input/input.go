@@ -93,6 +93,8 @@ type Device struct {
 	f    *os.File
 }
 
+type Axis struct{ Value, Min, Max int32 }
+
 func Open(path string) (*Device, error) {
 	f, err := os.Open(path)
 	if err != nil {

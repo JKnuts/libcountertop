@@ -71,6 +71,7 @@ type Screen struct {
 	err  error
 	rec  *Recognizer
 	view view
+	axes axes
 
 	started time.Time
 	last    time.Time
@@ -110,13 +111,18 @@ func (s *Screen) Startup() startup.Progress {
 
 func (s *Screen) Start(context.Context) error {
 	f, err := open(s.device)
+	var a axes
+	if err == nil {
+		a = readAxes(f)
+	}
 
 	s.mu.Lock()
-	s.f, s.err = f, err
+	s.f, s.err, s.axes = f, err, a
 	s.mu.Unlock()
 
 	if err == nil {
-		slog.Info("touchscreen", "name", s.device, "path", f.Name())
+		slog.Info("touchscreen", "name", s.device, "path", f.Name(),
+			"x", fmt.Sprintf("%d..%d", a.x.lo, a.x.hi), "y", fmt.Sprintf("%d..%d", a.y.lo, a.y.hi))
 	}
 	return err
 }
@@ -209,5 +215,5 @@ func (s *Screen) place(px, py int) (int, int) {
 		})
 		return px, py
 	}
-	return s.panel.Orientation().Unproject(w, h, px, py)
+	return s.panel.Orientation().Unproject(w, h, s.axes.x.pixel(px, w), s.axes.y.pixel(py, h))
 }

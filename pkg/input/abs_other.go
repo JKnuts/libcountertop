@@ -2,8 +2,13 @@
 
 package input
 
-import "errors"
+import (
+	"errors"
+	"os"
+)
 
-func (d *Device) Abs(uint16) (int32, error) {
-	return 0, errors.New("input: absolute axes are Linux only")
-}
+var errNoAbs = errors.New("input: absolute axes are Linux only")
+
+func AbsInfo(*os.File, uint16) (Axis, error) { return Axis{}, errNoAbs }
+
+func (d *Device) Abs(uint16) (int32, error) { return 0, errNoAbs }
