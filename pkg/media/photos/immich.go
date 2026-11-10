@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -45,6 +46,8 @@ func (immichSource) Open(ctx context.Context, cfg schema.Photos) (Session, strin
 		}
 	} else if errors.Is(err, immich.ErrKey) {
 		return nil, "", ErrKey
+	} else if _, ok := errors.AsType[*url.Error](err); ok {
+		return nil, "", err
 	}
 	about, err := c.About(ctx)
 	if err != nil {

@@ -26,6 +26,7 @@ type server struct {
 
 	mu       sync.Mutex
 	down     bool
+	drop     int
 	searches []map[string]any
 	previews int
 	faces    int
@@ -44,6 +45,15 @@ func (s *server) start(t *testing.T) string {
 		}
 	}
 	mux.HandleFunc("GET /api/api-keys/me", auth(func(w http.ResponseWriter, r *http.Request) {
+		s.mu.Lock()
+		drop := s.drop > 0
+		if drop {
+			s.drop--
+		}
+		s.mu.Unlock()
+		if drop {
+			panic(http.ErrAbortHandler)
+		}
 		if s.perms == nil {
 			http.NotFound(w, r)
 			return
@@ -349,6 +359,23 @@ func TestFacesAreOnlyAskedForWithFaceRead(t *testing.T) {
 	p, ok := l.Next()
 	if srv.faces != 0 || !ok || len(p.Faces) != 0 {
 		t.Errorf("without face.read: %d face lookups, picture %+v %v", srv.faces, p, ok)
+	}
+}
+
+func TestFacesComeBackWhenThePermissionCheckGetsNoAnswer(t *testing.T) {
+	srv := &server{version: "v3.3.1", key: "k", assets: 3, drop: 1,
+		perms: []string{"server.about", "asset.read", "asset.view", "face.read"}}
+	s := &settings{on(schema.Immich{Server: srv.start(t), Key: "k"})}
+	now := time.Date(2026, 10, 14, 9, 0, 0, 0, time.UTC)
+	l := New(Options{Settings: s, Dir: t.TempDir(), Keep: 4, Now: func() time.Time { return now }})
+	l.step(context.Background())
+	if got := l.State("immich").Status; got != Unreachable {
+		t.Fatalf("after the check got no answer: %v, want Unreachable", got)
+	}
+	now = now.Add(retryAfter)
+	l.step(context.Background())
+	if srv.previews == 0 || srv.faces != srv.previews {
+		t.Errorf("%d face lookups for %d downloaded photos", srv.faces, srv.previews)
 	}
 }
 
