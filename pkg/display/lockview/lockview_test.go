@@ -93,6 +93,26 @@ func TestTheRightPinOpens(t *testing.T) {
 	}
 }
 
+func TestAnAppsSettingsAskForThePin(t *testing.T) {
+	now := time.Unix(0, 0)
+	g, _, sh := gate("2468", &now)
+	page := &shell.Page{Title: "app settings"}
+	sh.OpenSettings(page)
+	if _, ok := sh.Top().(*Prompt); !ok {
+		t.Fatalf("top is %T, want the pin prompt", sh.Top())
+	}
+	g.Enter("2468")
+	if sh.Top() != page {
+		t.Errorf("after the pin, top is %T, want the app's settings", sh.Top())
+	}
+
+	_, _, open := gate("", &now)
+	open.OpenSettings(page)
+	if open.Top() != page {
+		t.Errorf("without a pin, top is %T, want the app's settings", open.Top())
+	}
+}
+
 func TestFiveWrongPinsStartTheBackoff(t *testing.T) {
 	now := time.Unix(0, 0)
 	g, s, _ := gate("1234", &now)

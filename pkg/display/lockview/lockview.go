@@ -113,7 +113,9 @@ func New(o Options) *Gate {
 	if o.Now == nil {
 		o.Now = time.Now
 	}
-	return &Gate{o: o, pad: &widgets.Keypad{ID: "lock", Redraw: o.Shell.Redraw}}
+	g := &Gate{o: o, pad: &widgets.Keypad{ID: "lock", Redraw: o.Shell.Redraw}}
+	o.Shell.GuardSettings(g.Open)
+	return g
 }
 
 func (g *Gate) Open(then func()) {

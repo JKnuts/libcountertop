@@ -1034,7 +1034,7 @@ func (c *Cameras) corners(vw int, level float32) []gogui.View {
 			vw,
 			widgets.CornerFloating,
 			level,
-			func() { c.o.Shell.Push(c.Page()) },
+			func() { c.o.Shell.OpenSettings(c.Page()) },
 		),
 	}
 }

@@ -54,7 +54,7 @@ func (s *Shopping) Screen(v shell.View) *navigation.Screen {
 	}
 	screen := &navigation.Screen{Title: s.title(), View: v, Build: s.build}
 	if s.o.Settings != nil {
-		screen.Settings = func() { s.o.Shell.Push(s.o.Settings()) }
+		screen.Settings = func() { s.o.Shell.OpenSettings(s.o.Settings()) }
 	}
 	return screen
 }

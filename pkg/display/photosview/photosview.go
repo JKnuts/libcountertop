@@ -156,7 +156,7 @@ func (v *View) build(w *gogui.Window) gogui.View {
 				vw,
 				widgets.CornerFloating,
 				level,
-				func() { v.o.Shell.Push(v.o.Page()) },
+				func() { v.o.Shell.OpenSettings(v.o.Page()) },
 			),
 		)
 	}

@@ -42,7 +42,7 @@ func (v *View) buildApp(w *gogui.Window) gogui.View {
 			vw,
 			widgets.CornerFloating,
 			level,
-			func() { v.o.Shell.Push(v.Page()) },
+			func() { v.o.Shell.OpenSettings(v.Page()) },
 		),
 	}
 	top := int(gogui.PadLarge)*2 + int(style.Reach()*1.2)

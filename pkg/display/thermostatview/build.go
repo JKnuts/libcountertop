@@ -136,7 +136,7 @@ func (v *View) corners(vw float32) []gogui.View {
 		widgets.LeaveCorner(press, "thermostat-close", widgets.CornerFloating, level,
 			func() { v.o.Shell.Remove(v.app) }),
 		widgets.SettingsCorner(press, "thermostat-settings", int(vw), widgets.CornerFloating, level,
-			func() { v.o.Shell.Push(v.Page()) }),
+			func() { v.o.Shell.OpenSettings(v.Page()) }),
 	}
 }
 

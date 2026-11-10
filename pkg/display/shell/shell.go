@@ -52,6 +52,8 @@ type Shell struct {
 	controlsAt    time.Time
 	controlsTimer *time.Timer
 
+	guard func(then func())
+
 	Changed hook.Hook[Change]
 	Redrawn hook.Hook[struct{}]
 }
@@ -222,6 +224,23 @@ func (s *Shell) Push(v View) {
 		s.changed()
 		s.wake()
 	}
+}
+
+func (s *Shell) GuardSettings(guard func(then func())) {
+	s.mu.Lock()
+	s.guard = guard
+	s.mu.Unlock()
+}
+
+func (s *Shell) OpenSettings(v View) {
+	s.mu.Lock()
+	guard := s.guard
+	s.mu.Unlock()
+	if guard == nil {
+		s.Push(v)
+		return
+	}
+	guard(func() { s.Push(v) })
 }
 
 func (s *Shell) Hold(v View) *Hold {

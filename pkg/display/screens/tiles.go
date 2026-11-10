@@ -84,7 +84,7 @@ func (app *App) fullScreen(f *homecontrol.Full) *Screen {
 		Title:    f.Sel.Name(),
 		View:     f,
 		Fixed:    true,
-		Settings: func() { app.o.Shell.Push(app.o.Home.NewPicker(f.Sel)) },
+		Settings: func() { app.o.Shell.OpenSettings(app.o.Home.NewPicker(f.Sel)) },
 		Build: func(w *gogui.Window) gogui.View {
 			s, ok := app.o.Home.Dash().Find(f.Sel.Key)
 			if !ok {

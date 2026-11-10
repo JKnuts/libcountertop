@@ -94,6 +94,27 @@ func TestQueuedOldIdleCannotCloseRefreshedStack(t *testing.T) {
 	}
 }
 
+func TestSettingsOpenOnlyWhenTheGuardLetsThrough(t *testing.T) {
+	s := &Shell{}
+	page := &view{covers: true}
+	s.OpenSettings(page)
+	if s.Top() != page {
+		t.Fatalf("without a guard, top is %v, want the page", s.Top())
+	}
+	s.Remove(page)
+
+	var pending func()
+	s.GuardSettings(func(then func()) { pending = then })
+	s.OpenSettings(page)
+	if s.Top() == page || pending == nil {
+		t.Fatalf("the page opened before the guard let it through")
+	}
+	pending()
+	if s.Top() != page {
+		t.Errorf("after the guard let it through, top is %v, want the page", s.Top())
+	}
+}
+
 func TestRemovingAViewDropsItsHold(t *testing.T) {
 	s := &Shell{}
 	idle := &view{covers: true}

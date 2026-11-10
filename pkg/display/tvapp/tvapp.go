@@ -113,7 +113,7 @@ func (a *App) Screen(v shell.View) *navigation.Screen {
 		View:     v,
 		Build:    a.build,
 		Fixed:    true,
-		Settings: func() { a.o.Shell.Push(a.Page()) },
+		Settings: func() { a.o.Shell.OpenSettings(a.Page()) },
 	}
 }
 
