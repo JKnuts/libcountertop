@@ -318,6 +318,13 @@ func (l *Library) prefetch(ctx context.Context) {
 		if err == nil {
 			err = os.WriteFile(l.file(e), data, 0o644)
 		}
+		if errors.Is(err, ErrGone) {
+			slog.Warn("photos: skipping a photo", "source", f.p.Key(), "asset", e.ID, "err", err)
+			l.mu.Lock()
+			f.deck = f.deck[1:]
+			l.mu.Unlock()
+			continue
+		}
 		if err != nil {
 			l.fail(f, err)
 			continue

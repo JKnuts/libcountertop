@@ -41,7 +41,10 @@ type Box struct {
 	Y2 float64 `json:"y2"`
 }
 
-var ErrKey = errors.New("photos: the key was refused")
+var (
+	ErrKey  = errors.New("photos: the key was refused")
+	ErrGone = errors.New("photos: the photo is gone")
+)
 
 type TooOldError struct{ Version string }
 

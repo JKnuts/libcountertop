@@ -3,6 +3,7 @@ package photos
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/url"
 	"slices"
@@ -131,6 +132,9 @@ func (s *immichSession) Faces(ctx context.Context, id string) []Box {
 
 func (s *immichSession) Fetch(ctx context.Context, id string) ([]byte, error) {
 	data, err := s.c.Picture(ctx, id, s.size)
+	if errors.Is(err, immich.ErrNotFound) {
+		return nil, fmt.Errorf("%w: %w", ErrGone, err)
+	}
 	return data, immichErr(err)
 }
 

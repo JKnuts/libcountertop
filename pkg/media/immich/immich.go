@@ -25,6 +25,7 @@ const (
 var (
 	ErrKey      = errors.New("immich: the API key was refused")
 	ErrNoServer = errors.New("immich: no server set")
+	ErrNotFound = errors.New("immich: not found")
 )
 
 type Client struct {
@@ -274,6 +275,15 @@ func status(resp *http.Response, method, path string) error {
 			return &PermissionError{Permission: strings.TrimSpace(perm)}
 		}
 		return ErrKey
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf(
+			"%w: %s %s: %s",
+			ErrNotFound,
+			method,
+			path,
+			strings.TrimSpace(string(msg)),
+		)
 	}
 	return fmt.Errorf(
 		"immich: %s %s: %s %s",
