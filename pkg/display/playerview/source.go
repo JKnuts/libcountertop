@@ -7,6 +7,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/ui"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 	"github.com/ygelfand/libcountertop/pkg/media/nowplaying"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 const (
@@ -30,18 +31,45 @@ func (p *Renderer) badge(w *gogui.Window, now nowplaying.Now, l look, room float
 		return nil
 	}
 	content := []gogui.View{mark}
-	if p.options.Player.From() == nowplaying.FromBluetooth {
-		if name := p.options.Player.Named(); name != "" {
-			content = append(content,
-				gogui.Label(widgets.Ellipsize(w, name, l.dim, max(room-side, 0)), l.dim))
-		}
-	}
-	return gogui.Row(gogui.ContainerCfg{
+	cfg := gogui.ContainerCfg{
 		Sizing:  gogui.FitFit,
 		Padding: gogui.NoPadding,
 		VAlign:  gogui.VAlignMiddle,
 		Spacing: gogui.SpacingMedium,
-		Content: content,
+	}
+	if p.options.Player.From() != nowplaying.FromBluetooth {
+		cfg.Content = content
+		return gogui.Row(cfg)
+	}
+
+	name := p.options.Player.Named()
+	picker := p.options.BluetoothSources
+	nameRoom := room - side - gogui.CurrentTheme().Cfg.SpacingMedium
+	if picker != nil {
+		if name == "" {
+			name = say.T("features.speaker")
+		}
+		nameRoom -= l.dim.Size + gogui.CurrentTheme().Cfg.SpacingMedium
+	}
+	if name != "" {
+		content = append(
+			content,
+			gogui.Label(widgets.Ellipsize(w, name, l.dim, max(nameRoom, 0)), l.dim),
+		)
+	}
+	if picker == nil {
+		cfg.Content = content
+		return gogui.Row(cfg)
+	}
+
+	cfg.ID = "bluetooth-source-picker"
+	cfg.Radius = gogui.RadiusMedium
+	cfg.Content = append(content, gogui.Label(gogui.IconArrowDown, iconStyle(l.dim.Color)))
+	return p.options.UI.Presses.Pressable(gogui.Row, cfg, func(e gogui.EventCtx) {
+		if page := picker(); page != nil {
+			p.options.Shell.Push(page)
+		}
+		e.Consume()
 	})
 }
 

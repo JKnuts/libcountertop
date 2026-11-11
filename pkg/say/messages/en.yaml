@@ -128,6 +128,10 @@ bluetooth.setting.proxy: Bluetooth proxy
 bluetooth.setting.scan: Bluetooth scanning
 bluetooth.setting.speaker: Bluetooth speaker
 bluetooth.setting.playback_gain_db: Bluetooth playback gain
+bluetooth.connected_sources: Connected devices
+bluetooth.source_auto: Automatic source switching
+bluetooth.source_empty: No Bluetooth devices connected
+bluetooth.source_selected: Selected source
 boot.leaving: Restarting
 boot.skip: Skip
 broadcast.from: "From {{.Peer}}"

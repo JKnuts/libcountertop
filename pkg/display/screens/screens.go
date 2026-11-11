@@ -190,20 +190,21 @@ type Options struct {
 	Alarms    alarmview.Alarms
 	OpenRadar func(*nws.Alert)
 
-	WeatherEntities func() shell.View
-	Todo            *todo.Todo
-	Calendar        *calendar.Calendar
-	CamerasPage     func() shell.View
-	DoorbellPage    func() shell.View
-	HomeAlarmPage   func() shell.View
-	ThermostatPage  func() shell.View
-	YouTubeTVPage   func() shell.View
-	Player          playerview.Player
-	PlayerPage      func() shell.View
-	Lyrics          playerview.Lyrics
-	MediaVolume     volume.Channel
-	Volume          Volume
-	Streams         []schema.Stream
+	WeatherEntities  func() shell.View
+	Todo             *todo.Todo
+	Calendar         *calendar.Calendar
+	CamerasPage      func() shell.View
+	DoorbellPage     func() shell.View
+	HomeAlarmPage    func() shell.View
+	ThermostatPage   func() shell.View
+	YouTubeTVPage    func() shell.View
+	Player           playerview.Player
+	PlayerPage       func() shell.View
+	BluetoothSources func() shell.View
+	Lyrics           playerview.Lyrics
+	MediaVolume      volume.Channel
+	Volume           Volume
+	Streams          []schema.Stream
 
 	Upgrade   func() widgets.Upgrade
 	Upgrading Watch
@@ -279,13 +280,14 @@ func New(o Options) *App {
 	}
 	a.nav = &navigation.Nav{For: a.screenFor}
 	a.player = playerview.New(playerview.Dependencies{
-		Player: o.Player,
-		Lyrics: o.Lyrics,
-		Volume: o.MediaVolume,
-		Shell:  o.Shell,
-		UI:     o.UI,
-		Dock:   func() schema.Edge { return o.Settings().Screen.Drawer },
-		Loud:   func() { o.Volume.Show(schema.StreamMedia) },
+		Player:           o.Player,
+		Lyrics:           o.Lyrics,
+		Volume:           o.MediaVolume,
+		Shell:            o.Shell,
+		UI:               o.UI,
+		Dock:             func() schema.Edge { return o.Settings().Screen.Drawer },
+		Loud:             func() { o.Volume.Show(schema.StreamMedia) },
+		BluetoothSources: o.BluetoothSources,
 	})
 	a.home = homeview.New(homeview.Dependencies{
 		Engine:          o.Home,

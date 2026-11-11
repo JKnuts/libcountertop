@@ -26,13 +26,14 @@ type Lyrics interface {
 	Find(q lyrics.Query) lyrics.Sheet
 }
 type Dependencies struct {
-	Player Player
-	Lyrics Lyrics
-	Volume volume.Channel
-	Shell  *shell.Shell
-	UI     *widgets.UI
-	Dock   func() schema.Edge
-	Loud   func()
+	Player           Player
+	Lyrics           Lyrics
+	Volume           volume.Channel
+	Shell            *shell.Shell
+	UI               *widgets.UI
+	Dock             func() schema.Edge
+	Loud             func()
+	BluetoothSources func() shell.View
 }
 type Renderer struct {
 	options Dependencies

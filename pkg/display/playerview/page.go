@@ -87,7 +87,10 @@ func (p *Renderer) Body(w *gogui.Window) gogui.View {
 	} else {
 		content = p.wide(w, now, cover, l, vw, vh)
 	}
-	layers := []gogui.View{widgets.Placed(whole, coverBackdrop(cover, vw, vh))}
+	layers := []gogui.View{
+		widgets.Placed(whole, coverBackdrop(cover, vw, vh)),
+		widgets.Placed(whole, content),
+	}
 	if b != nil {
 		layers = append(layers, widgets.Placed(whole, gogui.Column(gogui.ContainerCfg{
 			Sizing:  gogui.FillFill,
@@ -102,7 +105,6 @@ func (p *Renderer) Body(w *gogui.Window) gogui.View {
 		Padding: gogui.NoPadding,
 		Color:   gogui.CurrentTheme().Cfg.ColorBackground,
 		Content: append(layers,
-			widgets.Placed(whole, content),
 			widgets.LeaveCorner(
 				p.options.UI.Presses.Pressable,
 				"player-close",
