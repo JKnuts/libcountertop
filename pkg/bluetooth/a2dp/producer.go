@@ -18,7 +18,7 @@ func (s *Sink) Stand(down bool) {
 	}
 	s.mu.Unlock()
 
-	if !first {
+	if !first || !s.audible() {
 		return
 	}
 
@@ -42,7 +42,7 @@ func (s *Sink) Requeue() {
 	gain := s.gain
 	s.mu.Unlock()
 
-	if gain == 1 {
+	if gain == 1 || !s.audible() {
 		return
 	}
 	s.options.Queue.Adjust(func(samples []int16) { analysis.Scale(samples, gain) })

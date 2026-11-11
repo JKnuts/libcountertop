@@ -206,6 +206,10 @@ func (s *Sink) imaging() bool {
 }
 
 func (s *Sink) Art(psm uint16) {
+	if peer := s.selected(); peer != nil {
+		peer.Art(psm)
+		return
+	}
 	s.art.mu.Lock()
 	s.art.connection, s.art.open, s.art.body, s.art.asked = 0, false, nil, ""
 	s.art.psm = psm
@@ -221,7 +225,13 @@ func (s *Sink) Hello() {
 	})
 }
 
-func (s *Sink) Thumbnail(handle string) { s.wants(handle, true) }
+func (s *Sink) Thumbnail(handle string) {
+	if peer := s.selected(); peer != nil {
+		peer.Thumbnail(handle)
+		return
+	}
+	s.wants(handle, true)
+}
 
 func (s *Sink) imaged(packet []byte) {
 	s.art.mu.Lock()

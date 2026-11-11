@@ -36,6 +36,9 @@ type Sink struct {
 	dumping *capture.Dump
 	mu      sync.Mutex
 
+	links *connections // host service
+	owner *connections // per-connection sink
+
 	sink  *bt.Sink
 	pairs *pair.Manager
 
@@ -217,10 +220,23 @@ func (s *Sink) attempt(parent context.Context) error {
 	}
 
 	name := s.options.Name()
-	s.start(name)
+	links := &connections{
+		host: s, name: name, peers: make(map[uint16]*connectedPeer), volume: make(chan struct{}, 1),
+	}
+	go links.watchVolume(ctx)
+	s.mu.Lock()
+	s.openPairings()
+	s.links = links
+	s.mu.Unlock()
+	defer func() {
+		links.close()
+		s.mu.Lock()
+		s.links = nil
+		s.mu.Unlock()
+	}()
 
 	slog.Info("bluetooth speaker", "name", name, "class", "loudspeaker")
-	return radio.Speaker(ctx, name, s)
+	return radio.Speaker(ctx, name, links)
 }
 
 func (s *Sink) Sending(send func(handle uint16, pdu []byte) error) {
@@ -231,6 +247,13 @@ func (s *Sink) Sending(send func(handle uint16, pdu []byte) error) {
 
 // AVRCP absolute volume: the phone is the controller and this device the target.
 func (s *Sink) volumed(level int) {
+	if links := s.connections(); links != nil {
+		select {
+		case links.volume <- struct{}{}:
+		default:
+		}
+		return
+	}
 	s.tell(fmt.Sprintf("volume %d", level), func(sink *bt.Sink) ([]l2cap.Frame, error) {
 		return sink.Volumed(level)
 	})
@@ -267,7 +290,11 @@ func (s *Sink) interrupt() {
 func (s *Sink) start(name string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.openPairings()
+	s.startPeer(name)
+}
 
+func (s *Sink) openPairings() {
 	keys, err := pair.Open(s.options.Bonds)
 	if err != nil {
 		slog.Warn("pairings will not be remembered", "path", s.options.Bonds, "err", err)
@@ -275,7 +302,9 @@ func (s *Sink) start(name string) {
 	} else {
 		s.pairs = pair.New(keys)
 	}
+}
 
+func (s *Sink) startPeer(name string) {
 	s.sink = bt.NewSink(name, bt.MTU)
 	if s.options.Volume != nil {
 		s.sink.Remote().Volumed(s.options.Volume.Level())
@@ -285,7 +314,9 @@ func (s *Sink) start(name string) {
 	s.art.clear()
 
 	s.sink.Remote().Volume = func(percent int) {
-		s.options.Volume.Set(percent)
+		if s.audible() {
+			s.options.Volume.Set(percent)
+		}
 	}
 
 	s.sink.Remote().Changed = func(state avrcp.State) {
@@ -335,23 +366,26 @@ func (s *Sink) start(name string) {
 	s.sink.Listed = s.listed
 
 	s.sink.Started = func(e *avdtp.Endpoint) {
-
 		s.mu.Lock()
 		s.filter = sbc.Filter{}
-		s.mu.Unlock()
-
-		s.options.Queue.Drain()
-
-		s.options.Arbitration.Took(s)
-
-		s.mu.Lock()
 		s.streaming = true
-
 		s.said = time.Now()
 		s.frames, s.bad, s.samples, s.why = 0, 0, 0, nil
 		s.mu.Unlock()
 
-		s.attach()
+		if codec, ok := e.Codec(); ok {
+			rate, _ := codec.Rate()
+			resample := speaker.NewSkewable(rate, Rate, 2)
+			s.mu.Lock()
+			s.resample = resample
+			s.drift.Reset()
+			s.mu.Unlock()
+
+			up, down := resample.Ratio()
+			slog.Info("bluetooth audio started", "handle", s.handle,
+				"rate", rate, "mode", codec.Channels, "bitpool", codec.MaxBitpool,
+				"resampled", fmt.Sprintf("%d:%d", up, down))
+		}
 
 		if remote := s.remote(); remote != nil {
 			remote.Cleared()
@@ -359,43 +393,41 @@ func (s *Sink) start(name string) {
 		s.holds(nil)
 		s.ask()
 
-		codec, ok := e.Codec()
-		if !ok {
-			slog.Info("bluetooth audio started")
-			return
+		if s.owner != nil {
+			s.owner.started(s)
+		} else {
+			s.beginPlayback()
 		}
-
-		rate, _ := codec.Rate()
-
-		// 44.1 kHz is mandatory for an A2DP sink.
-		s.mu.Lock()
-		s.resample = speaker.NewSkewable(rate, Rate, 2)
-		s.drift.Reset()
-		s.mu.Unlock()
-
-		up, down := s.resample.Ratio()
-		slog.Info("bluetooth audio started",
-			"rate", rate, "mode", codec.Channels, "bitpool", codec.MaxBitpool,
-			"resampled", fmt.Sprintf("%d:%d", up, down))
 	}
 
-	s.sink.Stopped = func(e *avdtp.Endpoint) {
-		slog.Info("bluetooth audio stopped")
-
+	s.sink.Stopped = func(*avdtp.Endpoint) {
+		slog.Info("bluetooth audio stopped", "handle", s.handle)
 		s.mu.Lock()
+		wasStreaming := s.streaming
 		s.streaming = false
-		s.mu.Unlock()
-
-		s.options.Arbitration.Gave(s)
-
-		s.mu.Lock()
 		s.resample = nil
 		s.mu.Unlock()
 
-		s.options.Queue.Drain()
+		if wasStreaming && s.audible() {
+			s.options.Arbitration.Gave(s)
+			s.options.Queue.Drain()
+		}
 	}
 
 	s.sink.Frame = s.play
+	if s.owner != nil {
+		s.sink.Frame = func(frame []byte) { s.owner.frame(s, frame) }
+	}
+}
+
+func (s *Sink) audible() bool {
+	return s.owner == nil || s.owner.active.Load() == s
+}
+
+func (s *Sink) beginPlayback() {
+	s.options.Queue.Drain()
+	s.options.Arbitration.Took(s)
+	s.attach()
 }
 
 func (s *Sink) play(frame []byte) {
@@ -436,7 +468,11 @@ func (s *Sink) play(frame []byte) {
 		out = s.resample.Run(out)
 	}
 	s.dumping.Write(decoded, out)
-	s.applyPlaybackGain(out)
+	if s.owner != nil {
+		s.owner.host.applyPlaybackGain(out)
+	} else {
+		s.applyPlaybackGain(out)
+	}
 	if s.gain != 0 {
 		analysis.Scale(out, s.gain)
 	}
@@ -495,6 +531,14 @@ func interleave(audio sbc.Samples) []int16 {
 }
 
 func (s *Sink) Event(e pair.Event) ([]pair.Command, error) {
+	said, err := s.pairEvent(e)
+	if err != nil {
+		return nil, err
+	}
+	return append(said, s.named(e)...), nil
+}
+
+func (s *Sink) pairEvent(e pair.Event) ([]pair.Command, error) {
 	s.mu.Lock()
 	pairs := s.pairs
 	s.mu.Unlock()
@@ -508,7 +552,7 @@ func (s *Sink) Event(e pair.Event) ([]pair.Command, error) {
 		slog.Warn("bluetooth pairing", "code", fmt.Sprintf("%#02x", e.Code), "err", err)
 		return nil, err
 	}
-	return append(said, s.named(e)...), nil
+	return said, nil
 }
 
 func (s *Sink) named(e pair.Event) []pair.Command {

@@ -22,6 +22,10 @@ const (
 const ahead = 6
 
 func (s *Sink) open() {
+	if peer := s.selected(); peer != nil {
+		peer.open()
+		return
+	}
 	if s.browsable() {
 		return
 	}
@@ -31,6 +35,10 @@ func (s *Sink) open() {
 const patience = 5 * time.Second
 
 func (s *Sink) list() {
+	if peer := s.selected(); peer != nil {
+		peer.list()
+		return
+	}
 	if !s.browsable() {
 		return
 	}

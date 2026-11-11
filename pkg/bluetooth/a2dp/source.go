@@ -139,6 +139,10 @@ func (s *Sink) look() {
 }
 
 func (s *Sink) tell(what string, build func(*bt.Sink) ([]l2cap.Frame, error)) {
+	if peer := s.selected(); peer != nil {
+		peer.tell(what, build)
+		return
+	}
 	s.mu.Lock()
 	sink, send, handle := s.sink, s.send, s.handle
 	s.mu.Unlock()
