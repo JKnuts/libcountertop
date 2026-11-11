@@ -127,6 +127,7 @@ speaker.setting.speaker_gain: Speaker gain
 bluetooth.setting.proxy: Bluetooth proxy
 bluetooth.setting.scan: Bluetooth scanning
 bluetooth.setting.speaker: Bluetooth speaker
+bluetooth.setting.playback_gain_db: Bluetooth playback gain
 boot.leaving: Restarting
 boot.skip: Skip
 broadcast.from: "From {{.Peer}}"

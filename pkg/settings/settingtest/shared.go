@@ -176,6 +176,7 @@ var Shared = Coverage{
 		"Voice.Label":               "voice.label",
 		"Bluetooth.Proxy":           "bluetooth.proxy",
 		"Bluetooth.Speaker":         "bluetooth.speaker",
+		"Bluetooth.PlaybackGainDB":  "bluetooth.playback_gain_db",
 		"Bluetooth.Scan":            "bluetooth.scan",
 		"API.Adopted":               "access.adopted",
 		"RTSP.Enabled":              "rtsp.enabled",

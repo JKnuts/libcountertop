@@ -2,6 +2,7 @@ package settings
 
 import (
 	"log/slog"
+	"strconv"
 
 	"github.com/ygelfand/libcountertop/pkg/display/menu"
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
@@ -33,6 +34,15 @@ func ServicePage[T any](title string, c *setting.Controls[T]) *shell.Page {
 			case setting.Toggle:
 				row.Kind, row.On = menu.Toggle, s.On(&at)
 				tap = func(int) { save(setting.OnOff(!row.On)) }
+			case setting.Number:
+				row.Kind = menu.Slider
+				row.Level = s.Percent(s.Level(&at))
+				row.Snap = func(level int) int { return s.Percent(s.Raw(level)) }
+				row.Value = s.Read(&at)
+				if s.Unit != "" {
+					row.Value += " " + s.Unit
+				}
+				tap = func(level int) { save(strconv.Itoa(s.Raw(level))) }
 			case setting.Choice:
 				now, choices := s.Read(&at), s.Choices()
 				row.Kind, row.Options = menu.Segments, make([]string, len(choices))

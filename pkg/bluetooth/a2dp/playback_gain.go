@@ -1,5 +1,16 @@
 package a2dp
 
+import "math"
+
+func (s *Sink) setPlaybackGain(db int) {
+	gain := math.Pow(10, float64(min(max(db, 0), maxPlaybackGainDB))/20)
+	s.playbackGain.Store(math.Float64bits(gain))
+}
+
+func (s *Sink) applyPlaybackGain(samples []int16) {
+	boostPlayback(samples, math.Float64frombits(s.playbackGain.Load()))
+}
+
 // boostPlayback applies optional gain with a soft knee above 75% of full scale.
 func boostPlayback(samples []int16, gain float64) {
 	if !(gain > 1) {
