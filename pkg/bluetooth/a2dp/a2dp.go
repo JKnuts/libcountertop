@@ -257,6 +257,9 @@ func (s *Sink) start(name string) {
 	}
 
 	s.sink = bt.NewSink(name, bt.MTU)
+	if s.options.Volume != nil {
+		s.sink.Remote().Volumed(s.options.Volume.Level())
+	}
 	s.filter = sbc.Filter{}
 	s.queue, s.handles = nil, nil
 	s.art.clear()
@@ -413,6 +416,7 @@ func (s *Sink) play(frame []byte) {
 		out = s.resample.Run(out)
 	}
 	s.dumping.Write(decoded, out)
+	boostPlayback(out, s.options.PlaybackGain)
 	if s.gain != 0 {
 		analysis.Scale(out, s.gain)
 	}
@@ -637,6 +641,10 @@ type Dependencies struct {
 		Gave(pcm.Producer)
 	}
 	Ducking storage.Section[schema.Media]
+
+	// PlaybackGain is an optional linear multiplier, up to 4 (about +12 dB).
+	// Values at or below 1 leave the PCM unchanged.
+	PlaybackGain float64
 }
 
 func (s *Sink) Dump(within time.Duration) (string, error) { return s.dumping.Start(within) }

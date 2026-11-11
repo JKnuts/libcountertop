@@ -388,7 +388,11 @@ func (s *Sink) discovery(ch *l2cap.Channel, payload []byte) ([]l2cap.Frame, erro
 		return nil, fmt.Errorf("sdp: the far end refused a search: % x", p.Params)
 	}
 
-	answer, err := s.answer(p)
+	mtu := int(ch.MTU)
+	if mtu <= 0 {
+		mtu = l2cap.MTUDefault
+	}
+	answer, err := s.answer(p, mtu)
 	if err != nil {
 		return nil, err
 	}
@@ -444,7 +448,10 @@ func (s *Sink) Discover(search sdp.Search) ([]l2cap.Frame, error) {
 	return s.send(ch, p.Marshal()), nil
 }
 
-func (s *Sink) answer(p sdp.PDU) (sdp.PDU, error) {
+func (s *Sink) answer(p sdp.PDU, mtu int) (sdp.PDU, error) {
+	if p.ID == sdp.PDUServiceSearchRequest || p.ID == sdp.PDUAttributeRequest {
+		return s.answerSeparate(p, mtu), nil
+	}
 	if p.ID != sdp.PDUSearchAttributeRequest {
 		return sdp.Error(p.Transaction, sdp.ErrorBadSyntax), nil
 	}

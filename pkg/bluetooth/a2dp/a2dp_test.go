@@ -115,7 +115,10 @@ func TestBothRemoteControlRolesAreBuilt(t *testing.T) {
 	if s.sink.Remote() == nil {
 		t.Fatal("there is no remote control")
 	}
-	if got := s.sink.Remote().State().Volume; got != -1 {
-		t.Errorf("a fresh remote reports volume %d, want -1 for never said", got)
+	if got := s.sink.Remote().State().Volume; got != 100 {
+		t.Errorf(
+			"initial local volume is %d, want the saved 100%% rather than a zero-volume reply",
+			got,
+		)
 	}
 }

@@ -177,6 +177,8 @@ func (c *Controller) Receive(t Transport) ([]Transport, error) {
 	return c.answered(t, frame)
 }
 
+const capabilityCompanies = 0x02
+
 func (c *Controller) commanded(t Transport, frame AVC) ([]Transport, error) {
 	answer := func(payload AVC) []Transport {
 		return []Transport{{
@@ -197,6 +199,38 @@ func (c *Controller) commanded(t Transport, frame AVC) ([]Transport, error) {
 	}
 
 	switch p.ID {
+	case PDUGetCapabilities:
+		if len(p.Params) != 1 {
+			return nil, ErrShort
+		}
+		switch p.Params[0] {
+		case CapabilityEvents:
+			return answer(
+				PDU{
+					ID:     PDUGetCapabilities,
+					Params: []byte{CapabilityEvents, 1, EventVolume},
+				}.Frame(
+					Stable,
+				),
+			), nil
+		case capabilityCompanies:
+			return answer(
+				PDU{
+					ID: PDUGetCapabilities,
+					Params: []byte{
+						capabilityCompanies,
+						1,
+						byte(SIG >> 16),
+						byte(SIG >> 8 & 0xff),
+						byte(SIG & 0xff),
+					},
+				}.Frame(
+					Stable,
+				),
+			), nil
+		default:
+			return answer(PDU{ID: PDUGetCapabilities, Params: []byte{0x01}}.Frame(Rejected)), nil
+		}
 	case PDUSetAbsoluteVolume:
 		if len(p.Params) < 1 {
 			return nil, ErrShort
