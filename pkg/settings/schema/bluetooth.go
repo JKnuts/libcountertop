@@ -3,10 +3,9 @@ package schema
 import "strconv"
 
 type Bluetooth struct {
-	Proxy          bool      `json:"proxy"`
-	Speaker        bool      `json:"speaker"`
-	PlaybackGainDB int       `json:"playback_gain_db,omitempty"`
-	Scan           ScanShare `json:"scan"`
+	Proxy   bool      `json:"proxy"`
+	Speaker bool      `json:"speaker"`
+	Scan    ScanShare `json:"scan"`
 }
 
 type ScanShare string

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	esphome "github.com/ygelfand/go-esphome-device"
@@ -47,9 +46,7 @@ type Sink struct {
 	resample *speaker.Rational
 	drift    speaker.Drift
 
-	knobs        *setting.Controls[schema.Bluetooth]
-	settingsMu   sync.Mutex
-	playbackGain atomic.Uint64
+	knobs *setting.Controls[schema.Bluetooth]
 
 	wake chan struct{}
 
@@ -101,14 +98,10 @@ func New(options Dependencies) *Sink {
 		Read:  options.Settings.Read,
 		Save:  s.store,
 	}
-	s.setPlaybackGain(options.Settings.Read().PlaybackGainDB)
 	return s
 }
 
 const Group setting.Group = "Bluetooth"
-
-const playbackGainSetting = "playback_gain_db"
-const maxPlaybackGainDB = 12
 
 func NewTable() *setting.Table[schema.Bluetooth] {
 	return setting.NewTable(
@@ -122,13 +115,6 @@ func NewTable() *setting.Table[schema.Bluetooth] {
 					Icon:  "mdi:speaker-bluetooth",
 				},
 				func(c *schema.Bluetooth) *bool { return &c.Speaker },
-			),
-			setting.Count(
-				setting.Setting[schema.Bluetooth]{
-					Name: playbackGainSetting, Group: Group, Icon: "mdi:volume-plus",
-					Min: 0, Max: maxPlaybackGainDB, Unit: "dB", Slider: true,
-				},
-				func(c *schema.Bluetooth) *int { return &c.PlaybackGainDB },
 			),
 		},
 		setting.Messages{Text: say.T, Missing: say.Missing},
@@ -151,14 +137,8 @@ func (s *Sink) SetEnabled(on bool) {
 }
 
 func (s *Sink) store(row setting.Setting[schema.Bluetooth], v string) error {
-	s.settingsMu.Lock()
-	defer s.settingsMu.Unlock()
 	if err := setting.Store(s.options.Settings, row, v); err != nil {
 		return err
-	}
-	if row.Name == playbackGainSetting {
-		s.setPlaybackGain(s.options.Settings.Read().PlaybackGainDB)
-		return nil
 	}
 	select {
 	case s.wake <- struct{}{}:
@@ -468,11 +448,6 @@ func (s *Sink) play(frame []byte) {
 		out = s.resample.Run(out)
 	}
 	s.dumping.Write(decoded, out)
-	if s.owner != nil {
-		s.owner.host.applyPlaybackGain(out)
-	} else {
-		s.applyPlaybackGain(out)
-	}
 	if s.gain != 0 {
 		analysis.Scale(out, s.gain)
 	}

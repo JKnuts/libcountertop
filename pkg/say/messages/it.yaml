@@ -128,7 +128,6 @@ speaker.setting.speaker_gain: Guadagno altoparlante
 bluetooth.setting.proxy: Proxy Bluetooth
 bluetooth.setting.scan: Scansione Bluetooth
 bluetooth.setting.speaker: Altoparlante Bluetooth
-bluetooth.setting.playback_gain_db: Guadagno di riproduzione Bluetooth
 bluetooth.connected_sources: Dispositivi connessi
 bluetooth.source_auto: Cambio sorgente automatico
 bluetooth.source_empty: Nessun dispositivo Bluetooth connesso
